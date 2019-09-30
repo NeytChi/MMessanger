@@ -1,0 +1,14 @@
+/home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/miniMessanger.deps.json
+/home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/miniMessanger.runtimeconfig.json
+/home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/miniMessanger.runtimeconfig.dev.json
+/home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/miniMessanger.dll
+/home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/miniMessanger.pdb
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.csprojAssemblyReference.cache
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.csproj.CoreCompileInputs.cache
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.RazorAssemblyInfo.cache
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.RazorAssemblyInfo.cs
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.AssemblyInfoInputs.cache
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.AssemblyInfo.cs
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.RazorTargetAssemblyInfo.cache
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.dll
+/home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.pdb

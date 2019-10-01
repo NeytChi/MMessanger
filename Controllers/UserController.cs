@@ -458,6 +458,7 @@ namespace Common.Functional.UserF
                     {
                         profile = new Profiles();
                         profile.UserId = user.UserId;
+                        profile.ProfileSex = true;
                         _context.Add(profile);
                         _context.SaveChanges();
                     }
@@ -548,6 +549,7 @@ namespace Common.Functional.UserF
                     {
                         profile = new Profiles();
                         profile.UserId = user.UserId;
+                        profile.ProfileSex = true;
                         _context.Add(profile);
                         _context.SaveChanges();
                     }

@@ -1,0 +1,13 @@
+{
+	"ip" : "127.0.0.1",
+	"port" : 8000,
+	"domen" : "MiniMessanger",
+	"issuer" : "MiniMessanger",
+	"audience" : "http://localhost:8000/",
+	"auth_key" : "mysql.connection",
+	"auth_lifetime" : 1,
+	"mail_address" : "test6574839210@gmail.com", 
+	"mail_password" : "GmailPassword1234",
+	"smtp_server" : "smtp.gmail.com",
+	"smtp_port": 587
+}

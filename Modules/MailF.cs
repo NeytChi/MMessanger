@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using Common.Logging;
 using System.Net.Mail;
 using Newtonsoft.Json.Linq;
 
@@ -21,10 +20,10 @@ namespace Common
         {
             ip = Config.IP;
             domen = Config.Domen;
-            mailAddress = Config.GetConfigValue("mail_address", JTokenType.String);
-            mailPassword = Config.GetConfigValue("mail_password", JTokenType.String);
-            GmailServer = Config.GetConfigValue("smtp_server", JTokenType.String);
-            GmailPort = Config.GetConfigValue("smtp_port", JTokenType.Integer);
+            mailAddress = Config.GetServerConfigValue("mail_address", JTokenType.String);
+            mailPassword = Config.GetServerConfigValue("mail_password", JTokenType.String);
+            GmailServer = Config.GetServerConfigValue("smtp_server", JTokenType.String);
+            GmailPort = Config.GetServerConfigValue("smtp_port", JTokenType.Integer);
             if (ip != null && mailAddress != null)
             {
                 smtp = new SmtpClient(GmailServer, GmailPort);
@@ -49,16 +48,12 @@ namespace Common
             try
             {
                 await smtp.SendMailAsync(message);
-                Logger.WriteLog("Send message to " + emailAddress, LogLevel.Usual);
+                Common.Log.Info("Send message to " + emailAddress + ".");
             }
             catch (Exception e)
             {
-                Logger.WriteLog("Error SendEmailAsync, Message:" + e.Message, LogLevel.Error);
-                smtp = new SmtpClient(GmailServer, GmailPort);
-                smtp.Credentials = new NetworkCredential(mailAddress, mailPassword);
-                smtp.EnableSsl = true;
-                await smtp.SendMailAsync(message);
-                Logger.WriteLog("Send message to " + emailAddress, LogLevel.Usual);
+                Common.Log.Error("Error SendEmailAsync, Message:" + e.Message + ".");
+                Common.Log.Error("Send message to " + emailAddress + ".");
             }
         }
     }

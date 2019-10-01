@@ -412,7 +412,8 @@ namespace Common.Functional.UserF
             Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             return new { success = false, message = message };
         }
-        /*[Microsoft.AspNetCore.Mvc.HttpPost]
+        /* 
+        [Microsoft.AspNetCore.Mvc.HttpPost]
         [Microsoft.AspNetCore.Mvc.ActionName("UpdatePhoto")]
         public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> UpdateProfile(Microsoft.AspNetCore.Http.IFormFile photo)
         {
@@ -444,7 +445,7 @@ namespace Common.Functional.UserF
                             profile.url_photo = "http://" + domen + file.file_path + file.file_name;
                             Database.profile.UpdateUrlPhoto(user.user_id, profile.url_photo);
                             request.ResponseJsonData(profile);
-                            Logger.WriteLog("Update profile photo", LogLevel.Usual);
+                            Log.Info("Update profile photo", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                             return;
                         }
                         else { message = "File type is not correct."; }
@@ -496,6 +497,7 @@ namespace Common.Functional.UserF
                         }
                     }
                     Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                    _context.SaveChangesAsync();
                     return new { success = true, data = data };
                 }
                 else 
@@ -557,6 +559,7 @@ namespace Common.Functional.UserF
                         }
                     }
                     Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                    _context.SaveChangesAsync();
                     return new { success = true, data = chats };
                 }
                 else 
@@ -665,6 +668,7 @@ namespace Common.Functional.UserF
                                 Log.Info("Select exist chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                             }
                             Log.Info("Create/Select chat chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                            _context.SaveChangesAsync();
                             return new { success = true, data = room };
                         } 
                         else 
@@ -715,6 +719,7 @@ namespace Common.Functional.UserF
                                     chatMessage.MessageViewed = false;
                                     chatMessage.CreatedAt = System.DateTime.Now;
                                     _context.Messages.Add(chatMessage);
+                                    _context.SaveChangesAsync();
                                     Log.Info("Message was handled, message_id->" + chatMessage.MessageId + " chat.chat_id->" + room.ChatId, HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                     return new { success = true, data = chatMessage };
                                 } 
@@ -775,6 +780,7 @@ namespace Common.Functional.UserF
                                         blockedUser.BlockedDeleted = false;
                                         _context.BlockedUsers.Add(blockedUser);
                                         Log.Info("Block user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                        _context.SaveChangesAsync();
                                         return new { success = true, message = "Block user - successed." };
                                     }
                                     else 
@@ -818,9 +824,7 @@ namespace Common.Functional.UserF
                 if (user != null)
                 {
                     List<BlockedUsers> blockedUsers = _context.BlockedUsers.Where(b => b.UserId == user.UserId).ToList();
-                    
-                    request.ResponseJsonUTF8Data();
-                    Logger.WriteLog("Block user; user->user_id->" + user.user_id + ".", LogLevel.Usual);
+                    Log.Info("Block user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                     return blockedUsers;
                 }
                 else 
@@ -843,26 +847,30 @@ namespace Common.Functional.UserF
             Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
             if (userToken != null)
             {
-                string opposide_public_token = request.RequiredJsonField("opposide_public_token", Newtonsoft.Json.Linq.JTokenType.String);
-                if (opposide_public_token == null) return;
-                Common.NDatabase.UserData.UserCache user = new Common.NDatabase.UserData.UserCache();
-                if (Database.user.SelectUserByToken(user_token, ref user))
+                Newtonsoft.Json.Linq.JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                if (userToken != null)
                 {
-                    Common.NDatabase.UserData.UserCache interlocutor = new Common.NDatabase.UserData.UserCache();
-                    if (Database.user.SelectUserByPublicToken(opposide_public_token, ref interlocutor))
+                    Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
+                    if (user != null)
                     {
-                        if (Database.blocked.CheckBlockedUser(user.user_id, interlocutor.user_id))
+                        Users interlocutor = _context.Users.Where(u => u.UserPublicToken == opposidePublicToken.ToString()).FirstOrDefault();
+                        if (interlocutor != null)
                         {
-                            Database.blocked.DeleteBlockedUser(user.user_id, interlocutor.user_id);
-                            Logger.WriteLog("Delete blocked user; user->user_id->" + user.user_id + ".", LogLevel.Usual);
-                            request.ResponseJsonAnswer(true, "Unblock user - successed.");
-                            return;
+                            BlockedUsers blockedUser = _context.BlockedUsers.Where(b => b.UserId == user.UserId 
+                            && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
+                            if (blockedUser != null)
+                            {
+                                _context.BlockedUsers.Remove(blockedUser);
+                                _context.SaveChangesAsync();
+                                Log.Info("Delete blocked user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                return new { success = true, message = "Unblock user - successed." };
+                            }
+                            else { message = "User didn't block current user; user->user_id->" + user.UserId + "."; }
                         }
-                        else { message = "User didn't block current user; user->user_id->" + user.user_id + "."; }
+                        else { message = "No user with that opposide_public_token; user->user_id->" + user.UserId + "."; }
                     }
-                    else { message = "No user with that opposide_public_token; user->user_id->" + user.user_id + "."; }
+                    else { message = "No user with that user_token."; }
                 }
-                else { message = "No user with that user_token."; }
             }
             if (Response != null)
             {
@@ -879,54 +887,56 @@ namespace Common.Functional.UserF
             Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
             if (userToken != null)
             {
-                long message_id = request.RequiredJsonField("message_id", Newtonsoft.Json.Linq.JTokenType.Integer);
-                if (message_id == -1) return;
-                string complaint = request.RequiredJsonField("complaint", Newtonsoft.Json.Linq.JTokenType.String);
-                if (complaint == null) return;
-                complaint = System.Net.WebUtility.UrlDecode(complaint);
-                Common.NDatabase.UserData.UserCache user = new Common.NDatabase.UserData.UserCache();
-                if (Database.user.SelectUserByToken(user_token, ref user))
+                Newtonsoft.Json.Linq.JToken messageId = jsonHandler.handle(ref json, "message_id", Newtonsoft.Json.Linq.JTokenType.Integer, ref message);
+                if (messageId != null)
                 {
-                    Common.Chats.Message message = new Common.Chats.Message();
-                    if (Database.message.SelectMessage(message_id, ref message))
-                    {
-                        if (complaint.Length < 100)
+                    Newtonsoft.Json.Linq.JToken jComplaint = jsonHandler.handle(ref json, "complaint", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    if (messageId != null)
+                    {   
+                        string complaint = System.Net.WebUtility.UrlDecode(jComplaint.ToString());
+                        Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
+                        if (user != null)
                         {
-                            if (message.user_id != user.user_id)
+                            Messages messageChat = _context.Messages.Where(m => m.MessageId == messageId.ToObject<long>()).FirstOrDefault();
+                            if (messageChat != null)
                             {
-                                Common.NDatabase.UserData.UserCache interlocutor = new Common.NDatabase.UserData.UserCache();
-                                if (Database.user.SelectUserById(message.user_id, ref interlocutor))
+                                if (complaint.Length < 100)
                                 {
-                                    if (!Database.blocked.CheckBlockedUser(user.user_id, interlocutor.user_id))
+                                    if (messageChat.UserId != user.UserId)
                                     {
-                                        MiniMessanger.Models.Chat.BlockedUser blockedUser = new MiniMessanger.Models.Chat.BlockedUser();
-                                        blockedUser.user_id = user.user_id;
-                                        blockedUser.blocked_user_id = interlocutor.user_id;
-                                        blockedUser.blocked_reason = complaint;
-                                        blockedUser.blocked_deleted = false;
-                                        Database.blocked.Add(ref blockedUser);
-                                        MiniMessanger.Models.Chat.Complaint complaintUser = new MiniMessanger.Models.Chat.Complaint();
-                                        complaintUser.user_id = user.user_id;
-                                        complaintUser.blocked_id = blockedUser.blocked_id;
-                                        complaintUser.message_id = message.message_id;
-                                        complaintUser.complaint = complaint;
-                                        complaintUser.created_at = System.DateTime.Now;
-                                        Database.complaints.Add(ref complaintUser);
-                                        request.ResponseJsonAnswer(true, "Complain content - successed.");
-                                        Logger.WriteLog("Create complaint; user->user_id->" + user.user_id + ".", LogLevel.Usual);
-                                        return;
+                                        Users interlocutor = _context.Users.Where(u => u.UserId == messageChat.UserId).FirstOrDefault();
+                                        BlockedUsers blockedUser = _context.BlockedUsers.Where(b => b.UserId == user.UserId 
+                                        && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
+                                        if (blockedUser == null)
+                                        {
+                                            blockedUser = new BlockedUsers();
+                                            blockedUser.UserId = user.UserId;
+                                            blockedUser.BlockedUserId = interlocutor.UserId;
+                                            blockedUser.BlockedReason = complaint;
+                                            blockedUser.BlockedDeleted = false;
+                                            _context.BlockedUsers.Add(blockedUser);
+                                            Complaints complaintUser = new Complaints();
+                                            complaintUser.UserId = user.UserId;
+                                            complaintUser.BlockedId = blockedUser.BlockedId;
+                                            complaintUser.MessageId = messageChat.MessageId;
+                                            complaintUser.Complaint = complaint;
+                                            complaintUser.CreatedAt = System.DateTime.Now;
+                                            _context.Complaints.Add(complaintUser);
+                                            _context.SaveChangesAsync();
+                                            Log.Info("Create complaint; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                            return new { success = true, message = "Complain content - successed." };
+                                        }
+                                        else { message = "User blocked current user."; }
                                     }
-                                    else { message_return = "User blocked current user."; }
+                                    else { message = "User can't complain on himself."; }
                                 }
-                                else { message_return = "Server can't define user."; }
+                                else { message = "Complaint message can't be longer than 100 characters."; }
                             }
-                            else { message_return = "User can't complain on himself."; }
+                            else { message = "Unknow message_id. Server can't define message."; }
                         }
-                        else { message_return = "Complaint message can't be longer than 100 characters."; }
+                        else { message = "No user with that user_token."; }
                     }
-                    else { message_return = "Unknow message_id. Server can't define message."; }
                 }
-                else { message_return = "No user with that user_token."; }
             }
             if (Response != null)
             {

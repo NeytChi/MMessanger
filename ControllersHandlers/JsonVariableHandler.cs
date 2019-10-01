@@ -2,7 +2,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Controllers
 {
-    public class JsonVariableHandler : BaseHandler, IControllerHandlerGS
+    public class JsonVariableHandler
     {
         public JToken handle(ref JObject json, string name, JTokenType tokenType, ref string message)
         {

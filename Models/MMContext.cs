@@ -36,8 +36,6 @@ namespace miniMessanger.Models
             {
                 if (!optionsBuilder.IsConfigured)
                 {
-                    //System.Console.WriteLine(Configuration.GetConnectionString("Instasoft"));
-                    //optionsBuilder.UseMySql(ConfigurationManager.ConnectionStrings["Instasoft"].ConnectionString);
                     optionsBuilder.UseMySql(Common.Config.GetDatabaseConfigConnection());
                 }
             }
@@ -64,11 +62,11 @@ namespace miniMessanger.Models
 
                 entity.Property(e => e.BlockedDeleted)
                     .HasColumnName("blocked_deleted")
-                    .HasColumnType("tinyint(1)");
+                    .HasColumnType("boolean");
 
                 entity.Property(e => e.BlockedReason)
                     .HasColumnName("blocked_reason")
-                    .HasColumnType("varchar(100)");
+                    .HasColumnType("varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci");
 
                 entity.Property(e => e.BlockedUserId)
                     .HasColumnName("blocked_user_id")
@@ -108,9 +106,10 @@ namespace miniMessanger.Models
 
                 entity.Property(e => e.CreatedAt)
                     .HasColumnName("created_at")
-                    .HasColumnType("timestamp")
-                    .HasDefaultValueSql("'CURRENT_TIMESTAMP'")
-                    .ValueGeneratedOnAddOrUpdate();
+                    .HasColumnType("timestamp");
+                    //.HasDefaultValue("2000-01-01 10:00:00")
+                    //.HasDefaultValueSql("'CURRENT_TIMESTAMP'");
+                    //.ValueGeneratedOnAddOrUpdate();
             });
 
             modelBuilder.Entity<Complaints>(entity =>
@@ -139,7 +138,7 @@ namespace miniMessanger.Models
 
                 entity.Property(e => e.Complaint)
                     .HasColumnName("complaint")
-                    .HasColumnType("varchar(100)");
+                    .HasColumnType("varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci");
 
                 entity.Property(e => e.CreatedAt)
                     .HasColumnName("created_at")
@@ -266,23 +265,25 @@ namespace miniMessanger.Models
 
                 entity.Property(e => e.CreatedAt)
                     .HasColumnName("created_at")
-                    .HasColumnType("timestamp")
-                    .HasDefaultValueSql("'CURRENT_TIMESTAMP'")
-                    .ValueGeneratedOnAddOrUpdate();
+                    .HasColumnType("timestamp");
+                    //.HasDefaultValue("2000-01-01 10:00:00")
+                    //.HasDefaultValueSql("'CURRENT_TIMESTAMP'");
+                    //.ValueGeneratedOnAddOrUpdate();
 
                 entity.Property(e => e.MessageText)
                     .HasColumnName("message_text")
-                    .HasColumnType("varchar(500)");
+                    .HasColumnType("varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci")
+                    .IsUnicode(true);
 
                 entity.Property(e => e.MessageViewed)
                     .HasColumnName("message_viewed")
-                    .HasColumnType("tinyint(1)");
+                    .HasColumnType("boolean");
 
                 entity.Property(e => e.UserId)
                     .HasColumnName("user_id")
                     .HasColumnType("int(11)");
             });
-
+     
             modelBuilder.Entity<Participants>(entity =>
             {
                 entity.HasKey(e => e.ParticipantId)
@@ -327,7 +328,7 @@ namespace miniMessanger.Models
 
                 entity.Property(e => e.ProfileSex)
                     .HasColumnName("profile_sex")
-                    .HasColumnType("tinyint(1)");
+                    .HasColumnType("boolean");
 
                 entity.Property(e => e.UrlPhoto)
                     .HasColumnName("url_photo")
@@ -402,10 +403,6 @@ namespace miniMessanger.Models
                 entity.Property(e => e.UserToken)
                     .HasColumnName("user_token")
                     .HasColumnType("varchar(50)");
-
-                entity.Property(e => e.UserType)
-                    .HasColumnName("user_type")
-                    .HasColumnType("varchar(25)");
 
                 entity.Property(e => e.Deleted)
                     .HasColumnName("deleted")

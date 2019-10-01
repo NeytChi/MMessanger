@@ -15,16 +15,12 @@ namespace miniMessanger.Models
         }
 
         public int UserId { get; set; }
-        [Required]
         public string UserEmail { get; set; }
-        [Required]
         public string UserLogin { get; set; }
-        [Required]
         public string UserPassword { get; set; }
-        public int? CreatedAt { get; set; }
+        public int CreatedAt { get; set; }
         public string UserHash { get; set; }
         public sbyte? Activate { get; set; }
-        public string UserType { get; set; }
         public string UserToken { get; set; }
         public int? LastLoginAt { get; set; }
         public int? RecoveryCode { get; set; }

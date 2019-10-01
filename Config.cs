@@ -15,7 +15,10 @@ namespace Common
         public static string IP = "127.0.0.1";
         public static string Domen = "(none)";
         public static int Port = 8023;
-        public static string currentDirectory = Directory.GetCurrentDirectory();       // Return of the path occurs without the last '/' (pointer to the directory)
+        /// <summary>
+        /// Return of the path occurs without the last '/' (pointer to the directory) 
+        /// </summary>
+        public static string currentDirectory = Directory.GetCurrentDirectory();
         public static bool initiated = false;
 
         public static void Initialization()

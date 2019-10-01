@@ -28,65 +28,85 @@ namespace Common.Functional.UserF
         /// <param name="user">User data for registration.</param>
         [Microsoft.AspNetCore.Mvc.HttpPost]
         [Microsoft.AspNetCore.Mvc.ActionName("Registration")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Registration(miniMessanger.Models.Users user)
+        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Registration(Newtonsoft.Json.Linq.JObject json)
         {
             string message = string.Empty;
-            if (!string.IsNullOrEmpty(user.UserEmail) && !string.IsNullOrEmpty(user.UserPassword) && !string.IsNullOrEmpty(user.UserLogin))
+            Newtonsoft.Json.Linq.JToken userEmail = jsonHandler.handle(ref json, "user_email",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            if (userEmail != null)
             {
-                if (Common.Validator.ValidateEmail(user.UserEmail))
+                Newtonsoft.Json.Linq.JToken userLogin = jsonHandler.handle(ref json, "user_login",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                if (userLogin != null)
                 {
-                    if (Common.Validator.ValidatePassword(user.UserPassword, ref message))
+                    Newtonsoft.Json.Linq.JToken userPassword = jsonHandler.handle(ref json, "user_password",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    if (userPassword != null)
                     {
-                        miniMessanger.Models.Users old_user = _context.Users.Where(u => u.UserEmail == user.UserEmail).FirstOrDefault();
-                        if (old_user == null)
+                        if (Common.Validator.ValidateEmail(userEmail.ToString()))
                         {
-                            user.UserPassword = Common.Validator.HashPassword(user.UserPassword);
-                            user.UserHash = Common.Validator.GenerateHash(100);
-                            user.CreatedAt = (int)(System.DateTime.Now - Common.Config.unixed).TotalSeconds;
-                            user.Activate = 0;
-                            user.Deleted = false;
-                            user.LastLoginAt = user.CreatedAt;
-                            user.UserToken = Common.Validator.GenerateHash(40);
-                            _context.Users.Add(user);
-                            _context.SaveChangesAsync();
-                            Common.MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
-                            Common.Log.Info("Registrate new user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            return new { success = true, message = "User account was successfully registrate. See your email to activate account by url." };
-                        }
-                        else
-                        {
-                            if (old_user.Deleted == true)
+                            if (Common.Validator.ValidatePassword(userPassword.ToString(), ref message))
                             {
-                                old_user.Deleted = false;
-                                old_user.UserToken = Common.Validator.GenerateHash(40); 
-                                _context.Users.Update(old_user);
-                                _context.SaveChangesAsync();
-                                Common.Log.Info("Restored old user, user_id->" + old_user.UserId + ".", HttpContext.Connection.LocalIpAddress.ToString(), old_user.UserId);
-                                return new { success = true, message = "User account was successfully restored." };
+                                miniMessanger.Models.Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();
+                                if (user == null)
+                                {
+                                    user = new Users();
+                                    user.UserEmail = userEmail.ToString();
+                                    user.UserLogin = userLogin.ToString();
+                                    user.UserPassword = Common.Validator.HashPassword(userPassword.ToString());
+                                    user.UserHash = Common.Validator.GenerateHash(100);
+                                    user.CreatedAt = (int)(System.DateTime.Now - Common.Config.unixed).TotalSeconds;
+                                    user.Activate = 0;
+                                    user.Deleted = false;
+                                    user.LastLoginAt = user.CreatedAt;
+                                    user.UserToken = Common.Validator.GenerateHash(40);
+                                    user.UserPublicToken = Common.Validator.GenerateHash(20);
+                                    _context.Users.Add(user);
+                                    _context.SaveChangesAsync();
+                                    Common.MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
+                                    Common.Log.Info("Registrate new user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                    return new { success = true, message = "User account was successfully registrate. See your email to activate account by url." };
+                                }
+                                else
+                                {
+                                    if (user.Deleted == true)
+                                    {
+                                        user.Deleted = false;
+                                        user.UserToken = Common.Validator.GenerateHash(40); 
+                                        _context.Users.Update(user);
+                                        _context.SaveChangesAsync();
+                                        Common.Log.Info("Restored old user, user_id->" + user.UserId + ".", HttpContext.Connection.LocalIpAddress.ToString(), user.UserId);
+                                        return new { success = true, message = "User account was successfully restored." };
+                                    }
+                                    else 
+                                    {
+                                        message =  "Have exists account with email ->" + user.UserEmail + ".";
+                                        Common.Log.Warn("Have exists account with email ->" + user.UserEmail + ".", HttpContext.Connection.RemoteIpAddress.ToString()); 
+                                    }  
+                                }
                             }
-                            else 
+                            else
                             {
-                                message =  "Have exists account with email ->" + user.UserEmail + ".";
-                                Common.Log.Warn("Have exists account with email ->" + user.UserEmail + ".", HttpContext.Connection.RemoteIpAddress.ToString()); 
-                            }  
+                                Common.Log.Warn(message + " UserEmail->" + userEmail.ToString() + ".", HttpContext.Connection.RemoteIpAddress.ToString());                        
+                            } 
+                        }
+                        else 
+                        { 
+                            message = "Wrong validation email ->" + userEmail.ToString() + ".";
                         }
                     }
                     else
                     {
-                        Common.Log.Warn(message + " UserEmail->" + user.UserEmail + ".", HttpContext.Connection.RemoteIpAddress.ToString());                        
-                    } 
+                        Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+                    }
                 }
-                else 
-                { 
-                    message = "Wrong validation email ->" + user.UserEmail + ".";
-                    Common.Log.Warn(message, HttpContext.Connection.LocalIpAddress.ToString());
+                else
+                {
+                    Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
                 }
             }
-            else 
-            { 
-                message = "Json doesn't have required fields";
-                Common.Log.Warn("Json doesn't have required fields, Registration request.", HttpContext.Connection.RemoteIpAddress.ToString());
+            else
+            {
+                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             }
+            Common.Log.Warn(message, HttpContext.Connection.LocalIpAddress.ToString());
             if (Response != null)
             {
                 Response.StatusCode = 500;
@@ -129,59 +149,69 @@ namespace Common.Functional.UserF
             Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             return new { success = false, message = message };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Microsoft.AspNetCore.Mvc.HttpPut]
         [Microsoft.AspNetCore.Mvc.ActionName("Login")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Login(miniMessanger.Models.Users old_user)
+        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Login(Newtonsoft.Json.Linq.JObject json)
         {
             string message = null;
-            if (!string.IsNullOrEmpty(old_user.UserEmail) || !string.IsNullOrEmpty(old_user.UserPassword))
+            Newtonsoft.Json.Linq.JToken userEmail = jsonHandler.handle(ref json, "user_email",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            if (userEmail != null)
             {
-                miniMessanger.Models.Users user_data = _context.Users.Where(u=> u.UserEmail == old_user.UserEmail).FirstOrDefault();
-                if (user_data != null)
+                Newtonsoft.Json.Linq.JToken userPassword = jsonHandler.handle(ref json, "user_password",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                if (userPassword != null)
                 {
-                    if (Common.Validator.VerifyHashedPassword(user_data.UserPassword, old_user.UserPassword))
+                    miniMessanger.Models.Users user_data = _context.Users.Where(u=> u.UserEmail == userEmail.ToString()).FirstOrDefault();
+                    if (user_data != null)
                     {
-                        if (user_data.Activate == 1 && user_data.Deleted == false)
+                        if (Common.Validator.VerifyHashedPassword(user_data.UserPassword, userPassword.ToString()))
                         {
-                            user_data.LastLoginAt = (int)(System.DateTime.Now - Common.Config.unixed).TotalSeconds;
-                            _context.Users.Update(user_data);
-                            _context.SaveChanges();
-                            Common.Log.Info("User login.", HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
-                            return new 
+                            if (user_data.Activate == 1 && user_data.Deleted == false)
+                            {
+                                user_data.LastLoginAt = (int)(System.DateTime.Now - Common.Config.unixed).TotalSeconds;
+                                _context.Users.Update(user_data);
+                                _context.SaveChanges();
+                                Common.Log.Info("User login.", HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
+                                return new 
+                                { 
+                                    success = true, data = new { 
+                                        user = new 
+                                        {
+                                            user_token = user_data.UserToken,
+                                            user_email = user_data.UserEmail,
+                                            user_login = user_data.UserLogin,
+                                            created_at = user_data.CreatedAt,
+                                            last_login_at = user_data.LastLoginAt,
+                                            user_public_token = user_data.UserPublicToken
+                                        }
+                                    } 
+                                };
+                            }
+                            else 
                             { 
-                                success = true, data = new { 
-                                    user = new 
-                                    {
-                                        user_token = user_data.UserToken,
-                                        user_email = user_data.UserEmail,
-                                        created_at = user_data.CreatedAt,
-                                        last_login_at = user_data.LastLoginAt
-                                    }
-                                } 
-                            };
+                                Common.MailF.SendEmail(user_data.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user_data.UserHash + ">Confirm url!</a>");
+                                message =  "User's account isn't confirmed."; 
+                                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
+                            }
                         }
                         else 
                         { 
-                            Common.MailF.SendEmail(user_data.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user_data.UserHash + ">Confirm url!</a>");
-                            message =  "User's account isn't confirmed."; 
+                            message = "Wrong password."; 
                             Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
                         }
                     }
                     else 
                     { 
-                        message = "Wrong password."; 
-                        Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
+                        message = "No user with such email."; 
+                        Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
                     }
                 }
-                else 
-                { 
-                    message = "No user with such email."; 
+                else
+                {
                     Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
                 }
             }
-            else 
-            { 
-                message = "Json doesn't have required fields, Login request."; 
+            else
+            {
                 Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             }
             if (Response != null)
@@ -190,7 +220,7 @@ namespace Common.Functional.UserF
             }
             return new { success = false, message = message };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Microsoft.AspNetCore.Mvc.HttpPut]
         [Microsoft.AspNetCore.Mvc.ActionName("LogOut")]
         public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> LogOut(Newtonsoft.Json.Linq.JObject json)
         {
@@ -412,46 +442,88 @@ namespace Common.Functional.UserF
             Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             return new { success = false, message = message };
         }
-        /* 
         [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("UpdatePhoto")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> UpdateProfile(Microsoft.AspNetCore.Http.IFormFile photo)
+        [Microsoft.AspNetCore.Mvc.ActionName("UpdateProfile")]
+        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> UpdateProfile(Microsoft.AspNetCore.Http.IFormFile profile_photo)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            string userToken = Request.Form["user_token"];
             if (userToken != null)
             {
-                Users user = new Users();
-                Newtonsoft.Json.Linq.JToken profileAge = jsonHandler.handle(ref json, "profile_age", Newtonsoft.Json.Linq.JTokenType.Integer, ref message);
-                if (profileAge != null)
+                Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
+                if (user != null)
                 {
-
-                }
-                Newtonsoft.Json.Linq.JToken profileSex = jsonHandler.handle(ref json, "profile_sex", Newtonsoft.Json.Linq.JTokenType.Integer, ref message);
-                if ()
-                if (Database.user.SelectUserByToken(user_token, ref user))
-                {
-                    Common.NDatabase.FileData.FileD file = new Common.NDatabase.FileData.FileD();
-                    string  = request.OptionalJsonField("", Newtonsoft.Json.Linq.JTokenType.Integer);
-                    string  = request.OptionalJsonField("", Newtonsoft.Json.Linq.JTokenType.);
-
-                    if (request.GetFileRequest(ref file))
+                    Profiles profile = _context.Profiles.Where(p => p.UserId == user.UserId).FirstOrDefault();
+                    if (profile == null)
                     {
-                        if (file.file_type == "image")
-                        {
-                            MiniMessanger.Models.ProfileData profile = new MiniMessanger.Models.ProfileData();
-                            Database.profile.SelectByUserId(user.user_id, ref profile);
-                            Common.FileSystem.LoaderFile.SaveFile(ref file, "/ProfilePhoto/");
-                            profile.url_photo = "http://" + domen + file.file_path + file.file_name;
-                            Database.profile.UpdateUrlPhoto(user.user_id, profile.url_photo);
-                            request.ResponseJsonData(profile);
-                            Log.Info("Update profile photo", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            return;
-                        }
-                        else { message = "File type is not correct."; }
+                        profile = new Profiles();
+                        profile.UserId = user.UserId;
+                        _context.Add(profile);
+                        _context.SaveChanges();
                     }
+                    string profileSex = Request.Form["profile_sex"];
+                    if (profileSex != null)
+                    {
+                        if (profileSex == "1")
+                        {
+                            profile.ProfileSex = true;
+                            Log.Info("Update profile sex.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                        else if (profileSex == "0")
+                        {
+                            profile.ProfileSex = false;
+                            Log.Info("Update profile sex.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                    }
+                    string profileAge = Request.Form["profile_age"];
+                    if (profileAge != null)
+                    {
+                        short ProfileAge = 0;
+                        if (System.Int16.TryParse(profileAge, out ProfileAge))
+                        {
+                            if (ProfileAge > 0 && ProfileAge < 100)
+                            {
+                                profile.ProfileAge = (sbyte)ProfileAge;
+                                Log.Info("Update profile age.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                            }
+                        }
+                    }
+                    if (profile_photo != null)
+                    {
+                        if (profile_photo.ContentType.Contains("image"))
+                        {
+                            if (System.IO.File.Exists(Common.Config.currentDirectory + profile.UrlPhoto))
+                            {
+                                System.IO.File.Delete(Common.Config.currentDirectory + profile.UrlPhoto);
+                            }
+                            System.IO.Directory.CreateDirectory(Common.Config.currentDirectory + "/ProfilePhoto/" +
+                             System.DateTime.Now.Year + "-" + System.DateTime.Now.Month + "-" + System.DateTime.Now.Day);
+                            profile.UrlPhoto = "/ProfilePhoto/" + System.DateTime.Now.Year + "-" + System.DateTime.Now.Month 
+                            + "-" + System.DateTime.Now.Day + "/" + Validator.GenerateHash(10);
+                            profile_photo.CopyTo(new System.IO.FileStream(Common.Config.currentDirectory + profile.UrlPhoto,
+                            System.IO.FileMode.Create));
+                            Log.Info("Update profile photo.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                    }
+                    _context.Profiles.Update(profile);
+                    _context.SaveChanges();
+                    Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    profile.UrlPhoto = domen + profile.UrlPhoto;
+                    return new { success = true, data = new 
+                    {
+                        url_photo = profile.UrlPhoto,
+                        profileAge = profile.ProfileAge,
+                        profileSex = profile.ProfileSex
+                    } };
                 }
-                else { message = "No user with that user_token."; }
+                else 
+                { 
+                    message = "No user with that user_token."; 
+                }
+            }
+            else 
+            {
+                message = "Request doesn't contains 'user_token' key.";
             }
             if (Response != null)
             {
@@ -459,8 +531,50 @@ namespace Common.Functional.UserF
             }
             Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             return new { success = false, message = message };
-        }*/
+        }
         [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Microsoft.AspNetCore.Mvc.ActionName("Profile")]
+        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Profile(Newtonsoft.Json.Linq.JObject json)
+        {
+            string message = null;
+            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            if (userToken != null)
+            {
+                Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
+                if (user != null)
+                {
+                    Profiles profile = _context.Profiles.Where(p => p.UserId == user.UserId).FirstOrDefault();
+                    if (profile == null)
+                    {
+                        profile = new Profiles();
+                        profile.UserId = user.UserId;
+                        _context.Add(profile);
+                        _context.SaveChanges();
+                    }
+                    Log.Info("Select profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    profile.UrlPhoto = domen + profile.UrlPhoto;
+                    return new { success = true, 
+                    data = new 
+                        {
+                            url_photo = profile.UrlPhoto,
+                            profileAge = profile.ProfileAge,
+                            profileSex = profile.ProfileSex
+                        } 
+                    };
+                }
+                else 
+                { 
+                    message = "No user with that user_token."; 
+                }
+            }
+            if (Response != null)
+            {
+                Response.StatusCode = 500;
+            }
+            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+            return new { success = false, message = message };
+        }
+        [Microsoft.AspNetCore.Mvc.HttpPut]
         [Microsoft.AspNetCore.Mvc.ActionName("GetUsersList")]
         public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> GetUsersList(Newtonsoft.Json.Linq.JObject json)
         {
@@ -478,7 +592,7 @@ namespace Common.Functional.UserF
                         page = jPage.ToObject<int>();
                     }
                     List<dynamic> data = new List<dynamic>();  
-                    List<Users> users = _context.Users.Where(u => u.UserId == user.UserId).OrderByDescending(u => u.UserId).Skip(page * 30).Take(30).ToList();
+                    List<Users> users = _context.Users.Where(u => u.UserId != user.UserId).OrderByDescending(u => u.UserId).Skip(page * 30).Take(30).ToList();
                     List<int> blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedDeleted == false).Select(b => b.BlockedUserId).ToList();
                     foreach(Users publicUser in users)
                     {
@@ -516,7 +630,7 @@ namespace Common.Functional.UserF
         /// Select list of chats. Get last message data, user's data of chat and chat data.
         /// </summary>
         /// <param name="request">Request.</param>
-        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Microsoft.AspNetCore.Mvc.HttpPut]
         [Microsoft.AspNetCore.Mvc.ActionName("SelectChats")]
         public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> SelectChats(Newtonsoft.Json.Linq.JObject json)
         {
@@ -533,29 +647,68 @@ namespace Common.Functional.UserF
                     {
                         page = jPage.ToObject<int>();
                     }
-                    List<ChatData> chats = new List<ChatData>();
+                    List<dynamic> chats = new List<dynamic>();
                     List<Participants> participants = _context.Participants.Where(p => p.UserId == user.UserId).ToList();
                     List<int> blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedDeleted == false).Select(b => b.BlockedUserId).ToList();
-                    
                     foreach(Participants participant in participants)
                     {
                         if (!blocked.Contains(participant.OpposideId))
                         {
-                            ChatData data = new ChatData();
                             Chatroom room = _context.Chatroom.Where(ch => ch.ChatId == participant.ChatId).First();
-                            data.chat = room;
                             Users opposide = _context.Users.Where(u => u.UserId == participant.OpposideId).First();
-                            var dOpposide = new  
+                            Messages last_message = _context.Messages.Where(m => m.ChatId == room.ChatId).OrderByDescending(m => m.MessageId).FirstOrDefault();
+                            if (last_message == null)
                             {
-                                user_id = opposide.UserId,
-                                user_email = opposide.UserEmail,
-                                user_public_token = opposide.UserPublicToken,
-                                user_login = opposide.UserLogin,
-                                last_login_at = opposide.LastLoginAt,
-                            };
-                            data.user = dOpposide;
-                            data.last_message = _context.Messages.Where(m => m.ChatId == room.ChatId).TakeLast(1).FirstOrDefault();;
-                            chats.Add(data);
+                                var unit = new  
+                                {
+                                    user = new 
+                                    {
+                                        user_id = opposide.UserId,
+                                        user_email = opposide.UserEmail,
+                                        user_public_token = opposide.UserPublicToken,
+                                        user_login = opposide.UserLogin,
+                                        last_login_at = opposide.LastLoginAt,
+                                    },
+                                    chat = new 
+                                    {
+                                        chat_id = room.ChatId,
+                                        chat_token = room.ChatToken,
+                                        created_at = room.CreatedAt,
+                                    },
+                                    last_message = last_message
+                                };
+                                chats.Add(unit);
+                            }
+                            else
+                            {
+                                var unit = new  
+                                {
+                                    user = new 
+                                    {
+                                        user_id = opposide.UserId,
+                                        user_email = opposide.UserEmail,
+                                        user_public_token = opposide.UserPublicToken,
+                                        user_login = opposide.UserLogin,
+                                        last_login_at = opposide.LastLoginAt,
+                                    },
+                                    chat = new 
+                                    {
+                                        chat_id = room.ChatId,
+                                        chat_token = room.ChatToken,
+                                        created_at = room.CreatedAt,
+                                    },
+                                    last_message = new
+                                    {
+                                        message_id = last_message.MessageId,
+                                        chat_id = last_message.ChatId,
+                                        user_id = last_message.UserId,
+                                        message_text = last_message.MessageText,
+                                        message_viewed = last_message.MessageViewed,
+                                        created_at = last_message.CreatedAt
+                                    }
+                                };
+                                chats.Add(unit);
+                            }
                         }
                     }
                     Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
@@ -574,7 +727,7 @@ namespace Common.Functional.UserF
             }
             return new { success = false, message = message };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Microsoft.AspNetCore.Mvc.HttpPut]
         [Microsoft.AspNetCore.Mvc.ActionName("SelectMessages")]
         public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> SelectMessages(Newtonsoft.Json.Linq.JObject json)
         {
@@ -597,12 +750,11 @@ namespace Common.Functional.UserF
                             {
                                 page = jPage.ToObject<int>();
                             }
-                            List<Messages> messages = _context.Messages.Where(m => m.ChatId == room.ChatId).OrderByDescending(m => m.MessageId).Skip(page * 50).Take(50).ToList(); 
-                            foreach(Messages message in messages)
-                            {
-                                message.MessageViewed = true;
-                            }
-                            _context.UpdateRange(messages);
+                            var messages = _context.Messages.Where(m => m.ChatId == room.ChatId)
+                            .OrderByDescending(m => m.MessageId).Skip(page * 50).Take(50)
+                            .Select(m => new { message_id = m.MessageId, chat_id = m.ChatId, user_id= m.UserId,
+                            message_text = m.MessageText, message_viewed =m.MessageViewed, created_at = m.CreatedAt }).ToList(); 
+                            (from m in _context.Messages where m.ChatId == room.ChatId && m.UserId != user.UserId select m).ToList().ForEach(m => m.MessageViewed = true);
                             _context.SaveChangesAsync();
                             Log.Info("Get list of messages, chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                             return new { success = true, data = messages };
@@ -641,7 +793,7 @@ namespace Common.Functional.UserF
                     {
                         Chatroom room = new Chatroom();
                         room.users = new List<dynamic>();
-                        Users interlocutor = _context.Users.Where(u => u.UserToken == opposidePublicToken.ToString()).FirstOrDefault();
+                        Users interlocutor = _context.Users.Where(u => u.UserPublicToken == opposidePublicToken.ToString()).FirstOrDefault();
                         if (interlocutor != null)
                         {
                             Participants participant = _context.Participants.Where(p => p.OpposideId == interlocutor.UserId).FirstOrDefault();
@@ -650,6 +802,7 @@ namespace Common.Functional.UserF
                                 room.ChatToken = Common.Validator.GenerateHash(20);
                                 room.CreatedAt = System.DateTime.Now;
                                 _context.Chatroom.Add(room);
+                                _context.SaveChanges();
                                 participant = new Participants();
                                 participant.ChatId = room.ChatId;
                                 participant.UserId = user.UserId;
@@ -669,7 +822,12 @@ namespace Common.Functional.UserF
                             }
                             Log.Info("Create/Select chat chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                             _context.SaveChangesAsync();
-                            return new { success = true, data = room };
+                            return new { success = true, data = new 
+                            {
+                               chat_id = room.ChatId,
+                               chat_token = room.ChatToken,
+                               created_at = room.CreatedAt 
+                            } };
                         } 
                         else 
                         { 
@@ -719,9 +877,18 @@ namespace Common.Functional.UserF
                                     chatMessage.MessageViewed = false;
                                     chatMessage.CreatedAt = System.DateTime.Now;
                                     _context.Messages.Add(chatMessage);
-                                    _context.SaveChangesAsync();
+                                    _context.SaveChanges();
                                     Log.Info("Message was handled, message_id->" + chatMessage.MessageId + " chat.chat_id->" + room.ChatId, HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                                    return new { success = true, data = chatMessage };
+                                    return new { success = true, data = new
+                                        {
+                                            message_id = chatMessage.MessageId,
+                                            chat_id = chatMessage.ChatId,
+                                            user_id = chatMessage.UserId,
+                                            message_text = chatMessage.MessageText,
+                                            message_viewed = chatMessage.MessageViewed,
+                                            created_at = chatMessage.CreatedAt
+                                        }
+                                    };
                                 } 
                                 else 
                                 { 
@@ -770,7 +937,7 @@ namespace Common.Functional.UserF
                             {
                                 if (blockedReason.Length < 100)
                                 {
-                                    BlockedUsers blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedUserId == interlocutor.UserId).FirstOrDefault();
+                                    BlockedUsers blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
                                     if (blocked == null)
                                     {
                                         BlockedUsers blockedUser = new BlockedUsers();
@@ -780,7 +947,7 @@ namespace Common.Functional.UserF
                                         blockedUser.BlockedDeleted = false;
                                         _context.BlockedUsers.Add(blockedUser);
                                         Log.Info("Block user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                                        _context.SaveChangesAsync();
+                                        _context.SaveChanges();
                                         return new { success = true, message = "Block user - successed." };
                                     }
                                     else 
@@ -812,7 +979,7 @@ namespace Common.Functional.UserF
             }
             return new { success = false, message = message };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Microsoft.AspNetCore.Mvc.HttpPut]
         [Microsoft.AspNetCore.Mvc.ActionName("GetBlockedUsers")]
         public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> GetBlockedUsers(Newtonsoft.Json.Linq.JObject json)
         {
@@ -823,9 +990,18 @@ namespace Common.Functional.UserF
                 Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
                 if (user != null)
                 {
-                    List<BlockedUsers> blockedUsers = _context.BlockedUsers.Where(b => b.UserId == user.UserId).ToList();
+                    var blockedUsers = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedDeleted == false)
+                    .Select(m => new 
+                    { 
+                        user_email = m.User.UserEmail,
+                        user_login = m.User.UserLogin,
+                        last_login_at = m.User.LastLoginAt,
+                        user_public_token = m.User.UserPublicToken,
+                        blocked_reason = m.BlockedReason 
+                    }
+                    ).ToList();         
                     Log.Info("Block user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    return blockedUsers;
+                    return new { success = true, data = blockedUsers };;
                 }
                 else 
                 { 
@@ -860,7 +1036,8 @@ namespace Common.Functional.UserF
                             && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
                             if (blockedUser != null)
                             {
-                                _context.BlockedUsers.Remove(blockedUser);
+                                blockedUser.BlockedDeleted = true;
+                                _context.BlockedUsers.UpdateRange(blockedUser);
                                 _context.SaveChangesAsync();
                                 Log.Info("Delete blocked user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                 return new { success = true, message = "Unblock user - successed." };
@@ -922,7 +1099,7 @@ namespace Common.Functional.UserF
                                             complaintUser.Complaint = complaint;
                                             complaintUser.CreatedAt = System.DateTime.Now;
                                             _context.Complaints.Add(complaintUser);
-                                            _context.SaveChangesAsync();
+                                            _context.SaveChanges();
                                             Log.Info("Create complaint; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                             return new { success = true, message = "Complain content - successed." };
                                         }

@@ -7,7 +7,7 @@ namespace miniMessanger.Models
     {
         public BlockedUsers()
         {
-            Complaints = new HashSet<Complaints>();
+            
         }
 
         public int BlockedId { get; set; }
@@ -18,6 +18,6 @@ namespace miniMessanger.Models
 
         public virtual Users BlockedUser { get; set; }
         public virtual Users User { get; set; }
-        public virtual ICollection<Complaints> Complaints { get; set; }
+        public virtual Complaints Complaints { get; set; }
     }
 }

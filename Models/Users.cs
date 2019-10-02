@@ -11,7 +11,7 @@ namespace miniMessanger.Models
             BlockedUsersBlockedUser = new HashSet<BlockedUsers>();
             BlockedUsersUser = new HashSet<BlockedUsers>();
             Complaints = new HashSet<Complaints>();
-            Profiles = new HashSet<Profiles>();
+            Profile = new Profiles();
         }
 
         public int UserId { get; set; }
@@ -28,9 +28,12 @@ namespace miniMessanger.Models
         public string UserPublicToken { get; set; }
         public bool Deleted { get; set; }
 
-        public virtual ICollection<BlockedUsers> BlockedUsersBlockedUser { get; set; }
-        public virtual ICollection<BlockedUsers> BlockedUsersUser { get; set; }
+        public virtual ICollection<BlockedUsers> BlockedUsers { get; set; }
+        public virtual ICollection<BlockedUsers> UsersBlocks { get; set; }
         public virtual ICollection<Complaints> Complaints { get; set; }
-        public virtual ICollection<Profiles> Profiles { get; set; }
+        public virtual Participants Opposite { get; set; }
+        public virtual Participants ChatSide { get; set; }
+        
+        public virtual Profiles Profile { get; set; }
     }
 }

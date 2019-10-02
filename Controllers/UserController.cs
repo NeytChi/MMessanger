@@ -59,7 +59,7 @@ namespace Common.Functional.UserF
                                     user.UserToken = Common.Validator.GenerateHash(40);
                                     user.UserPublicToken = Common.Validator.GenerateHash(20);
                                     _context.Users.Add(user);
-                                    _context.SaveChangesAsync();
+                                    _context.SaveChanges();
                                     Common.MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
                                     Common.Log.Info("Registrate new user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                     return new { success = true, message = "User account was successfully registrate. See your email to activate account by url." };
@@ -71,7 +71,7 @@ namespace Common.Functional.UserF
                                         user.Deleted = false;
                                         user.UserToken = Common.Validator.GenerateHash(40); 
                                         _context.Users.Update(user);
-                                        _context.SaveChangesAsync();
+                                        _context.SaveChanges();
                                         Common.Log.Info("Restored old user, user_id->" + user.UserId + ".", HttpContext.Connection.LocalIpAddress.ToString(), user.UserId);
                                         return new { success = true, message = "User account was successfully restored." };
                                     }
@@ -617,7 +617,7 @@ namespace Common.Functional.UserF
                         }
                     }
                     Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
-                    _context.SaveChangesAsync();
+                    _context.SaveChanges();
                     return new { success = true, data = data };
                 }
                 else 
@@ -663,62 +663,42 @@ namespace Common.Functional.UserF
                             Chatroom room = _context.Chatroom.Where(ch => ch.ChatId == participant.ChatId).First();
                             Users opposide = _context.Users.Where(u => u.UserId == participant.OpposideId).First();
                             Messages last_message = _context.Messages.Where(m => m.ChatId == room.ChatId).OrderByDescending(m => m.MessageId).FirstOrDefault();
-                            if (last_message == null)
+                            dynamic lastMessage = last_message;
+                            if (last_message != null)
                             {
-                                var unit = new  
+                                lastMessage = new
                                 {
-                                    user = new 
-                                    {
-                                        user_id = opposide.UserId,
-                                        user_email = opposide.UserEmail,
-                                        user_public_token = opposide.UserPublicToken,
-                                        user_login = opposide.UserLogin,
-                                        last_login_at = opposide.LastLoginAt,
-                                    },
-                                    chat = new 
-                                    {
-                                        chat_id = room.ChatId,
-                                        chat_token = room.ChatToken,
-                                        created_at = room.CreatedAt,
-                                    },
-                                    last_message = last_message
+                                    message_id = last_message.MessageId,
+                                    chat_id = last_message.ChatId,
+                                    user_id = last_message.UserId,
+                                    message_text = last_message.MessageText,
+                                    message_viewed = last_message.MessageViewed,
+                                    created_at = last_message.CreatedAt
                                 };
-                                chats.Add(unit);
                             }
-                            else
+                            var unit = new  
                             {
-                                var unit = new  
+                                user = new 
                                 {
-                                    user = new 
-                                    {
-                                        user_id = opposide.UserId,
-                                        user_email = opposide.UserEmail,
-                                        user_public_token = opposide.UserPublicToken,
-                                        user_login = opposide.UserLogin,
-                                        last_login_at = opposide.LastLoginAt,
-                                    },
-                                    chat = new 
-                                    {
-                                        chat_id = room.ChatId,
-                                        chat_token = room.ChatToken,
-                                        created_at = room.CreatedAt,
-                                    },
-                                    last_message = new
-                                    {
-                                        message_id = last_message.MessageId,
-                                        chat_id = last_message.ChatId,
-                                        user_id = last_message.UserId,
-                                        message_text = last_message.MessageText,
-                                        message_viewed = last_message.MessageViewed,
-                                        created_at = last_message.CreatedAt
-                                    }
-                                };
-                                chats.Add(unit);
-                            }
+                                    user_id = opposide.UserId,
+                                    user_email = opposide.UserEmail,
+                                    user_public_token = opposide.UserPublicToken,
+                                    user_login = opposide.UserLogin,
+                                    last_login_at = opposide.LastLoginAt,
+                                },
+                                chat = new 
+                                {
+                                    chat_id = room.ChatId,
+                                    chat_token = room.ChatToken,
+                                    created_at = room.CreatedAt,
+                                },
+                                last_message = lastMessage
+                            };
+                            chats.Add(unit);
                         }
                     }
                     Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
-                    _context.SaveChangesAsync();
+                    _context.SaveChanges();
                     return new { success = true, data = chats };
                 }
                 else 
@@ -761,7 +741,7 @@ namespace Common.Functional.UserF
                             .Select(m => new { message_id = m.MessageId, chat_id = m.ChatId, user_id= m.UserId,
                             message_text = m.MessageText, message_viewed =m.MessageViewed, created_at = m.CreatedAt }).ToList(); 
                             (from m in _context.Messages where m.ChatId == room.ChatId && m.UserId != user.UserId select m).ToList().ForEach(m => m.MessageViewed = true);
-                            _context.SaveChangesAsync();
+                            _context.SaveChanges();
                             Log.Info("Get list of messages, chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                             return new { success = true, data = messages };
                         }
@@ -827,7 +807,7 @@ namespace Common.Functional.UserF
                                 Log.Info("Select exist chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                             }
                             Log.Info("Create/Select chat chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            _context.SaveChangesAsync();
+                            _context.SaveChanges();
                             return new { success = true, data = new 
                             {
                                chat_id = room.ChatId,
@@ -1044,7 +1024,7 @@ namespace Common.Functional.UserF
                             {
                                 blockedUser.BlockedDeleted = true;
                                 _context.BlockedUsers.UpdateRange(blockedUser);
-                                _context.SaveChangesAsync();
+                                _context.SaveChanges();
                                 Log.Info("Delete blocked user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                 return new { success = true, message = "Unblock user - successed." };
                             }
@@ -1119,6 +1099,165 @@ namespace Common.Functional.UserF
                         }
                         else { message = "No user with that user_token."; }
                     }
+                }
+            }
+            if (Response != null)
+            {
+                Response.StatusCode = 500;
+                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+            }
+            return new { success = false, message = message };
+        }
+        [Microsoft.AspNetCore.Mvc.HttpPut]
+        [Microsoft.AspNetCore.Mvc.ActionName("GetUsersByGender")]
+        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> GetUsersByGender(Newtonsoft.Json.Linq.JObject json)
+        {
+            int page = 0;
+            string message = null;
+            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            if (userToken != null)
+            {
+                var user = (from u in _context.Users
+                join p in _context.Profiles on u.UserId equals p.UserId
+                where u.UserToken == userToken.ToString()
+                select new { UserId = u.UserId, ProfileGender = p.ProfileGender } ).FirstOrDefault();
+                if (user != null)
+                {
+                    Newtonsoft.Json.Linq.JToken jPage = jsonHandler.handle(ref json, "page", Newtonsoft.Json.Linq.JTokenType.Integer, ref message);
+                    if (jPage != null)
+                    {
+                        page = jPage.ToObject<int>();
+                    }
+                    List<dynamic> data = new List<dynamic>();
+                    var users = (from u in _context.Users
+                    join p in _context.Profiles on u.UserId equals p.UserId
+                    where u.UserToken != userToken.ToString() && p.ProfileGender != user.ProfileGender
+                    orderby u.UserId descending
+                    select new 
+                    { 
+                        user_id = u.UserId,
+                        user_email = u.UserEmail,
+                        user_login = u.UserLogin,
+                        created_at = u.CreatedAt,
+                        last_login_at = u.LastLoginAt,
+                        user_public_token = u.UserPublicToken,
+                        profile = new 
+                        {
+                            url_photo = p.UrlPhoto,
+                            profile_age = p.ProfileAge,
+                            profile_gender = p.ProfileGender
+                        }
+                    }).Skip(page * 30).Take(30).ToList();
+                    List<int> blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedDeleted == false).Select(b => b.BlockedUserId).ToList();
+                    foreach(var publicUser in users)
+                    {
+                        if (!blocked.Contains(publicUser.user_id))
+                        {
+                            data.Add(publicUser);
+                        }
+                    }
+                    Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                    _context.SaveChanges();
+                    return new { success = true, data = data };
+                }
+                else 
+                { 
+                    message = "No user with that user_token."; 
+                }
+            }
+            if (Response != null)
+            {
+                Response.StatusCode = 500;
+                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+            }
+            return new { success = false, message = message };
+        }
+        /// <summary>
+        /// Select list of chats. Get last message data, user's data of chat and chat data.
+        /// </summary>
+        /// <param name="request">Request.</param>
+        [Microsoft.AspNetCore.Mvc.HttpPut]
+        [Microsoft.AspNetCore.Mvc.ActionName("SelectChatsByGender")]
+        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> SelectChatsByGender(Newtonsoft.Json.Linq.JObject json)
+        {
+            int page = 0;
+            string message = null;
+            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            if (userToken != null)
+            {
+                var user = (from u in _context.Users
+                join p in _context.Profiles on u.UserId equals p.UserId
+                where u.UserToken == userToken.ToString()
+                select new { UserId = u.UserId, ProfileGender = p.ProfileGender } ).FirstOrDefault();
+                if (user != null)
+                {
+                    Newtonsoft.Json.Linq.JToken jPage = jsonHandler.handle(ref json, "page", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    if (jPage != null)
+                    {
+                        page = jPage.ToObject<int>();
+                    }
+                    List<dynamic> chats = new List<dynamic>();
+                    var participants = (from par in _context.Participants
+                    join u in _context.Users on par.OpposideId equals u.UserId
+                    join p in _context.Profiles on u.UserId equals p.UserId
+                    where par.UserId == user.UserId && p.ProfileGender != user.ProfileGender
+                    orderby u.UserId descending
+                    select new 
+                    { 
+                        user_id = u.UserId,
+                        user_email = u.UserEmail,
+                        user_public_token = u.UserPublicToken,
+                        user_login = u.UserLogin,
+                        last_login_at = u.LastLoginAt,    
+                        chat_id = par.ChatId,
+                        profile = new 
+                        {
+                            url_photo = p.UrlPhoto,
+                            profile_age = p.ProfileAge,
+                            profile_gender = p.ProfileGender
+                        }
+                    }).Skip(page * 30).Take(30).ToList();
+                    List<int> blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedDeleted == false).Select(b => b.BlockedUserId).ToList();
+                    foreach(var participant in participants)
+                    {
+                        if (!blocked.Contains(participant.user_id))
+                        {
+                            Chatroom room = _context.Chatroom.Where(ch => ch.ChatId == participant.chat_id).First();
+                            Messages last_message = _context.Messages.Where(m => m.ChatId == room.ChatId).OrderByDescending(m => m.MessageId).FirstOrDefault();
+                            dynamic lastMessage = last_message;
+                            if (last_message != null)
+                            {
+                                lastMessage = new
+                                {
+                                    message_id = last_message.MessageId,
+                                    chat_id = last_message.ChatId,
+                                    user_id = last_message.UserId,
+                                    message_text = last_message.MessageText,
+                                    message_viewed = last_message.MessageViewed,
+                                    created_at = last_message.CreatedAt
+                                };
+                            }
+                            var unit = new  
+                            {
+                                user = participant,
+                                chat = new 
+                                {
+                                    chat_id = room.ChatId,
+                                    chat_token = room.ChatToken,
+                                    created_at = room.CreatedAt,
+                                },
+                                last_message = lastMessage
+                            };
+                            chats.Add(unit);            
+                        }
+                    }
+                    Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                    _context.SaveChanges();
+                    return new { success = true, data = chats };
+                }
+                else 
+                { 
+                    message = "No user with that user_token."; 
                 }
             }
             if (Response != null)

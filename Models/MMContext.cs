@@ -77,13 +77,13 @@ namespace miniMessanger.Models
                     .HasColumnType("int(11)");
 
                 entity.HasOne(d => d.BlockedUser)
-                    .WithMany(p => p.BlockedUsersBlockedUser)
+                    .WithMany(p => p.BlockedUsers)
                     .HasForeignKey(d => d.BlockedUserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("blocked_users_ibfk_2");
 
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.BlockedUsersUser)
+                    .WithMany(p => p.UsersBlocks)
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("blocked_users_ibfk_1");
@@ -153,8 +153,8 @@ namespace miniMessanger.Models
                     .HasColumnType("int(11)");
 
                 entity.HasOne(d => d.Blocked)
-                    .WithMany(p => p.Complaints)
-                    .HasForeignKey(d => d.BlockedId)
+                    .WithOne(p => p.Complaints)
+                    .HasForeignKey<Complaints>(d => d.BlockedId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("complaints_ibfk_2");
 
@@ -306,6 +306,18 @@ namespace miniMessanger.Models
                 entity.Property(e => e.UserId)
                     .HasColumnName("user_id")
                     .HasColumnType("int(11)");
+                                
+                entity.HasOne(e => e.Opposite)
+                    .WithOne(u => u.Opposite)
+                    .HasForeignKey<Participants>(e => e.OpposideId)
+                    .HasConstraintName("participants_ibfk_1");
+
+                entity.HasOne(e => e.ChatSide)
+                    .WithOne(u => u.ChatSide)
+                    .HasForeignKey<Participants>(e => e.UserId)
+                    .HasConstraintName("participants_ibfk_2");
+
+
             });
 
             modelBuilder.Entity<Profiles>(entity =>
@@ -328,6 +340,7 @@ namespace miniMessanger.Models
 
                 entity.Property(e => e.ProfileGender)
                     .HasColumnName("profile_gender")
+                    .HasDefaultValue(true)
                     .HasColumnType("boolean");
 
                 entity.Property(e => e.UrlPhoto)
@@ -339,8 +352,9 @@ namespace miniMessanger.Models
                     .HasColumnType("int(11)");
 
                 entity.HasOne(d => d.User)
-                    .WithMany(p => p.Profiles)
-                    .HasForeignKey(d => d.UserId)
+                    .WithOne(p => p.Profile)
+                    .HasForeignKey<Profiles>(e => e.UserId)
+                    .IsRequired()
                     .HasConstraintName("profiles_ibfk_1");
             });
 

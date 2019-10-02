@@ -1,0 +1,17 @@
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/libhostpolicy.so
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/libhostfxr.so
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.deps.json
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.runtimeconfig.json
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.runtimeconfig.dev.json
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.dll
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.pdb
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.csprojAssemblyReference.cache
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.csproj.CoreCompileInputs.cache
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.RazorAssemblyInfo.cache
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.RazorAssemblyInfo.cs
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.AssemblyInfoInputs.cache
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.AssemblyInfo.cs
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.RazorTargetAssemblyInfo.cache
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.dll
+/home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.pdb

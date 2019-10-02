@@ -108,3 +108,27 @@ Time: 02.10.19 14:42:07 | info | Message: Block user; user->user_id->1. | UID: 1
 Time: 02.10.19 14:42:14 | info | Message: Get list of chats. | UID: 1 | UIP: 127.0.0.1 | TID: 24 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 02.10.19 14:42:41 | info | Message: Delete blocked user; user->user_id->1. | UID: 1 | UIP: 127.0.0.1 | TID: 25 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 02.10.19 14:42:45 | info | Message: Get list of chats. | UID: 1 | UIP: 127.0.0.1 | TID: 26 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:56:42 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:03 | info | Message: Validating email=neyton61@gmail.com success=True | UID: 0 | UIP:  | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:03 | info | Message: Validate password success=True. | UID: 0 | UIP:  | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:04 | info | Message: Registrate new user. | UID: 1 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:07 | info | Message: Send message to neyton61@gmail.com. | UID: 0 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:18 | info | Message: Validating email=test6574839210@gmail.com success=True | UID: 0 | UIP:  | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:18 | info | Message: Validate password success=True. | UID: 0 | UIP:  | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:18 | info | Message: Registrate new user. | UID: 2 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:20 | info | Message: Send message to test6574839210@gmail.com. | UID: 0 | UIP:  | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:24 | info | Message: Active user account. | UID: 1 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:57:34 | info | Message: Active user account. | UID: 2 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:58:03 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:58:14 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:58:24 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 17 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:58:32 | info | Message: Update profile gender. | UID: 2 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:58:32 | info | Message: Update profile age. | UID: 2 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:58:32 | info | Message: Update profile photo. | UID: 2 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:58:32 | info | Message: Update profile. | UID: 2 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:58:36 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 17 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:59:23 | info | Message: Create chat for user_id->2 and opposide_id->1. | UID: 2 | UIP: 127.0.0.1 | TID: 17 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 14:59:23 | info | Message: Create/Select chat chat_id->1. | UID: 2 | UIP: 127.0.0.1 | TID: 17 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 15:00:09 | info | Message: Message was handled, message_id->1 chat.chat_id->1 | UID: 2 | UIP: 127.0.0.1 | TID: 21 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 15:00:12 | info | Message: Message was handled, message_id->2 chat.chat_id->1 | UID: 2 | UIP: 127.0.0.1 | TID: 22 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 02.10.19 15:00:26 | info | Message: Get list of chats. | UID: 2 | UIP: 127.0.0.1 | TID: 24 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

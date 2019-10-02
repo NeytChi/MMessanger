@@ -458,22 +458,26 @@ namespace Common.Functional.UserF
                     {
                         profile = new Profiles();
                         profile.UserId = user.UserId;
-                        profile.ProfileSex = true;
+                        profile.ProfileGender = true;
                         _context.Add(profile);
                         _context.SaveChanges();
                     }
-                    string profileSex = Request.Form["profile_sex"];
-                    if (profileSex != null)
+                    string profileGender = Request.Form["profile_gender"];
+                    if (profileGender != null)
                     {
-                        if (profileSex == "1")
+                        if (profileGender == "1")
                         {
-                            profile.ProfileSex = true;
-                            Log.Info("Update profile sex.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                            profile.ProfileGender = true;
+                            Log.Info("Update profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                         }
-                        else if (profileSex == "0")
+                        else if (profileGender == "0")
                         {
-                            profile.ProfileSex = false;
-                            Log.Info("Update profile sex.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                            profile.ProfileGender = false;
+                            Log.Info("Update profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                        else
+                        {
+                            Log.Warn("Incorrect value to uUpdate profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                         }
                     }
                     string profileAge = Request.Form["profile_age"];
@@ -513,8 +517,8 @@ namespace Common.Functional.UserF
                     return new { success = true, data = new 
                     {
                         url_photo = profile.UrlPhoto,
-                        profileAge = profile.ProfileAge,
-                        profileSex = profile.ProfileSex
+                        profile_age = profile.ProfileAge,
+                        profile_gender = profile.ProfileGender
                     } };
                 }
                 else 
@@ -549,7 +553,7 @@ namespace Common.Functional.UserF
                     {
                         profile = new Profiles();
                         profile.UserId = user.UserId;
-                        profile.ProfileSex = true;
+                        profile.ProfileGender = true;
                         _context.Add(profile);
                         _context.SaveChanges();
                     }
@@ -559,8 +563,8 @@ namespace Common.Functional.UserF
                     data = new 
                         {
                             url_photo = profile.UrlPhoto,
-                            profileAge = profile.ProfileAge,
-                            profileSex = profile.ProfileSex
+                            profile_age = profile.ProfileAge,
+                            profile_gender = profile.ProfileGender
                         } 
                     };
                 }

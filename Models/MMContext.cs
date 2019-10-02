@@ -326,8 +326,8 @@ namespace miniMessanger.Models
                     .HasColumnName("profile_age")
                     .HasColumnType("tinyint(3)");
 
-                entity.Property(e => e.ProfileSex)
-                    .HasColumnName("profile_sex")
+                entity.Property(e => e.ProfileGender)
+                    .HasColumnName("profile_gender")
                     .HasColumnType("boolean");
 
                 entity.Property(e => e.UrlPhoto)

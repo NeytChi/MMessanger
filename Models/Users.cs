@@ -8,8 +8,8 @@ namespace miniMessanger.Models
     {
         public Users()
         {
-            BlockedUsersBlockedUser = new HashSet<BlockedUsers>();
-            BlockedUsersUser = new HashSet<BlockedUsers>();
+            BlockedUsers = new HashSet<BlockedUsers>();
+            UsersBlocks = new HashSet<BlockedUsers>();
             Complaints = new HashSet<Complaints>();
             Profile = new Profiles();
         }

@@ -103,6 +103,10 @@ namespace miniMessanger.Models
                 entity.HasIndex(e => e.ToUserId)
                     .HasName("to_user_id");
 
+                entity.Property(e => e.LikeId)
+                    .HasColumnName("like_id")
+                    .HasColumnType("bigint(20)");
+
                 entity.Property(e => e.UserId)
                     .HasColumnName("user_id")
                     .HasColumnType("int(11)");

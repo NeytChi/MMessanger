@@ -193,7 +193,7 @@ namespace Common.Functional.UserF
                                             user_public_token = user_data.UserPublicToken,
                                             profile = new
                                             {
-                                                url_photo = domen + profile.UrlPhoto,
+                                                url_photo = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto,
                                                 profile_age = profile.ProfileAge,
                                                 profile_gender = profile.ProfileGender,
                                                 profile_city = profile.ProfileCity
@@ -538,7 +538,7 @@ namespace Common.Functional.UserF
                     _context.Profiles.Update(profile);
                     _context.SaveChanges();
                     Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    profile.UrlPhoto = domen + profile.UrlPhoto;
+                    profile.UrlPhoto = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto;
                     return new { success = true, data = new 
                     {
                         url_photo = profile.UrlPhoto,
@@ -584,7 +584,7 @@ namespace Common.Functional.UserF
                         _context.SaveChanges();
                     }
                     Log.Info("Select profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    profile.UrlPhoto = domen + profile.UrlPhoto;
+                    profile.UrlPhoto = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto;
                     return new { success = true, 
                     data = new 
                         {
@@ -1155,11 +1155,13 @@ namespace Common.Functional.UserF
                     {
                         page = jPage.ToObject<int>();
                     }
-                    var data = (from users in _context.Users
+                    List<dynamic> data = new List<dynamic>();
+                    var usersData = (from users in _context.Users
                     join profile in _context.Profiles on users.UserId equals profile.UserId
-                    join blockedUser in _context.BlockedUsers on user.UserId equals blockedUser.UserId
-                    where users.UserToken != userToken.ToString() && profile.ProfileGender != user.ProfileGender
-                    && blockedUser.BlockedId != users.UserId && blockedUser.BlockedDeleted == false
+                    join blockedUser in _context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
+                    where (users.UserToken != userToken.ToString() && profile.ProfileGender != user.ProfileGender)
+                    && (blockedUsers.Any(b => b.UserId == user.UserId && b.BlockedDeleted == true)
+                    || blockedUsers.Count() == 0)
                     orderby users.UserId descending
                     select new 
                     { 
@@ -1173,9 +1175,39 @@ namespace Common.Functional.UserF
                         {
                             url_photo = profile.UrlPhoto,
                             profile_age = profile.ProfileAge,
-                            profile_gender = profile.ProfileGender
+                            profile_gender = profile.ProfileGender,
+                            profile_city = profile.ProfileCity
                         }
                     }).Skip(page * 30).Take(30).ToList();
+                    foreach(var userData in usersData)
+                    {
+                        bool liked = false;
+                        LikeProfiles likedProfiles = _context.LikeProfile.Where(like => like.UserId == user.UserId 
+                        && like.ToUserId == userData.user_id).FirstOrDefault();
+                        if (likedProfiles != null)
+                        {
+                            liked = true;
+                        }
+                        data.Add(
+                            new 
+                            { 
+                                user_id = userData.user_id,
+                                user_email = userData.user_email,
+                                user_login = userData.user_login,
+                                created_at = userData.created_at,
+                                last_login_at = userData.last_login_at,
+                                user_public_token = userData.user_public_token,
+                                profile = new 
+                                {
+                                    url_photo = userData.profile.url_photo == null ? null : domen + userData.profile.url_photo,
+                                    profile_age = userData.profile.profile_age,
+                                    profile_gender = userData.profile.profile_gender,
+                                    profile_city = userData.profile.profile_city
+                                },
+                                liked_user = liked
+                            }
+                        );
+                    }
                     Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                     _context.SaveChanges();
                     return new { success = true, data = data };
@@ -1217,13 +1249,14 @@ namespace Common.Functional.UserF
                         page = jPage.ToObject<int>();
                     }
                     var data = (from participant in _context.Participants
-                    join block in _context.BlockedUsers on user.UserId equals block.UserId
                     join users in _context.Users on participant.OpposideId equals users.UserId
                     join profile in _context.Profiles on users.UserId equals profile.UserId
                     join likesProfile in _context.LikeProfile on user.UserId equals likesProfile.UserId
                     join chats in _context.Chatroom on participant.ChatId equals chats.ChatId
-                    where block.BlockedId != participant.OpposideId && block.BlockedDeleted == false 
-                    && participant.UserId == user.UserId && profile.ProfileGender != user.ProfileGender
+                    join blockedUser in _context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
+                    where participant.UserId == user.UserId && profile.ProfileGender != user.ProfileGender
+                     && (blockedUsers.Any(b => b.UserId == user.UserId && b.BlockedDeleted == true)
+                    || blockedUsers.Count() == 0)
                     orderby users.UserId descending
                     select new
                     { 
@@ -1237,7 +1270,7 @@ namespace Common.Functional.UserF
                             chat_id = participant.ChatId,
                             profile = new 
                             {
-                                url_photo = profile.UrlPhoto,
+                                url_photo = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto,
                                 profile_age = profile.ProfileAge,
                                 profile_gender = profile.ProfileGender,
                                 profile_city = profile.ProfileCity
@@ -1281,7 +1314,7 @@ namespace Common.Functional.UserF
                                 user = data[i].user,
                                 chat = data[i].chat,
                                 last_message = lastMessage,
-                                liked_User = liked_User
+                                liked_user = liked_User
                             }
                         );
                     }            
@@ -1306,8 +1339,8 @@ namespace Common.Functional.UserF
         /// </summary>
         /// <param name="request">Request.</param>
         [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("LikeUsersProfile")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> LikeUser(Newtonsoft.Json.Linq.JObject json)
+        [Microsoft.AspNetCore.Mvc.ActionName("LikeUnlikeUsers")]
+        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> LikeUnlikeUsers(Newtonsoft.Json.Linq.JObject json)
         {
             string message = null;
             Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
@@ -1319,23 +1352,30 @@ namespace Common.Functional.UserF
                     Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
                     if (user != null)
                     {
-                        Users opposideUser = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
+                        Users opposideUser = _context.Users.Where(u => u.UserPublicToken == opposidePublicToken.ToString()).FirstOrDefault();
                         if (opposideUser != null)
                         {
-                            LikeProfiles like = _context.LikeProfile.Where(l => l.UserId == user.UserId && l.ToUserId == opposideUser.UserId).FirstOrDefault();
-                            if (like != null)
+                            if (user.UserId != opposideUser.UserId)
                             {
-                                new LikeProfiles();
-                                like.UserId = user.UserId;
-                                like.ToUserId = opposideUser.UserId;
-                                _context.LikeProfile.Add(like);
+                                LikeProfiles like = _context.LikeProfile.Where(l => l.UserId == user.UserId && l.ToUserId == opposideUser.UserId).FirstOrDefault();
+                                if (like == null)
+                                {
+                                    like = new LikeProfiles();
+                                    like.UserId = user.UserId;
+                                    like.ToUserId = opposideUser.UserId;
+                                    _context.LikeProfile.Add(like);
+                                }
+                                else
+                                {
+                                    _context.LikeProfile.Remove(like);
+                                }
+                                _context.SaveChanges();
+                                return new { success = true };                
                             }
                             else
                             {
-                                _context.LikeProfile.Remove(like);
+                                message = "User can't like himself.";
                             }
-                            _context.SaveChanges();
-                            return new { success = true };                
                         }
                         else 
                         { 

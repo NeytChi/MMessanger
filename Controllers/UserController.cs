@@ -193,7 +193,7 @@ namespace Common.Functional.UserF
                                             user_public_token = user_data.UserPublicToken,
                                             profile = new
                                             {
-                                                url_photo = profile.UrlPhoto,
+                                                url_photo = domen + profile.UrlPhoto,
                                                 profile_age = profile.ProfileAge,
                                                 profile_gender = profile.ProfileGender,
                                                 profile_city = profile.ProfileCity
@@ -1155,20 +1155,20 @@ namespace Common.Functional.UserF
                     {
                         page = jPage.ToObject<int>();
                     }
-                    var data = (from u in _context.Users
-                    join profile in _context.Profiles on u.UserId equals profile.UserId
-                    join blockedUser in _context.BlockedUsers on u.UserId equals blockedUser.UserId
-                    where u.UserToken != userToken.ToString() && profile.ProfileGender != user.ProfileGender
-                    && blockedUser.BlockedId != u.UserId && blockedUser.BlockedDeleted == false
-                    orderby u.UserId descending
+                    var data = (from users in _context.Users
+                    join profile in _context.Profiles on users.UserId equals profile.UserId
+                    join blockedUser in _context.BlockedUsers on user.UserId equals blockedUser.UserId
+                    where users.UserToken != userToken.ToString() && profile.ProfileGender != user.ProfileGender
+                    && blockedUser.BlockedId != users.UserId && blockedUser.BlockedDeleted == false
+                    orderby users.UserId descending
                     select new 
                     { 
-                        user_id = u.UserId,
-                        user_email = u.UserEmail,
-                        user_login = u.UserLogin,
-                        created_at = u.CreatedAt,
-                        last_login_at = u.LastLoginAt,
-                        user_public_token = u.UserPublicToken,
+                        user_id = users.UserId,
+                        user_email = users.UserEmail,
+                        user_login = users.UserLogin,
+                        created_at = users.CreatedAt,
+                        last_login_at = users.LastLoginAt,
+                        user_public_token = users.UserPublicToken,
                         profile = new 
                         {
                             url_photo = profile.UrlPhoto,
@@ -1322,10 +1322,18 @@ namespace Common.Functional.UserF
                         Users opposideUser = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
                         if (opposideUser != null)
                         {
-                            LikeProfiles like = new LikeProfiles();
-                            like.UserId = user.UserId;
-                            like.ToUserId = opposideUser.UserId;
-                            _context.LikeProfile.Add(like);
+                            LikeProfiles like = _context.LikeProfile.Where(l => l.UserId == user.UserId && l.ToUserId == opposideUser.UserId).FirstOrDefault();
+                            if (like != null)
+                            {
+                                new LikeProfiles();
+                                like.UserId = user.UserId;
+                                like.ToUserId = opposideUser.UserId;
+                                _context.LikeProfile.Add(like);
+                            }
+                            else
+                            {
+                                _context.LikeProfile.Remove(like);
+                            }
                             _context.SaveChanges();
                             return new { success = true };                
                         }

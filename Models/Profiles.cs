@@ -10,6 +10,7 @@ namespace miniMessanger.Models
         public string UrlPhoto { get; set; }
         public sbyte? ProfileAge { get; set; }
         public bool ProfileGender { get; set; }
+        public string ProfileCity { get; set; }
 
         public virtual Users User { get; set; }
     }

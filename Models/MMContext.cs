@@ -29,6 +29,7 @@ namespace miniMessanger.Models
         public virtual DbSet<Participants> Participants { get; set; }
         public virtual DbSet<Profiles> Profiles { get; set; }
         public virtual DbSet<Users> Users { get; set; }
+        public virtual DbSet<LikeProfiles> LikeProfile { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -87,6 +88,40 @@ namespace miniMessanger.Models
                     .HasForeignKey(d => d.UserId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("blocked_users_ibfk_1");
+            });
+
+            modelBuilder.Entity<LikeProfiles>(entity =>
+            {
+                entity.HasKey(e => e.LikeId)
+                    .HasName("PRIMARY");
+
+                entity.ToTable("like_profiles");
+
+                entity.HasIndex(e => e.UserId)
+                    .HasName("user_id");
+
+                entity.HasIndex(e => e.ToUserId)
+                    .HasName("to_user_id");
+
+                entity.Property(e => e.UserId)
+                    .HasColumnName("user_id")
+                    .HasColumnType("int(11)");
+
+                entity.Property(e => e.ToUserId)
+                    .HasColumnName("to_user_id")
+                    .HasColumnType("int(11)");
+
+                /*entity.HasOne(like => like.User)
+                    .WithMany(user => user.)
+                    .HasForeignKey(d => d.BlockedUserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("blocked_users_ibfk_2");
+
+                entity.HasOne(d => d.User)
+                    .WithMany(p => p.UsersBlocks)
+                    .HasForeignKey(d => d.UserId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("blocked_users_ibfk_1");*/
             });
 
             modelBuilder.Entity<Chatroom>(entity =>
@@ -342,6 +377,10 @@ namespace miniMessanger.Models
                     .HasColumnName("profile_gender")
                     .HasDefaultValue(true)
                     .HasColumnType("boolean");
+
+                entity.Property(e => e.UrlPhoto)
+                    .HasColumnName("url_photo")
+                    .HasColumnType("varchar(256)");
 
                 entity.Property(e => e.UrlPhoto)
                     .HasColumnName("url_photo")

@@ -835,12 +835,15 @@ namespace Common.Functional.UserF
                             }
                             Log.Info("Create/Select chat chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                             _context.SaveChanges();
-                            return new { success = true, data = new 
-                            {
-                               chat_id = room.ChatId,
-                               chat_token = room.ChatToken,
-                               created_at = room.CreatedAt 
-                            } };
+                            return new 
+                            { 
+                                success = true, data = new 
+                                {
+                                    chat_id = room.ChatId,
+                                    chat_token = room.ChatToken,
+                                    created_at = room.CreatedAt 
+                                } 
+                            };
                         } 
                         else 
                         { 
@@ -1003,14 +1006,16 @@ namespace Common.Functional.UserF
                 Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
                 if (user != null)
                 {
-                    var blockedUsers = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedDeleted == false)
-                    .Select(m => new 
+                    var blockedUsers = (from blocked in _context.BlockedUsers
+                    join users in _context.Users on blocked.BlockedUserId equals users.UserId
+                    where blocked.UserId == user.UserId && blocked.BlockedDeleted == false
+                    select new
                     { 
-                        user_email = m.User.UserEmail,
-                        user_login = m.User.UserLogin,
-                        last_login_at = m.User.LastLoginAt,
-                        user_public_token = m.User.UserPublicToken,
-                        blocked_reason = m.BlockedReason 
+                        user_email = users.UserEmail,
+                        user_login =  users.UserLogin,
+                        last_login_at = users.LastLoginAt,
+                        user_public_token = users.UserPublicToken,
+                        blocked_reason = blocked.BlockedReason 
                     }
                     ).ToList();         
                     Log.Info("Block user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
@@ -1155,12 +1160,12 @@ namespace Common.Functional.UserF
                     {
                         page = jPage.ToObject<int>();
                     }
-                    List<dynamic> data = new List<dynamic>();
                     var usersData = (from users in _context.Users
                     join profile in _context.Profiles on users.UserId equals profile.UserId
+                    join likesProfile in _context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
                     join blockedUser in _context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
-                    where (users.UserToken != userToken.ToString() && profile.ProfileGender != user.ProfileGender)
-                    && (blockedUsers.Any(b => b.UserId == user.UserId && b.BlockedDeleted == true)
+                    where users.UserId != user.UserId && profile.ProfileGender != user.ProfileGender
+                    && (blockedUsers.All(b => b.UserId == user.UserId && b.BlockedDeleted == true)
                     || blockedUsers.Count() == 0)
                     orderby users.UserId descending
                     select new 
@@ -1177,40 +1182,12 @@ namespace Common.Functional.UserF
                             profile_age = profile.ProfileAge,
                             profile_gender = profile.ProfileGender,
                             profile_city = profile.ProfileCity
-                        }
+                        },
+                        liked_user = likes.Any(l => l.UserId == user.UserId) ? true : false
                     }).Skip(page * 30).Take(30).ToList();
-                    foreach(var userData in usersData)
-                    {
-                        bool liked = false;
-                        LikeProfiles likedProfiles = _context.LikeProfile.Where(like => like.UserId == user.UserId 
-                        && like.ToUserId == userData.user_id).FirstOrDefault();
-                        if (likedProfiles != null)
-                        {
-                            liked = true;
-                        }
-                        data.Add(
-                            new 
-                            { 
-                                user_id = userData.user_id,
-                                user_email = userData.user_email,
-                                user_login = userData.user_login,
-                                created_at = userData.created_at,
-                                last_login_at = userData.last_login_at,
-                                user_public_token = userData.user_public_token,
-                                profile = new 
-                                {
-                                    url_photo = userData.profile.url_photo == null ? null : domen + userData.profile.url_photo,
-                                    profile_age = userData.profile.profile_age,
-                                    profile_gender = userData.profile.profile_gender,
-                                    profile_city = userData.profile.profile_city
-                                },
-                                liked_user = liked
-                            }
-                        );
-                    }
                     Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                     _context.SaveChanges();
-                    return new { success = true, data = data };
+                    return new { success = true, data = usersData };
                 }
                 else 
                 { 
@@ -1248,18 +1225,20 @@ namespace Common.Functional.UserF
                     {
                         page = jPage.ToObject<int>();
                     }
-                    var data = (from participant in _context.Participants
+                    var data = (
+                    from participant in _context.Participants
                     join users in _context.Users on participant.OpposideId equals users.UserId
                     join profile in _context.Profiles on users.UserId equals profile.UserId
-                    join likesProfile in _context.LikeProfile on user.UserId equals likesProfile.UserId
                     join chats in _context.Chatroom on participant.ChatId equals chats.ChatId
+                    join likesProfile in _context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
+                    join messageChat in _context.Messages on chats.ChatId equals messageChat.ChatId into messages
                     join blockedUser in _context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
                     where participant.UserId == user.UserId && profile.ProfileGender != user.ProfileGender
-                     && (blockedUsers.Any(b => b.UserId == user.UserId && b.BlockedDeleted == true)
+                    && (blockedUsers.All(b => b.UserId == user.UserId && b.BlockedDeleted == true)
                     || blockedUsers.Count() == 0)
                     orderby users.UserId descending
                     select new
-                    { 
+                    {
                         user = new 
                         { 
                             user_id = users.UserId,
@@ -1276,51 +1255,26 @@ namespace Common.Functional.UserF
                                 profile_city = profile.ProfileCity
                             }
                         },
-                        chat =  new 
+                        chat = new 
                         {
                             chat_id = chats.ChatId,
                             chat_token = chats.ChatToken,
                             created_at = chats.CreatedAt,
-                        }
-                    }).Skip(page * 30).Take(30).ToList();
-                    List<dynamic> chatsData = new List<dynamic>();
-                    for(int i =0; i < data.Count; i++)
-                    {                   
-                        Messages lastMessage = _context.Messages.Where(m => m.ChatId == data[i].chat.chat_id)
-                        .OrderByDescending(m => m.MessageId).FirstOrDefault();
-                        dynamic last_message = lastMessage;
-                        if (lastMessage != null)
+                        },
+                        last_message = messages == null || messages.Count() == 0 ? null : new 
                         {
-                            last_message = new
-                            {
-                                message_id = last_message.MessageId,
-                                chat_id = last_message.ChatId,
-                                user_id = last_message.UserId,
-                                message_text = last_message.MessageText,
-                                message_viewed = last_message.MessageViewed,
-                                created_at = last_message.CreatedAt
-                            };
-                        }
-                        LikeProfiles likedUser = _context.LikeProfile.Where(l => l.ToUserId == data[i].user.user_id 
-                        && l.UserId == user.UserId).FirstOrDefault();
-                        bool liked_User = false;
-                        if (likedUser != null)
-                        {
-                            liked_User = true;
-                        }                       
-                        chatsData.Add(
-                            new 
-                            {
-                                user = data[i].user,
-                                chat = data[i].chat,
-                                last_message = lastMessage,
-                                liked_user = liked_User
-                            }
-                        );
-                    }            
+                            message_id = messages.ToList()[messages.Count() - 1].MessageId,
+                            chat_id = messages.ToList()[messages.Count() - 1].ChatId,
+                            user_id = messages.ToList()[messages.Count() - 1].UserId,
+                            message_text = messages.ToList()[messages.Count() - 1].MessageText,
+                            message_viewed = messages.ToList()[messages.Count() - 1].MessageViewed,
+                            created_at = messages.ToList()[messages.Count() - 1].CreatedAt
+                        } ,
+                        liked_user = likes.Any(l => l.UserId == user.UserId) ? true : false
+                    }).Skip(page * 30).Take(30).ToList();           
                     Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                     _context.SaveChanges();
-                    return new { success = true, data = chatsData };
+                    return new { success = true, data = data };
                 }
                 else 
                 { 

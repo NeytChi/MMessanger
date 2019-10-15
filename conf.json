@@ -2,6 +2,7 @@
 	"ip" : "127.0.0.1",
 	"port" : 8000,
 	"domen" : "MiniMessanger",
+	"aws_path" : "http://127.0.0.1:8000/www",
 	"issuer" : "MiniMessanger",
 	"audience" : "http://localhost:8000/",
 	"auth_key" : "mysql.connection",

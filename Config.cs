@@ -15,6 +15,7 @@ namespace Common
         public static string IP = "127.0.0.1";
         public static string Domen = "(none)";
         public static int Port = 8023;
+        public static string AwsPath = "";
         /// <summary>
         /// Return of the path occurs without the last '/' (pointer to the directory) 
         /// </summary>
@@ -37,6 +38,7 @@ namespace Common
                     Port = GetServerConfigValue("port", JTokenType.Integer);
                     IP = GetServerConfigValue("ip", JTokenType.String);
                     Domen = GetServerConfigValue("domen", JTokenType.String);
+                    AwsPath = GetServerConfigValue("aws_path", JTokenType.String);
                 }
                 else 
                 {

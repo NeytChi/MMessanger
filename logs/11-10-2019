@@ -116,3 +116,14 @@ Time: 11.10.19 12:21:08 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 
 Time: 11.10.19 12:21:19 | info | Message: Get list of chats. | UID: 2 | UIP: 127.0.0.1 | TID: 39 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 11.10.19 12:22:28 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 45 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 11.10.19 12:22:34 | info | Message: Get list of chats. | UID: 2 | UIP: 127.0.0.1 | TID: 44 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 12:25:09 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 12:25:21 | info | Message: Get list of chats. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 12:28:10 | info | Message: Block user; user->user_id->2. | UID: 2 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 12:33:23 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 12:33:41 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 12:36:34 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 12:36:46 | info | Message: Select profile. | UID: 2 | UIP: 127.0.0.1 | TID: 17 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 12:38:01 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 | TID: 17 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 13:22:59 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 13:26:35 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 11.10.19 13:26:47 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

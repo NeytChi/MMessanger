@@ -182,23 +182,21 @@ namespace Common.Functional.UserF
                                 Common.Log.Info("User login.", HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
                                 return new 
                                 { 
-                                    success = true, data = new { 
-                                        user = new 
+                                    success = true, data = new 
+                                    { 
+                                        user_token = user_data.UserToken,
+                                        user_email = user_data.UserEmail,
+                                        user_login = user_data.UserLogin,
+                                        created_at = user_data.CreatedAt,
+                                        last_login_at = user_data.LastLoginAt,
+                                        user_public_token = user_data.UserPublicToken,
+                                        profile = new
                                         {
-                                            user_token = user_data.UserToken,
-                                            user_email = user_data.UserEmail,
-                                            user_login = user_data.UserLogin,
-                                            created_at = user_data.CreatedAt,
-                                            last_login_at = user_data.LastLoginAt,
-                                            user_public_token = user_data.UserPublicToken,
-                                            profile = new
-                                            {
-                                                url_photo = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto,
-                                                profile_age = profile.ProfileAge,
-                                                profile_gender = profile.ProfileGender,
-                                                profile_city = profile.ProfileCity
-                                            }
-                                        }
+                                            url_photo = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto,
+                                            profile_age = profile.ProfileAge,
+                                            profile_gender = profile.ProfileGender,
+                                            profile_city = profile.ProfileCity
+                                        }    
                                     } 
                                 };
                             }
@@ -1178,14 +1176,14 @@ namespace Common.Functional.UserF
                         user_public_token = users.UserPublicToken,
                         profile = new 
                         {
-                            url_photo = profile.UrlPhoto,
+                            url_photo = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto,
                             profile_age = profile.ProfileAge,
                             profile_gender = profile.ProfileGender,
                             profile_city = profile.ProfileCity
                         },
                         liked_user = likes.Any(l => l.UserId == user.UserId) ? true : false
                     }).Skip(page * 30).Take(30).ToList();
-                    Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                    Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                     _context.SaveChanges();
                     return new { success = true, data = usersData };
                 }

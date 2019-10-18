@@ -552,7 +552,6 @@ namespace Common.Functional.UserF
                     _context.Profiles.Update(profile);
                     _context.SaveChanges();
                     Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    profile.UrlPhoto = profile.UrlPhoto == null ? null : awsPath + profile.UrlPhoto;
                     return new { success = true, data = new 
                     {
                         url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
@@ -656,8 +655,7 @@ namespace Common.Functional.UserF
                     }
                     _context.Profiles.Update(profile);
                     _context.SaveChanges();
-                    Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    profile.UrlPhoto = profile.UrlPhoto == null ? null : awsPath + profile.UrlPhoto;
+                    Log.Info("Registrate profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                     return new { success = true, data = new 
                     {
                         url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,

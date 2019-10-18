@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.2/ubuntu.18.10-x64",
-    "signature": "99efc3044ddf000ec9a5d3d7cd27ceb456f3c383"
+    "signature": "3c802214b49a0b7e08ae5ad661c8d1cf4cb0ef30"
   },
   "compilationOptions": {
     "defines": [
@@ -24,6 +24,7 @@
     ".NETCoreApp,Version=v2.2": {
       "miniMessanger/1.0.0": {
         "dependencies": {
+          "AWSSDK.S3": "3.3.104.36",
           "Microsoft.AspNetCore.App": "2.2.7",
           "Microsoft.EntityFrameworkCore.Design": "2.2.6",
           "Microsoft.EntityFrameworkCore.Tools": "2.2.6",
@@ -32,6 +33,19 @@
         },
         "compile": {
           "miniMessanger.dll": {}
+        }
+      },
+      "AWSSDK.Core/3.3.103.48": {
+        "compile": {
+          "lib/netstandard2.0/AWSSDK.Core.dll": {}
+        }
+      },
+      "AWSSDK.S3/3.3.104.36": {
+        "dependencies": {
+          "AWSSDK.Core": "3.3.103.48"
+        },
+        "compile": {
+          "lib/netstandard2.0/AWSSDK.S3.dll": {}
         }
       },
       "Microsoft.AspNet.WebApi.Client/5.2.6": {
@@ -2962,6 +2976,7 @@
     ".NETCoreApp,Version=v2.2/ubuntu.18.10-x64": {
       "miniMessanger/1.0.0": {
         "dependencies": {
+          "AWSSDK.S3": "3.3.104.36",
           "Microsoft.AspNetCore.App": "2.2.7",
           "Microsoft.EntityFrameworkCore.Design": "2.2.6",
           "Microsoft.EntityFrameworkCore.Tools": "2.2.6",
@@ -2970,6 +2985,25 @@
         },
         "runtime": {
           "miniMessanger.dll": {}
+        }
+      },
+      "AWSSDK.Core/3.3.103.48": {
+        "runtime": {
+          "lib/netstandard2.0/AWSSDK.Core.dll": {
+            "assemblyVersion": "3.3.0.0",
+            "fileVersion": "3.3.103.48"
+          }
+        }
+      },
+      "AWSSDK.S3/3.3.104.36": {
+        "dependencies": {
+          "AWSSDK.Core": "3.3.103.48"
+        },
+        "runtime": {
+          "lib/netstandard2.0/AWSSDK.S3.dll": {
+            "assemblyVersion": "3.3.0.0",
+            "fileVersion": "3.3.104.36"
+          }
         }
       },
       "Microsoft.AspNet.WebApi.Client/5.2.6": {
@@ -6984,6 +7018,20 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "AWSSDK.Core/3.3.103.48": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ltX0YbyTvGsR+69YLNnxO9l3isOh/ceoq7EwJsRqTB0a64qQh2kUtZV+enFxTsixDTlXfXBOzHVPjwLZ8wE4Dg==",
+      "path": "awssdk.core/3.3.103.48",
+      "hashPath": "awssdk.core.3.3.103.48.nupkg.sha512"
+    },
+    "AWSSDK.S3/3.3.104.36": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IJcpjWWqX9HFJfKdzcduurCiPfidJQ33xLnd/efcWSNtS95S8JugDy1KNpirJueDpLNZdXR9u69q6Ru+upsZ6A==",
+      "path": "awssdk.s3/3.3.104.36",
+      "hashPath": "awssdk.s3.3.3.104.36.nupkg.sha512"
     },
     "Microsoft.AspNet.WebApi.Client/5.2.6": {
       "type": "package",

@@ -1,6 +1,7 @@
 {
 	"ip" : "159.203.113.210",
 	"port" : 8030,
+	"aws_path" : "http://159.203.113.210/minimessanger",
 	"domen" : "http://MiniMessanger.com",
 	"issuer" : "MiniMessanger.com",
 	"audience" : "http://localhost:8000/",

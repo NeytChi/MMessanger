@@ -1,8 +1,9 @@
 {
-	"ip" : "159.203.113.210",
-	"port" : 8030,
-	"domen" : "http://MiniMessanger.com",
-	"issuer" : "MiniMessanger.com",
+	"ip" : "127.0.0.1",
+	"port" : 8000,
+	"domen" : "MiniMessanger",
+	"aws_path" : "http://127.0.0.1:8000/www",
+	"issuer" : "MiniMessanger",
 	"audience" : "http://localhost:8000/",
 	"auth_key" : "mysql.connection",
 	"auth_lifetime" : 1,

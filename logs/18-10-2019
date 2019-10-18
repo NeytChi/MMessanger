@@ -22,3 +22,6 @@ Time: 18.10.19 15:15:51 | info | Message: Active user account. | UID: 2 | UIP: 1
 Time: 18.10.19 15:16:06 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 18.10.19 15:16:22 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 18.10.19 15:16:30 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 16:13:34 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 16:13:58 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 16:14:10 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 7 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

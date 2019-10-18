@@ -461,6 +461,10 @@ namespace miniMessanger.Models
                     .HasColumnName("user_token")
                     .HasColumnType("varchar(50)");
 
+                entity.Property(e => e.ProfileToken)
+                    .HasColumnName("profile_token")
+                    .HasColumnType("varchar(50)");
+
                 entity.Property(e => e.Deleted)
                     .HasColumnName("deleted")
                     .HasColumnType("boolean");

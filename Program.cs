@@ -8,6 +8,7 @@ namespace Instasoft
         public static bool request_view = false;    
         public static void Main(string[] args)
         {
+            //Common.S3Uploader.SendFileToS3("/home/neytchi/parrot.jpg", "", "parrot.jpg");
             using (miniMessanger.Models.MMContext context = new miniMessanger.Models.MMContext(true))
             {
                 context.Database.EnsureCreated();

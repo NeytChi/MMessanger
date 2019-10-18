@@ -1,0 +1,24 @@
+Time: 18.10.19 15:09:22 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:11:48 | info | Message: Validate login success=False. | UID: 0 | UIP:  | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:11:48 | Warn | Message: Password must be more than 6 characters and less that 20. | UID: 0 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:14:13 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:14:21 | info | Message: Validate login success=True. | UID: 0 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:14:21 | info | Message: Validating email=test6574839210@gmail.com success=True | UID: 0 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:14:21 | info | Message: Validate password success=True. | UID: 0 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:14:22 | info | Message: Registrate new user. | UID: 1 | UIP: 127.0.0.1 | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:14:25 | info | Message: Send message to test6574839210@gmail.com. | UID: 0 | UIP:  | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:14:52 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:09 | info | Message: Validate login success=True. | UID: 0 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:09 | info | Message: Validating email=neyton61@gmail.com success=True | UID: 0 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:09 | info | Message: Validate password success=True. | UID: 0 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:10 | info | Message: Registrate new user. | UID: 2 | UIP: 127.0.0.1 | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:12 | info | Message: Send message to neyton61@gmail.com. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:37 | info | Message: Update profile gender. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:37 | info | Message: Update profile age. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:37 | info | Message: Update profile city. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:37 | info | Message: Update profile photo. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:37 | info | Message: Update profile. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:15:51 | info | Message: Active user account. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:16:06 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:16:22 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 18.10.19 15:16:30 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

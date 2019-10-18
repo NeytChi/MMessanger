@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.2",
-    "signature": "76a2b2024038b71b26b82c2a72e71f31f90a7a9d"
+    "signature": "bfdf9fab594c050e439d32b651ad93aae779ac60"
   },
   "compilationOptions": {
     "defines": [
@@ -24,6 +24,7 @@
     ".NETCoreApp,Version=v2.2": {
       "miniMessanger/1.0.0": {
         "dependencies": {
+          "AWSSDK.S3": "3.3.104.36",
           "Microsoft.AspNetCore.App": "2.2.0",
           "Microsoft.AspNetCore.Razor.Design": "2.2.0",
           "Microsoft.EntityFrameworkCore.Design": "2.2.6",
@@ -36,6 +37,31 @@
         },
         "compile": {
           "miniMessanger.dll": {}
+        }
+      },
+      "AWSSDK.Core/3.3.103.48": {
+        "runtime": {
+          "lib/netstandard2.0/AWSSDK.Core.dll": {
+            "assemblyVersion": "3.3.0.0",
+            "fileVersion": "3.3.103.48"
+          }
+        },
+        "compile": {
+          "lib/netstandard2.0/AWSSDK.Core.dll": {}
+        }
+      },
+      "AWSSDK.S3/3.3.104.36": {
+        "dependencies": {
+          "AWSSDK.Core": "3.3.103.48"
+        },
+        "runtime": {
+          "lib/netstandard2.0/AWSSDK.S3.dll": {
+            "assemblyVersion": "3.3.0.0",
+            "fileVersion": "3.3.104.36"
+          }
+        },
+        "compile": {
+          "lib/netstandard2.0/AWSSDK.S3.dll": {}
         }
       },
       "Microsoft.EntityFrameworkCore/2.2.6": {
@@ -3305,6 +3331,20 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "AWSSDK.Core/3.3.103.48": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ltX0YbyTvGsR+69YLNnxO9l3isOh/ceoq7EwJsRqTB0a64qQh2kUtZV+enFxTsixDTlXfXBOzHVPjwLZ8wE4Dg==",
+      "path": "awssdk.core/3.3.103.48",
+      "hashPath": "awssdk.core.3.3.103.48.nupkg.sha512"
+    },
+    "AWSSDK.S3/3.3.104.36": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IJcpjWWqX9HFJfKdzcduurCiPfidJQ33xLnd/efcWSNtS95S8JugDy1KNpirJueDpLNZdXR9u69q6Ru+upsZ6A==",
+      "path": "awssdk.s3/3.3.104.36",
+      "hashPath": "awssdk.s3.3.3.104.36.nupkg.sha512"
     },
     "Microsoft.EntityFrameworkCore/2.2.6": {
       "type": "package",

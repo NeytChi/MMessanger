@@ -9,5 +9,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.2.6"/>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.2.6"/>
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0"/>
+    <PackageReference Include="AWSSDK.S3" Version="3.3.104.36"/>
   </ItemGroup>
 </Project>

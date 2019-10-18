@@ -2,6 +2,10 @@
 using System.Linq;
 using miniMessanger.Models;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using System.IO;
+using System;
 
 namespace Common.Functional.UserF
 {
@@ -12,14 +16,14 @@ namespace Common.Functional.UserF
     [Microsoft.AspNetCore.Mvc.ApiController]
     public class UsersController : Microsoft.AspNetCore.Mvc.ControllerBase
     {
-        private string domen = "none";
+        private string awsPath = "none";
         private System.DateTime unixed = new System.DateTime(1970, 1, 1, 0, 0, 0);
         private miniMessanger.Models.MMContext _context;
         private Controllers.JsonVariableHandler jsonHandler;
         public UsersController(miniMessanger.Models.MMContext _context)
         {
             this._context = _context;
-            this.domen = Common.Config.Domen;
+            this.awsPath = Common.Config.AwsPath;
             jsonHandler = new Controllers.JsonVariableHandler();
         }
         /// <summary>
@@ -40,56 +44,68 @@ namespace Common.Functional.UserF
                     Newtonsoft.Json.Linq.JToken userPassword = jsonHandler.handle(ref json, "user_password",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
                     if (userPassword != null)
                     {
-                        if (Common.Validator.ValidateEmail(userEmail.ToString()))
+                        if (Common.Validator.ValidateLogin(userLogin.ToString(), ref message))
                         {
-                            if (Common.Validator.ValidatePassword(userPassword.ToString(), ref message))
+                            if (Common.Validator.ValidateEmail(userEmail.ToString()))
                             {
-                                miniMessanger.Models.Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();
-                                if (user == null)
+                                if (Common.Validator.ValidatePassword(userPassword.ToString(), ref message))
                                 {
-                                    user = new Users();
-                                    user.UserEmail = userEmail.ToString();
-                                    user.UserLogin = userLogin.ToString();
-                                    user.UserPassword = Common.Validator.HashPassword(userPassword.ToString());
-                                    user.UserHash = Common.Validator.GenerateHash(100);
-                                    user.CreatedAt = (int)(System.DateTime.Now - Common.Config.unixed).TotalSeconds;
-                                    user.Activate = 0;
-                                    user.Deleted = false;
-                                    user.LastLoginAt = user.CreatedAt;
-                                    user.UserToken = Common.Validator.GenerateHash(40);
-                                    user.UserPublicToken = Common.Validator.GenerateHash(20);
-                                    _context.Users.Add(user);
-                                    _context.SaveChanges();
-                                    Common.MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
-                                    Common.Log.Info("Registrate new user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                                    return new { success = true, message = "User account was successfully registrate. See your email to activate account by url." };
+                                    miniMessanger.Models.Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();
+                                    if (user == null)
+                                    {
+                                        user = new Users();
+                                        user.UserEmail = userEmail.ToString();
+                                        user.UserLogin = userLogin.ToString();
+                                        user.UserPassword = Common.Validator.HashPassword(userPassword.ToString());
+                                        user.UserHash = Common.Validator.GenerateHash(100);
+                                        user.CreatedAt = (int)(System.DateTime.Now - Common.Config.unixed).TotalSeconds;
+                                        user.Activate = 0;
+                                        user.Deleted = false;
+                                        user.LastLoginAt = user.CreatedAt;
+                                        user.UserToken = Common.Validator.GenerateHash(40);
+                                        user.UserPublicToken = Common.Validator.GenerateHash(20);
+                                        user.ProfileToken = Common.Validator.GenerateHash(50);
+                                        _context.Users.Add(user);
+                                        _context.SaveChanges();
+                                        Common.MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
+                                        Common.Log.Info("Registrate new user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                        return new 
+                                        { 
+                                            success = true, 
+                                            message = "User account was successfully registered. See your email to activate account by link.",
+                                            data = new 
+                                            {
+                                                profile_token = user.ProfileToken,
+                                            }
+                                        };
+                                    }
+                                    else
+                                    {
+                                        if (user.Deleted == true)
+                                        {
+                                            user.Deleted = false;
+                                            user.UserToken = Common.Validator.GenerateHash(40); 
+                                            _context.Users.Update(user);
+                                            _context.SaveChanges();
+                                            Common.Log.Info("Restored old user, user_id->" + user.UserId + ".", HttpContext.Connection.LocalIpAddress.ToString(), user.UserId);
+                                            return new { success = true, message = "User account was successfully restored." };
+                                        }
+                                        else 
+                                        {
+                                            message =  "Have exists account with email ->" + user.UserEmail + ".";
+                                            Common.Log.Warn("Have exists account with email ->" + user.UserEmail + ".", HttpContext.Connection.RemoteIpAddress.ToString()); 
+                                        }  
+                                    }
                                 }
                                 else
                                 {
-                                    if (user.Deleted == true)
-                                    {
-                                        user.Deleted = false;
-                                        user.UserToken = Common.Validator.GenerateHash(40); 
-                                        _context.Users.Update(user);
-                                        _context.SaveChanges();
-                                        Common.Log.Info("Restored old user, user_id->" + user.UserId + ".", HttpContext.Connection.LocalIpAddress.ToString(), user.UserId);
-                                        return new { success = true, message = "User account was successfully restored." };
-                                    }
-                                    else 
-                                    {
-                                        message =  "Have exists account with email ->" + user.UserEmail + ".";
-                                        Common.Log.Warn("Have exists account with email ->" + user.UserEmail + ".", HttpContext.Connection.RemoteIpAddress.ToString()); 
-                                    }  
+                                    Common.Log.Warn(message + " UserEmail->" + userEmail.ToString() + ".", HttpContext.Connection.RemoteIpAddress.ToString());                        
                                 }
                             }
-                            else
-                            {
-                                Common.Log.Warn(message + " UserEmail->" + userEmail.ToString() + ".", HttpContext.Connection.RemoteIpAddress.ToString());                        
-                            } 
-                        }
-                        else 
-                        { 
-                            message = "Wrong validation email ->" + userEmail.ToString() + ".";
+                            else 
+                            { 
+                                message = "Not valid email ->" + userEmail.ToString() + ".";
+                            }
                         }
                     }
                     else
@@ -111,7 +127,7 @@ namespace Common.Functional.UserF
             {
                 Response.StatusCode = 500;
             }
-            return new { success = false, message = message };
+            return new { success = false, message = message, };
         }
         [Microsoft.AspNetCore.Mvc.HttpPost]
         [Microsoft.AspNetCore.Mvc.ActionName("RegistrationEmail")]
@@ -192,10 +208,10 @@ namespace Common.Functional.UserF
                                         user_public_token = user_data.UserPublicToken,
                                         profile = new
                                         {
-                                            url_photo = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto,
-                                            profile_age = profile.ProfileAge,
+                                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                                            profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                                             profile_gender = profile.ProfileGender,
-                                            profile_city = profile.ProfileCity
+                                            profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                                         }    
                                     } 
                                 };
@@ -536,13 +552,13 @@ namespace Common.Functional.UserF
                     _context.Profiles.Update(profile);
                     _context.SaveChanges();
                     Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    profile.UrlPhoto = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto;
+                    profile.UrlPhoto = profile.UrlPhoto == null ? null : awsPath + profile.UrlPhoto;
                     return new { success = true, data = new 
                     {
-                        url_photo = profile.UrlPhoto,
-                        profile_age = profile.ProfileAge,
+                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                         profile_gender = profile.ProfileGender,
-                        profile_city = profile.ProfileCity
+                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                     } };
                 }
                 else 
@@ -553,6 +569,111 @@ namespace Common.Functional.UserF
             else 
             {
                 message = "Request doesn't contains 'user_token' key.";
+            }
+            if (Response != null)
+            {
+                Response.StatusCode = 500;
+            }
+            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+            return new { success = false, message = message };
+        }
+        [HttpPost]
+        [ActionName("RegistrateProfile")]
+        public ActionResult<dynamic> RegistrateProfile(IFormFile profile_photo)
+        {
+            string message = null;
+            string profileToken = Request.Form["profile_token"];
+            if (profileToken != null)
+            {
+                Users user = _context.Users.Where(u => u.ProfileToken == profileToken.ToString()).FirstOrDefault();
+                if (user != null)
+                {
+                    Profiles profile = _context.Profiles.Where(p => p.UserId == user.UserId).FirstOrDefault();
+                    if (profile == null)
+                    {
+                        profile = new Profiles();
+                        profile.UserId = user.UserId;
+                        profile.ProfileGender = true;
+                        _context.Add(profile);
+                        _context.SaveChanges();
+                    }
+                    string profileGender = Request.Form["profile_gender"];
+                    if (profileGender != null)
+                    {
+                        if (profileGender == "1")
+                        {
+                            profile.ProfileGender = true;
+                            Log.Info("Update profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                        else if (profileGender == "0")
+                        {
+                            profile.ProfileGender = false;
+                            Log.Info("Update profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                        else
+                        {
+                            Log.Warn("Incorrect value to uUpdate profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                    }
+                    string profileAge = Request.Form["profile_age"];
+                    if (profileAge != null)
+                    {
+                        short ProfileAge = 0;
+                        if (System.Int16.TryParse(profileAge, out ProfileAge))
+                        {
+                            if (ProfileAge > 0 && ProfileAge < 100)
+                            {
+                                profile.ProfileAge = (sbyte)ProfileAge;
+                                Log.Info("Update profile age.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                            }
+                        }
+                    }
+                    string profileCity = Request.Form["profile_city"];
+                    if (profileCity != null)
+                    {
+                        if (profileCity.Length > 3 && profileCity.Length < 50)
+                        {
+                            profile.ProfileCity = profileCity;
+                            Log.Info("Update profile city.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                    }
+                    if (profile_photo != null)
+                    {
+                        if (profile_photo.ContentType.Contains("image"))
+                        {
+                            if (System.IO.File.Exists(Common.Config.currentDirectory + profile.UrlPhoto))
+                            {
+                                System.IO.File.Delete(Common.Config.currentDirectory + profile.UrlPhoto);
+                            }
+                            Directory.CreateDirectory(Common.Config.currentDirectory + "/ProfilePhoto/" +
+                             DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
+                            profile.UrlPhoto = "/ProfilePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
+                            + "-" + DateTime.Now.Day + "/" + Validator.GenerateHash(10);
+                            profile_photo.CopyTo(new FileStream(Common.Config.currentDirectory + profile.UrlPhoto,
+                            FileMode.Create));
+                            Log.Info("Update profile photo.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        }
+                    }
+                    _context.Profiles.Update(profile);
+                    _context.SaveChanges();
+                    Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    profile.UrlPhoto = profile.UrlPhoto == null ? null : awsPath + profile.UrlPhoto;
+                    return new { success = true, data = new 
+                    {
+                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
+                        profile_gender = profile.ProfileGender,
+                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                    } };
+                }
+                else 
+                { 
+                    message = "No user with that profile_token."; 
+                }
+            }
+            else 
+            {
+                message = "Request doesn't contains 'profile_token' key.";
             }
             if (Response != null)
             {
@@ -582,14 +703,14 @@ namespace Common.Functional.UserF
                         _context.SaveChanges();
                     }
                     Log.Info("Select profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    profile.UrlPhoto = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto;
+                    profile.UrlPhoto = profile.UrlPhoto == null ? null : awsPath + profile.UrlPhoto;
                     return new { success = true, 
                     data = new 
                         {
-                            url_photo = profile.UrlPhoto,
-                            profile_age = profile.ProfileAge,
+                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                            profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                             profile_gender = profile.ProfileGender,
-                            profile_city = profile.ProfileCity
+                            profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                         } 
                     };
                 }
@@ -1119,15 +1240,30 @@ namespace Common.Functional.UserF
                                             Log.Info("Create complaint; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                             return new { success = true, message = "Complain content - successed." };
                                         }
-                                        else { message = "User blocked current user."; }
+                                        else 
+                                        { 
+                                            message = "User blocked current user."; 
+                                        }
                                     }
-                                    else { message = "User can't complain on himself."; }
+                                    else 
+                                    { 
+                                        message = "User can't complain on himself."; 
+                                    }
                                 }
-                                else { message = "Complaint message can't be longer than 100 characters."; }
+                                else 
+                                { 
+                                    message = "Complaint message can't be longer than 100 characters."; 
+                                }
                             }
-                            else { message = "Unknow message_id. Server can't define message."; }
+                            else 
+                            { 
+                                message = "Unknow message_id. Server can't define message."; 
+                            }
                         }
-                        else { message = "No user with that user_token."; }
+                        else 
+                        {
+                            message = "No user with that user_token."; 
+                        }
                     }
                 }
             }
@@ -1163,6 +1299,7 @@ namespace Common.Functional.UserF
                     join likesProfile in _context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
                     join blockedUser in _context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
                     where users.UserId != user.UserId && profile.ProfileGender != user.ProfileGender
+                    && users.Activate == 1
                     && (blockedUsers.All(b => b.UserId == user.UserId && b.BlockedDeleted == true)
                     || blockedUsers.Count() == 0)
                     orderby users.UserId descending
@@ -1176,10 +1313,10 @@ namespace Common.Functional.UserF
                         user_public_token = users.UserPublicToken,
                         profile = new 
                         {
-                            url_photo = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto,
-                            profile_age = profile.ProfileAge,
+                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                            profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                             profile_gender = profile.ProfileGender,
-                            profile_city = profile.ProfileCity
+                            profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                         },
                         liked_user = likes.Any(l => l.UserId == user.UserId) ? true : false
                     }).Skip(page * 30).Take(30).ToList();
@@ -1233,7 +1370,7 @@ namespace Common.Functional.UserF
                     join blockedUser in _context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
                     where participant.UserId == user.UserId && profile.ProfileGender != user.ProfileGender
                     && (blockedUsers.All(b => b.UserId == user.UserId && b.BlockedDeleted == true)
-                    || blockedUsers.Count() == 0)
+                    || blockedUsers.Count() == 0) && users.Activate == 1
                     orderby users.UserId descending
                     select new
                     {
@@ -1247,10 +1384,10 @@ namespace Common.Functional.UserF
                             chat_id = participant.ChatId,
                             profile = new 
                             {
-                                url_photo = profile.UrlPhoto == null ? null : domen + profile.UrlPhoto,
-                                profile_age = profile.ProfileAge,
+                                url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                                profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                                 profile_gender = profile.ProfileGender,
-                                profile_city = profile.ProfileCity
+                                profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                             }
                         },
                         chat = new 

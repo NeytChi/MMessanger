@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Common
@@ -11,6 +12,7 @@ namespace Common
 		private const int MIN_LENGTH = 6;
         private const int MAX_LENGTH = 20;
         private static  EmailAddressAttribute foo = new EmailAddressAttribute();
+        public static Regex onlyEnglish = new Regex("^[a-zA-Z0-9]*$", RegexOptions.Compiled);
 		public static Random random = new Random();
         private static string Alphavite = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         private static string sum_names = "abc123";
@@ -64,6 +66,28 @@ namespace Common
             bool isValid = meetsLengthRequirements && hasDecimalDigit && hasLetter;
             Common.Log.Info("Validate password success=" + isValid + ".");
 			return isValid;         
+        }
+        public static bool ValidateLogin(string login, ref string answer)
+        {
+            bool result = false;
+            if (!string.IsNullOrEmpty(login)) 
+            {
+                result = onlyEnglish.Match(login).Success;
+                if (result)
+                {
+
+                }
+                else
+                {
+                    answer = "Login contains only english charaters and numbers.";
+                }
+            }
+            else
+            {
+                answer = "Login must be more than 6 characters.";
+            }
+            Common.Log.Info("Validate login success=" + result + ".");
+			return result;
         }
         public static string GenerateHash(int length_hash)
         {

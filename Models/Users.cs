@@ -26,6 +26,7 @@ namespace miniMessanger.Models
         public int? RecoveryCode { get; set; }
         public string RecoveryToken { get; set; }
         public string UserPublicToken { get; set; }
+        public string ProfileToken { get; set; }
         public bool Deleted { get; set; }
 
         public virtual ICollection<BlockedUsers> BlockedUsers { get; set; }

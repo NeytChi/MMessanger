@@ -17,6 +17,7 @@ namespace Common.Functional.UserF
     public class UsersController : Microsoft.AspNetCore.Mvc.ControllerBase
     {
         private string awsPath = "none";
+        private string savePath = "none";
         private System.DateTime unixed = new System.DateTime(1970, 1, 1, 0, 0, 0);
         private miniMessanger.Models.MMContext _context;
         private Controllers.JsonVariableHandler jsonHandler;
@@ -24,6 +25,7 @@ namespace Common.Functional.UserF
         {
             this._context = _context;
             this.awsPath = Common.Config.AwsPath;
+            this.savePath = Common.Config.savePath;
             jsonHandler = new Controllers.JsonVariableHandler();
         }
         /// <summary>
@@ -536,15 +538,15 @@ namespace Common.Functional.UserF
                     {
                         if (profile_photo.ContentType.Contains("image"))
                         {
-                            if (System.IO.File.Exists(Common.Config.currentDirectory + profile.UrlPhoto))
+                            if (System.IO.File.Exists(savePath + profile.UrlPhoto))
                             {
-                                System.IO.File.Delete(Common.Config.currentDirectory + profile.UrlPhoto);
+                                System.IO.File.Delete(savePath + profile.UrlPhoto);
                             }
-                            System.IO.Directory.CreateDirectory(Common.Config.currentDirectory + "/ProfilePhoto/" +
+                            System.IO.Directory.CreateDirectory(savePath + "/ProfilePhoto/" +
                              System.DateTime.Now.Year + "-" + System.DateTime.Now.Month + "-" + System.DateTime.Now.Day);
                             profile.UrlPhoto = "/ProfilePhoto/" + System.DateTime.Now.Year + "-" + System.DateTime.Now.Month 
                             + "-" + System.DateTime.Now.Day + "/" + Validator.GenerateHash(10);
-                            profile_photo.CopyTo(new System.IO.FileStream(Common.Config.currentDirectory + profile.UrlPhoto,
+                            profile_photo.CopyTo(new System.IO.FileStream(savePath + profile.UrlPhoto,
                             System.IO.FileMode.Create));
                             Log.Info("Update profile photo.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                         }
@@ -640,15 +642,15 @@ namespace Common.Functional.UserF
                     {
                         if (profile_photo.ContentType.Contains("image"))
                         {
-                            if (System.IO.File.Exists(Common.Config.currentDirectory + profile.UrlPhoto))
+                            if (System.IO.File.Exists(savePath + profile.UrlPhoto))
                             {
-                                System.IO.File.Delete(Common.Config.currentDirectory + profile.UrlPhoto);
+                                System.IO.File.Delete(savePath + profile.UrlPhoto);
                             }
-                            Directory.CreateDirectory(Common.Config.currentDirectory + "/ProfilePhoto/" +
+                            Directory.CreateDirectory(savePath + "/ProfilePhoto/" +
                              DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
                             profile.UrlPhoto = "/ProfilePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
                             + "-" + DateTime.Now.Day + "/" + Validator.GenerateHash(10);
-                            profile_photo.CopyTo(new FileStream(Common.Config.currentDirectory + profile.UrlPhoto,
+                            profile_photo.CopyTo(new FileStream(Common.Config.savePath + profile.UrlPhoto,
                             FileMode.Create));
                             Log.Info("Update profile photo.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                         }
@@ -656,13 +658,18 @@ namespace Common.Functional.UserF
                     _context.Profiles.Update(profile);
                     _context.SaveChanges();
                     Log.Info("Registrate profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    return new { success = true, data = new 
-                    {
-                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
-                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                        profile_gender = profile.ProfileGender,
-                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                    } };
+                    return new 
+                    { 
+                        success = true, 
+                        message = "User account was successfully registered. See your email to activate account by link.",
+                        data = new 
+                        {
+                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                            profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
+                            profile_gender = profile.ProfileGender,
+                            profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                        } 
+                    };
                 }
                 else 
                 { 

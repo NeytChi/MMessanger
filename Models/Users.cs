@@ -32,8 +32,8 @@ namespace miniMessanger.Models
         public virtual ICollection<BlockedUsers> BlockedUsers { get; set; }
         public virtual ICollection<BlockedUsers> UsersBlocks { get; set; }
         public virtual ICollection<Complaints> Complaints { get; set; }
-        public virtual Participants Opposite { get; set; }
-        public virtual Participants ChatSide { get; set; }
+        //public virtual Participants Opposite { get; set; }
+        //public virtual Participants ChatSide { get; set; }
         
         public virtual Profiles Profile { get; set; }
     }

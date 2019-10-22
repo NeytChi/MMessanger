@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.IO;
 using System;
+using Newtonsoft.Json.Linq;
 
 namespace Common.Functional.UserF
 {
@@ -914,16 +915,17 @@ namespace Common.Functional.UserF
             }
             return new { success = false, message = messageReturn };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("CreateChat")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> CreateChat(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("CreateChat")]
+        public ActionResult<dynamic> CreateChat(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
             if (userToken != null)
             {
-                Newtonsoft.Json.Linq.JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
-                if (userToken != null)
+                JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token",
+                Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                if (opposidePublicToken != null)
                 {
                     Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
                     if (user != null)
@@ -933,7 +935,9 @@ namespace Common.Functional.UserF
                         Users interlocutor = _context.Users.Where(u => u.UserPublicToken == opposidePublicToken.ToString()).FirstOrDefault();
                         if (interlocutor != null)
                         {
-                            Participants participant = _context.Participants.Where(p => p.OpposideId == interlocutor.UserId).FirstOrDefault();
+                            Participants participant = _context.Participants.Where(p => 
+                            p.UserId == user.UserId &&
+                            p.OpposideId == interlocutor.UserId).FirstOrDefault();
                             if (participant == null)
                             {
                                 room.ChatToken = Common.Validator.GenerateHash(20);
@@ -945,11 +949,13 @@ namespace Common.Functional.UserF
                                 participant.UserId = user.UserId;
                                 participant.OpposideId = interlocutor.UserId;
                                 _context.Participants.Add(participant);
-                                Participants opposide_participant = new Participants();
-                                opposide_participant.ChatId = room.ChatId;
-                                opposide_participant.UserId = interlocutor.UserId;
-                                opposide_participant.OpposideId = user.UserId;
-                                _context.Participants.Add(opposide_participant);
+                                _context.SaveChanges();
+                                Participants opposideParticipant = new Participants();
+                                opposideParticipant.ChatId = room.ChatId;
+                                opposideParticipant.UserId = interlocutor.UserId;
+                                opposideParticipant.OpposideId = user.UserId;
+                                _context.Participants.Add(opposideParticipant);
+                                _context.SaveChanges();
                                 Log.Info("Create chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                             }
                             else
@@ -958,10 +964,10 @@ namespace Common.Functional.UserF
                                 Log.Info("Select exist chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                             }
                             Log.Info("Create/Select chat chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            _context.SaveChanges();
                             return new 
                             { 
-                                success = true, data = new 
+                                success = true, 
+                                data = new 
                                 {
                                     chat_id = room.ChatId,
                                     chat_token = room.ChatToken,

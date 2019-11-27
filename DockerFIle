@@ -1,2 +1,3 @@
-FROM ubuntu:18.04
+FROM ubuntu:16.04
+RUN apt-get update
 ENV ASP-NET-MM=production

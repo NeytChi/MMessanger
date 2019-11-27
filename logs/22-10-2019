@@ -67,3 +67,6 @@ Time: 22.10.19 14:39:11 | info | Message: Update profile photo. | UID: 2 | UIP: 
 Time: 22.10.19 14:39:11 | info | Message: Update profile. | UID: 2 | UIP: 127.0.0.1 | TID: 20 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 22.10.19 14:39:19 | info | Message: Get users list. | UID: 2 | UIP: 127.0.0.1 | TID: 23 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 22.10.19 14:39:29 | info | Message: Get list of chats. | UID: 2 | UIP: 127.0.0.1 | TID: 19 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 22.10.19 16:53:56 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 22.10.19 16:54:13 | Warn | Message: No user with such email. | UID: 0 | UIP: 127.0.0.1 | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 22.10.19 16:54:21 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

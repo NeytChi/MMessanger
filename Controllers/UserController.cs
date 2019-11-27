@@ -1,28 +1,28 @@
-﻿using Common;
+﻿using System;
+using System.IO;
+using Controllers;
 using System.Linq;
 using miniMessanger.Models;
-using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using System.IO;
-using System;
-using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace Common.Functional.UserF
 {
     /// <summary>
     /// User functional for general movement. This class will be generate functional for user ability.
     /// </summary>
-    [Microsoft.AspNetCore.Mvc.Route("v1.0/[controller]/[action]/")]
-    [Microsoft.AspNetCore.Mvc.ApiController]
-    public class UsersController : Microsoft.AspNetCore.Mvc.ControllerBase
+    [Route("v1.0/[controller]/[action]/")]
+    [ApiController]
+    public class UsersController : ControllerBase
     {
         private string awsPath = "none";
         private string savePath = "none";
-        private System.DateTime unixed = new System.DateTime(1970, 1, 1, 0, 0, 0);
-        private miniMessanger.Models.MMContext _context;
-        private Controllers.JsonVariableHandler jsonHandler;
-        public UsersController(miniMessanger.Models.MMContext _context)
+        private DateTime unixed = new DateTime(1970, 1, 1, 0, 0, 0);
+        private MMContext _context;
+        private JsonVariableHandler jsonHandler;
+        public UsersController(MMContext _context)
         {
             this._context = _context;
             this.awsPath = Common.Config.AwsPath;
@@ -33,45 +33,45 @@ namespace Common.Functional.UserF
         /// Registration user with user_email and user_password.
         /// </summary>
         /// <param name="user">User data for registration.</param>
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("Registration")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Registration(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("Registration")]
+        public ActionResult<dynamic> Registration(JObject json)
         {
             string message = string.Empty;
-            Newtonsoft.Json.Linq.JToken userEmail = jsonHandler.handle(ref json, "user_email",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userEmail = jsonHandler.handle(ref json, "user_email", JTokenType.String, ref message);
             if (userEmail != null)
             {
-                Newtonsoft.Json.Linq.JToken userLogin = jsonHandler.handle(ref json, "user_login",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                JToken userLogin = jsonHandler.handle(ref json, "user_login", JTokenType.String, ref message);
                 if (userLogin != null)
                 {
-                    Newtonsoft.Json.Linq.JToken userPassword = jsonHandler.handle(ref json, "user_password",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    JToken userPassword = jsonHandler.handle(ref json, "user_password", JTokenType.String, ref message);
                     if (userPassword != null)
                     {
-                        if (Common.Validator.ValidateLogin(userLogin.ToString(), ref message))
+                        if (Validator.ValidateLogin(userLogin.ToString(), ref message))
                         {
-                            if (Common.Validator.ValidateEmail(userEmail.ToString()))
+                            if (Validator.ValidateEmail(userEmail.ToString()))
                             {
-                                if (Common.Validator.ValidatePassword(userPassword.ToString(), ref message))
+                                if (Validator.ValidatePassword(userPassword.ToString(), ref message))
                                 {
-                                    miniMessanger.Models.Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();
+                                    Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();
                                     if (user == null)
                                     {
                                         user = new Users();
                                         user.UserEmail = userEmail.ToString();
                                         user.UserLogin = userLogin.ToString();
-                                        user.UserPassword = Common.Validator.HashPassword(userPassword.ToString());
-                                        user.UserHash = Common.Validator.GenerateHash(100);
-                                        user.CreatedAt = (int)(System.DateTime.Now - Common.Config.unixed).TotalSeconds;
+                                        user.UserPassword = Validator.HashPassword(userPassword.ToString());
+                                        user.UserHash = Validator.GenerateHash(100);
+                                        user.CreatedAt = (int)(DateTime.Now - Config.unixed).TotalSeconds;
                                         user.Activate = 0;
                                         user.Deleted = false;
                                         user.LastLoginAt = user.CreatedAt;
-                                        user.UserToken = Common.Validator.GenerateHash(40);
-                                        user.UserPublicToken = Common.Validator.GenerateHash(20);
-                                        user.ProfileToken = Common.Validator.GenerateHash(50);
+                                        user.UserToken = Validator.GenerateHash(40);
+                                        user.UserPublicToken = Validator.GenerateHash(20);
+                                        user.ProfileToken = Validator.GenerateHash(50);
                                         _context.Users.Add(user);
                                         _context.SaveChanges();
-                                        Common.MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
-                                        Common.Log.Info("Registrate new user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                        MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
+                                        Log.Info("Registrate new user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                         return new 
                                         { 
                                             success = true, 
@@ -87,22 +87,22 @@ namespace Common.Functional.UserF
                                         if (user.Deleted == true)
                                         {
                                             user.Deleted = false;
-                                            user.UserToken = Common.Validator.GenerateHash(40); 
+                                            user.UserToken = Validator.GenerateHash(40); 
                                             _context.Users.Update(user);
                                             _context.SaveChanges();
-                                            Common.Log.Info("Restored old user, user_id->" + user.UserId + ".", HttpContext.Connection.LocalIpAddress.ToString(), user.UserId);
+                                            Log.Info("Restored old user, user_id->" + user.UserId + ".", HttpContext.Connection.LocalIpAddress.ToString(), user.UserId);
                                             return new { success = true, message = "User account was successfully restored." };
                                         }
                                         else 
                                         {
                                             message =  "Have exists account with email ->" + user.UserEmail + ".";
-                                            Common.Log.Warn("Have exists account with email ->" + user.UserEmail + ".", HttpContext.Connection.RemoteIpAddress.ToString()); 
+                                            Log.Warn("Have exists account with email ->" + user.UserEmail + ".", HttpContext.Connection.RemoteIpAddress.ToString()); 
                                         }  
                                     }
                                 }
                                 else
                                 {
-                                    Common.Log.Warn(message + " UserEmail->" + userEmail.ToString() + ".", HttpContext.Connection.RemoteIpAddress.ToString());                        
+                                    Log.Warn(message + " UserEmail->" + userEmail.ToString() + ".", HttpContext.Connection.RemoteIpAddress.ToString());                        
                                 }
                             }
                             else 
@@ -113,80 +113,80 @@ namespace Common.Functional.UserF
                     }
                     else
                     {
-                        Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+                        Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
                     }
                 }
                 else
                 {
-                    Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+                    Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
                 }
             }
             else
             {
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+                Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             }
-            Common.Log.Warn(message, HttpContext.Connection.LocalIpAddress.ToString());
+            Log.Warn(message, HttpContext.Connection.LocalIpAddress.ToString());
             if (Response != null)
             {
                 Response.StatusCode = 500;
             }
             return new { success = false, message = message, };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("RegistrationEmail")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> RegistrationEmail(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("RegistrationEmail")]
+        public ActionResult<dynamic> RegistrationEmail(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userEmail = jsonHandler.handle(ref json, "user_email",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userEmail = jsonHandler.handle(ref json, "user_email", JTokenType.String, ref message);
             if (userEmail != null)
             {
-                miniMessanger.Models.Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();;
+                Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();;
                 if (user != null)
                 {
                     if (!user.Deleted)
                     {
-                        Common.MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account url: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
-                        Common.Log.Info("Send registration email to user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        MailF.SendEmail(user.UserEmail, "Confirm account", "Confirm account url: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user.UserHash + ">Confirm url!</a>");
+                        Log.Info("Send registration email to user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                         return new { success = true, message = "Send confirm email to user." };
                     }
                     else 
                     { 
                         message = "Unknow email -> " + user.UserEmail + "."; 
-                        Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                     }
                 }
                 else 
                 { 
                     message = "Can't define user data by json's key 'user_email'."; 
-                    Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                 }
             }
             if (Response != null)
             {
                 Response.StatusCode = 500;
             }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+            Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             return new { success = false, message = message };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPut]
-        [Microsoft.AspNetCore.Mvc.ActionName("Login")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Login(Newtonsoft.Json.Linq.JObject json)
+        [HttpPut]
+        [ActionName("Login")]
+        public ActionResult<dynamic> Login(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userEmail = jsonHandler.handle(ref json, "user_email",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userEmail = jsonHandler.handle(ref json, "user_email",  JTokenType.String, ref message);
             if (userEmail != null)
             {
-                Newtonsoft.Json.Linq.JToken userPassword = jsonHandler.handle(ref json, "user_password",  Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                JToken userPassword = jsonHandler.handle(ref json, "user_password",  JTokenType.String, ref message);
                 if (userPassword != null)
                 {
-                    miniMessanger.Models.Users user_data = _context.Users.Where(u=> u.UserEmail == userEmail.ToString()).FirstOrDefault();
+                    Users user_data = _context.Users.Where(u=> u.UserEmail == userEmail.ToString()).FirstOrDefault();
                     if (user_data != null)
                     {
-                        if (Common.Validator.VerifyHashedPassword(user_data.UserPassword, userPassword.ToString()))
+                        if (Validator.VerifyHashedPassword(user_data.UserPassword, userPassword.ToString()))
                         {
                             if (user_data.Activate == 1 && user_data.Deleted == false)
                             {
-                                user_data.LastLoginAt = (int)(System.DateTime.Now - Common.Config.unixed).TotalSeconds;
+                                user_data.LastLoginAt = (int)(DateTime.Now - Config.unixed).TotalSeconds;
                                 _context.Users.Update(user_data);
                                 Profiles profile = _context.Profiles.Where(p => p.UserId == user_data.UserId).FirstOrDefault();
                                 if (profile == null)
@@ -198,11 +198,12 @@ namespace Common.Functional.UserF
                                     _context.SaveChanges();
                                 }
                                 _context.SaveChanges();
-                                Common.Log.Info("User login.", HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
+                                Log.Info("User login.", HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
                                 return new 
                                 { 
                                     success = true, data = new 
                                     { 
+                                        user_id = user_data.UserId,
                                         user_token = user_data.UserToken,
                                         user_email = user_data.UserEmail,
                                         user_login = user_data.UserLogin,
@@ -221,31 +222,31 @@ namespace Common.Functional.UserF
                             }
                             else 
                             { 
-                                Common.MailF.SendEmail(user_data.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user_data.UserHash + ">Confirm url!</a>");
+                                MailF.SendEmail(user_data.UserEmail, "Confirm account", "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port + "/v1.0/users/Activate/?hash=" + user_data.UserHash + ">Confirm url!</a>");
                                 message =  "User's account isn't confirmed."; 
-                                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
+                                Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
                             }
                         }
                         else 
                         { 
                             message = "Wrong password."; 
-                            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
+                            Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString(), user_data.UserId);
                         }
                     }
                     else 
                     { 
                         message = "No user with such email."; 
-                        Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+                        Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
                     }
                 }
                 else
                 {
-                    Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+                    Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
                 }
             }
             else
             {
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+                Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             }
             if (Response != null)
             {
@@ -253,21 +254,21 @@ namespace Common.Functional.UserF
             }
             return new { success = false, message = message };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPut]
-        [Microsoft.AspNetCore.Mvc.ActionName("LogOut")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> LogOut(Newtonsoft.Json.Linq.JObject json)
+        [HttpPut]
+        [ActionName("LogOut")]
+        public ActionResult<dynamic> LogOut(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token",JTokenType.String, ref message);
             if (userToken != null)
             {
-                miniMessanger.Models.Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
+                Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
                 if (user != null)
                 {
-                    user.UserToken = Common.Validator.GenerateHash(40);
+                    user.UserToken = Validator.GenerateHash(40);
                     _context.Users.Update(user);
                     _context.SaveChanges();
-                    Common.Log.Info("User log out.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    Log.Info("User log out.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                     return new { success = true, message = "Log out is successfully." };
                 }
                 else 
@@ -279,25 +280,25 @@ namespace Common.Functional.UserF
             {
                 Response.StatusCode = 500;
             }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+            Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             return new { success = false, message = message };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("RecoveryPassword")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> RecoveryPassword(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("RecoveryPassword")]
+        public ActionResult<dynamic> RecoveryPassword(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userEmail = jsonHandler.handle(ref json, "user_email", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userEmail = jsonHandler.handle(ref json, "user_email", JTokenType.String, ref message);
             if (userEmail != null)
             {
-                miniMessanger.Models.Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();
+                Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();
                 if (user != null || !user.Deleted)
                 {
                         user.RecoveryCode = Common.Validator.random.Next(100000, 999999);
-                        Common.MailF.SendEmail(user.UserEmail, "Recovery password", "Recovery code=" + user.RecoveryCode);
+                        MailF.SendEmail(user.UserEmail, "Recovery password", "Recovery code=" + user.RecoveryCode);
                         _context.Users.Update(user);
                         _context.SaveChanges();
-                        Common.Log.Info("Recovery password.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        Log.Info("Recovery password.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                         return new { success = true, message = "Recovery password. Send message with code to email=" + user.UserEmail + "." };
                 }
                 else 
@@ -305,22 +306,26 @@ namespace Common.Functional.UserF
                     message = "Unknow email."; 
                 }
             }
+            return Return500Error(message);
+        }
+        public dynamic Return500Error(string message)
+        {
             if (Response != null)
             {
                 Response.StatusCode = 500;
             }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+            Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
             return new { success = false, message = message };
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("CheckRecoveryCode")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> CheckRecoveryCode(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("CheckRecoveryCode")]
+        public ActionResult<dynamic> CheckRecoveryCode(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userEmail = jsonHandler.handle(ref json, "user_email", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userEmail = jsonHandler.handle(ref json, "user_email", JTokenType.String, ref message);
             if (userEmail != null)
             {
-                Newtonsoft.Json.Linq.JToken recoveryCode = jsonHandler.handle(ref json, "recovery_code", Newtonsoft.Json.Linq.JTokenType.Integer, ref message);
+                JToken recoveryCode = jsonHandler.handle(ref json, "recovery_code", JTokenType.Integer, ref message);
                 if (userEmail != null)
                 {
                     Users user = _context.Users.Where(u => u.UserEmail == userEmail.ToString()).FirstOrDefault();
@@ -334,7 +339,7 @@ namespace Common.Functional.UserF
                                 user.RecoveryCode = 0;
                                 _context.Users.Update(user);
                                 _context.SaveChanges();
-                                Common.Log.Info("Check recovery code - successed.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                Log.Info("Check recovery code - successed.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                 return new { success = true, data = new { recovery_token = user.RecoveryToken }};
                             }
                             else 
@@ -353,25 +358,20 @@ namespace Common.Functional.UserF
                     }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-            }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("ChangePassword")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> ChangePassword(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("ChangePassword")]
+        public ActionResult<dynamic> ChangePassword(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken recoveryToken = jsonHandler.handle(ref json, "recovery_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken recoveryToken = jsonHandler.handle(ref json, "recovery_token", JTokenType.String, ref message);
             if (recoveryToken != null)
             {
-                Newtonsoft.Json.Linq.JToken userPassword = jsonHandler.handle(ref json, "user_password", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                JToken userPassword = jsonHandler.handle(ref json, "user_password", JTokenType.String, ref message);
                 if (userPassword != null)
                 {
-                    Newtonsoft.Json.Linq.JToken userConfirmPassword = jsonHandler.handle(ref json, "user_confirm_password", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    JToken userConfirmPassword = jsonHandler.handle(ref json, "user_confirm_password", JTokenType.String, ref message);
                     if (userConfirmPassword != null)
                     {
                         Users user = _context.Users.Where(u=> u.RecoveryToken == recoveryToken.ToString()).FirstOrDefault();
@@ -381,13 +381,13 @@ namespace Common.Functional.UserF
                             {
                                 if (userPassword.ToString().Equals(userConfirmPassword.ToString()))
                                 {
-                                    if (Common.Validator.ValidatePassword(userPassword.ToString(), ref message))
+                                    if (Validator.ValidatePassword(userPassword.ToString(), ref message))
                                     {
-                                        user.UserPassword = Common.Validator.HashPassword(userPassword.ToString());
+                                        user.UserPassword = Validator.HashPassword(userPassword.ToString());
                                         user.RecoveryToken  = "";
                                         _context.Users.Update(user);
                                         _context.SaveChanges();
-                                        Common.Log.Info("Change user password.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                        Log.Info("Change user password.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                                         return new { success = true, message = "Change user password, user_id=" + user.UserId + "." };
                                     }
                                     else 
@@ -412,16 +412,11 @@ namespace Common.Functional.UserF
                     }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-            }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpGet]
-        [Microsoft.AspNetCore.Mvc.ActionName("Activate")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Activate([Microsoft.AspNetCore.Mvc.FromQuery] string hash)
+        [HttpGet]
+        [ActionName("Activate")]
+        public ActionResult<dynamic> Activate([FromQuery] string hash)
         {
             string message = null;
             Users user = _context.Users.Where(u => u.UserHash == hash).FirstOrDefault();
@@ -432,25 +427,26 @@ namespace Common.Functional.UserF
                     user.Activate = 1;
                     _context.Users.Update(user);
                     _context.SaveChanges();                
-                    Common.Log.Info("Active user account.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    Log.Info("Active user account.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                     return new { success = true, message = "User account is successfully active." };
                 }
-                else { message = "No user with that email."; }
+                else 
+                { 
+                    message = "No user with that email."; 
+                }
             }
-            else { message = "Can't activate account. Unknow hash in request parameters."; }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
+            else 
+            { 
+                message = "Can't activate account. Unknow hash in request parameters."; 
             }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("Delete")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Delete(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("Delete")]
+        public ActionResult<dynamic> Delete(JObject json)
         { 
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
                 Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
@@ -460,7 +456,7 @@ namespace Common.Functional.UserF
                     user.UserToken = null;
                     _context.Users.Update(user);
                     _context.SaveChanges();
-                    Common.Log.Info("Account was successfully deleted.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                    Log.Info("Account was successfully deleted.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                     return new { success = true, message = "Account was successfully deleted." };
                 }
                 else 
@@ -468,16 +464,11 @@ namespace Common.Functional.UserF
                     message = "Server can't get user's by user_token."; 
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-            }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("UpdateProfile")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> UpdateProfile(Microsoft.AspNetCore.Http.IFormFile profile_photo)
+        [HttpPost]
+        [ActionName("UpdateProfile")]
+        public ActionResult<dynamic> UpdateProfile(IFormFile profile_photo)
         {
             string message = null;
             string userToken = Request.Form["user_token"];
@@ -543,10 +534,10 @@ namespace Common.Functional.UserF
                             {
                                 System.IO.File.Delete(savePath + profile.UrlPhoto);
                             }
-                            System.IO.Directory.CreateDirectory(savePath + "/ProfilePhoto/" +
-                             System.DateTime.Now.Year + "-" + System.DateTime.Now.Month + "-" + System.DateTime.Now.Day);
-                            profile.UrlPhoto = "/ProfilePhoto/" + System.DateTime.Now.Year + "-" + System.DateTime.Now.Month 
-                            + "-" + System.DateTime.Now.Day + "/" + Validator.GenerateHash(10);
+                            Directory.CreateDirectory(savePath + "/ProfilePhoto/" +
+                             DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
+                            profile.UrlPhoto = "/ProfilePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
+                            + "-" + DateTime.Now.Day + "/" + Validator.GenerateHash(10);
                             profile_photo.CopyTo(new System.IO.FileStream(savePath + profile.UrlPhoto,
                             System.IO.FileMode.Create));
                             Log.Info("Update profile photo.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
@@ -572,12 +563,7 @@ namespace Common.Functional.UserF
             {
                 message = "Request doesn't contains 'user_token' key.";
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-            }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
         [HttpPost]
         [ActionName("RegistrateProfile")]
@@ -681,19 +667,14 @@ namespace Common.Functional.UserF
             {
                 message = "Request doesn't contains 'profile_token' key.";
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-            }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("Profile")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> Profile(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("Profile")]
+        public ActionResult<dynamic> Profile(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
                 Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
@@ -725,26 +706,21 @@ namespace Common.Functional.UserF
                     message = "No user with that user_token."; 
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-            }
-            Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPut]
-        [Microsoft.AspNetCore.Mvc.ActionName("GetUsersList")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> GetUsersList(Newtonsoft.Json.Linq.JObject json)
+        [HttpPut]
+        [ActionName("GetUsersList")]
+        public ActionResult<dynamic> GetUsersList(JObject json)
         {
             int page = 0;
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
                 Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
                 if (user != null)
                 {
-                    Newtonsoft.Json.Linq.JToken jPage = jsonHandler.handle(ref json, "page", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    JToken jPage = jsonHandler.handle(ref json, "page", JTokenType.String, ref message);
                     if (jPage != null)
                     {
                         page = jPage.ToObject<int>();
@@ -776,31 +752,26 @@ namespace Common.Functional.UserF
                 { 
                     message = "No user with that user_token."; 
                 }
-            }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            }            
+            return Return500Error(message);
         }
         /// <summary>
         /// Select list of chats. Get last message data, user's data of chat and chat data.
         /// </summary>
         /// <param name="request">Request.</param>
-        [Microsoft.AspNetCore.Mvc.HttpPut]
-        [Microsoft.AspNetCore.Mvc.ActionName("SelectChats")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> SelectChats(Newtonsoft.Json.Linq.JObject json)
+        [HttpPut]
+        [ActionName("SelectChats")]
+        public ActionResult<dynamic> SelectChats(JObject json)
         {
             int page = 0;
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
                 Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
                 if (user != null)
                 {
-                    Newtonsoft.Json.Linq.JToken jPage = jsonHandler.handle(ref json, "page", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    JToken jPage = jsonHandler.handle(ref json, "page", JTokenType.String, ref message);
                     if (jPage != null)
                     {
                         page = jPage.ToObject<int>();
@@ -858,23 +829,18 @@ namespace Common.Functional.UserF
                     message = "No user with that user_token."; 
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPut]
-        [Microsoft.AspNetCore.Mvc.ActionName("SelectMessages")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> SelectMessages(Newtonsoft.Json.Linq.JObject json)
+        [HttpPut]
+        [ActionName("SelectMessages")]
+        public ActionResult<dynamic> SelectMessages(JObject json)
         {
             int page = 0;
             string messageReturn = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref messageReturn);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref messageReturn);
             if (userToken != null)
             {
-                Newtonsoft.Json.Linq.JToken chatToken = jsonHandler.handle(ref json, "chat_token", Newtonsoft.Json.Linq.JTokenType.String, ref messageReturn);
+                JToken chatToken = jsonHandler.handle(ref json, "chat_token", JTokenType.String, ref messageReturn);
                 if (userToken != null)
                 {
                     Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
@@ -883,7 +849,7 @@ namespace Common.Functional.UserF
                         Chatroom room = _context.Chatroom.Where(r => r.ChatToken == chatToken.ToString()).FirstOrDefault();
                         if (room != null)
                         {
-                            Newtonsoft.Json.Linq.JToken jPage = jsonHandler.handle(ref json, "page", Newtonsoft.Json.Linq.JTokenType.String, ref messageReturn);
+                            JToken jPage = jsonHandler.handle(ref json, "page", JTokenType.String, ref messageReturn);
                             if (jPage != null)
                             {
                                 page = jPage.ToObject<int>();
@@ -908,12 +874,7 @@ namespace Common.Functional.UserF
                     }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(messageReturn, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = messageReturn };
+            return Return500Error(messageReturn);
         }
         [HttpPost]
         [ActionName("CreateChat")]
@@ -986,25 +947,20 @@ namespace Common.Functional.UserF
                     }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("SendMessage")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> SendMessage(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("SendMessage")]
+        public ActionResult<dynamic> SendMessage(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
-                Newtonsoft.Json.Linq.JToken chatToken = jsonHandler.handle(ref json, "chat_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                JToken chatToken = jsonHandler.handle(ref json, "chat_token", JTokenType.String, ref message);
                 if (chatToken != null)
                 {
-                    Newtonsoft.Json.Linq.JToken jMessageText = jsonHandler.handle(ref json, "message_text", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    JToken jMessageText = jsonHandler.handle(ref json, "message_text", JTokenType.String, ref message);
                     if (jMessageText != null)
                     {
                         string messageText = System.Net.WebUtility.UrlDecode(jMessageText.ToString());
@@ -1053,25 +1009,20 @@ namespace Common.Functional.UserF
                     }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("BlockUser")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> BlockUser(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("BlockUser")]
+        public ActionResult<dynamic> BlockUser(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
-                Newtonsoft.Json.Linq.JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", JTokenType.String, ref message);
                 if (opposidePublicToken != null)
                 {
-                    Newtonsoft.Json.Linq.JToken jBlockedReason = jsonHandler.handle(ref json, "blocked_reason", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    JToken jBlockedReason = jsonHandler.handle(ref json, "blocked_reason",JTokenType.String, ref message);
                     if (jBlockedReason != null)
                     {
                         string blockedReason = System.Net.WebUtility.UrlDecode(jBlockedReason.ToString());
@@ -1118,19 +1069,14 @@ namespace Common.Functional.UserF
                     }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPut]
-        [Microsoft.AspNetCore.Mvc.ActionName("GetBlockedUsers")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> GetBlockedUsers(Newtonsoft.Json.Linq.JObject json)
+        [HttpPut]
+        [ActionName("GetBlockedUsers")]
+        public ActionResult<dynamic> GetBlockedUsers(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
                 Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
@@ -1156,22 +1102,17 @@ namespace Common.Functional.UserF
                     message = "No user with that user_token."; 
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("UnblockUser")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> UnblockUser(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("UnblockUser")]
+        public ActionResult<dynamic> UnblockUser(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
-                Newtonsoft.Json.Linq.JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", JTokenType.String, ref message);
                 if (userToken != null)
                 {
                     Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
@@ -1197,25 +1138,20 @@ namespace Common.Functional.UserF
                     else { message = "No user with that user_token."; }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("ComplaintContent")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> ComplaintContent(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("ComplaintContent")]
+        public ActionResult<dynamic> ComplaintContent(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
-                Newtonsoft.Json.Linq.JToken messageId = jsonHandler.handle(ref json, "message_id", Newtonsoft.Json.Linq.JTokenType.Integer, ref message);
+                JToken messageId = jsonHandler.handle(ref json, "message_id", JTokenType.Integer, ref message);
                 if (messageId != null)
                 {
-                    Newtonsoft.Json.Linq.JToken jComplaint = jsonHandler.handle(ref json, "complaint", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    JToken jComplaint = jsonHandler.handle(ref json, "complaint", JTokenType.String, ref message);
                     if (messageId != null)
                     {   
                         string complaint = System.Net.WebUtility.UrlDecode(jComplaint.ToString());
@@ -1278,20 +1214,15 @@ namespace Common.Functional.UserF
                     }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
-        [Microsoft.AspNetCore.Mvc.HttpPut]
-        [Microsoft.AspNetCore.Mvc.ActionName("GetUsersByGender")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> GetUsersByGender(Newtonsoft.Json.Linq.JObject json)
+        [HttpPut]
+        [ActionName("GetUsersByGender")]
+        public ActionResult<dynamic> GetUsersByGender(JObject json)
         {
             int page = 0;
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
                 var user = (from u in _context.Users
@@ -1300,7 +1231,7 @@ namespace Common.Functional.UserF
                 select new { UserId = u.UserId, ProfileGender = p.ProfileGender } ).FirstOrDefault();
                 if (user != null)
                 {
-                    Newtonsoft.Json.Linq.JToken jPage = jsonHandler.handle(ref json, "page", Newtonsoft.Json.Linq.JTokenType.Integer, ref message);
+                    JToken jPage = jsonHandler.handle(ref json, "page", JTokenType.Integer, ref message);
                     if (jPage != null)
                     {
                         page = jPage.ToObject<int>();
@@ -1340,24 +1271,19 @@ namespace Common.Functional.UserF
                     message = "No user with that user_token."; 
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
         /// <summary>
         /// Select list of chats. Get last message data, user's data of chat and chat data.
         /// </summary>
         /// <param name="request">Request.</param>
-        [Microsoft.AspNetCore.Mvc.HttpPut]
-        [Microsoft.AspNetCore.Mvc.ActionName("SelectChatsByGender")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> SelectChatsByGender(Newtonsoft.Json.Linq.JObject json)
+        [HttpPut]
+        [ActionName("SelectChatsByGender")]
+        public ActionResult<dynamic> SelectChatsByGender(JObject json)
         {
             int page = 0;
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
                 var user = (from u in _context.Users 
@@ -1366,7 +1292,7 @@ namespace Common.Functional.UserF
                 select new { UserId = u.UserId, ProfileGender = p.ProfileGender } ).FirstOrDefault();
                 if (user != null)
                 {
-                    Newtonsoft.Json.Linq.JToken jPage = jsonHandler.handle(ref json, "page", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                    JToken jPage = jsonHandler.handle(ref json, "page", JTokenType.String, ref message);
                     if (jPage != null)
                     {
                         page = jPage.ToObject<int>();
@@ -1427,26 +1353,21 @@ namespace Common.Functional.UserF
                     message = "No user with that user_token."; 
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
         /// <summary>
         /// Select list of chats. Get last message data, user's data of chat and chat data.
         /// </summary>
         /// <param name="request">Request.</param>
-        [Microsoft.AspNetCore.Mvc.HttpPost]
-        [Microsoft.AspNetCore.Mvc.ActionName("LikeUnlikeUsers")]
-        public Microsoft.AspNetCore.Mvc.ActionResult<dynamic> LikeUnlikeUsers(Newtonsoft.Json.Linq.JObject json)
+        [HttpPost]
+        [ActionName("LikeUnlikeUsers")]
+        public ActionResult<dynamic> LikeUnlikeUsers(JObject json)
         {
             string message = null;
-            Newtonsoft.Json.Linq.JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
             if (userToken != null)
             {
-                Newtonsoft.Json.Linq.JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
+                JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", JTokenType.String, ref message);
                 if (opposidePublicToken != null)
                 {
                     Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
@@ -1488,12 +1409,7 @@ namespace Common.Functional.UserF
                     }
                 }
             }
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-                Common.Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
-            }
-            return new { success = false, message = message };
+            return Return500Error(message);
         }
     }
 }

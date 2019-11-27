@@ -1,0 +1,34 @@
+Time: 26.10.19 20:36:52 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:04 | info | Message: Validate login success=True. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:04 | info | Message: Validating email=test6574839210@gmail.com success=True | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:04 | info | Message: Validate password success=True. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:05 | info | Message: Registrate new user. | UID: 3 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:05 | Warn | Message: No user with that profile_token. | UID: 0 | UIP: 127.0.0.1 | TID: 7 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:06 | info | Message: User login. | UID: 2 | UIP: 127.0.0.1 | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:06 | Warn | Message: Can't activate account. Unknow hash in request parameters. | UID: 0 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:07 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:07 | ERROR | Message: Send message to test6574839210@gmail.com. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:07 | info | Message: Send registration email to user. | UID: 3 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:07 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:07 | ERROR | Message: Send message to test6574839210@gmail.com. | UID: 0 | UIP:  | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:07 | info | Message: Recovery password. | UID: 3 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:08 | Warn | Message: Wrong recovery code. | UID: 0 | UIP: 127.0.0.1 | TID: 7 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:08 | Warn | Message: Can't find user by recovery_token. | UID: 0 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:08 | Warn | Message: Server can't get user's by user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 15 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:08 | Warn | Message: Server can't get user's data by user_token from json. | UID: 0 | UIP: 127.0.0.1 | TID: 15 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:08 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 15 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:09 | info | Message: Send message to test6574839210@gmail.com. | UID: 0 | UIP:  | TID: 15 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:09 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:09 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:09 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:09 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:09 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:10 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:10 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:10 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:10 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:10 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:11 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:11 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 20:37:11 | Warn | Message: No user with that user_token. | UID: 0 | UIP: 127.0.0.1 | TID: 16 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 26.10.19 23:05:41 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

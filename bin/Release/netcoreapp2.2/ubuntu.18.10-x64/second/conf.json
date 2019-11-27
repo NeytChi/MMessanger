@@ -1,8 +1,8 @@
 {
 	"ip" : "159.203.113.210",
 	"port" : 8030,
-	"save_path" : "/home/neytchi/Projects/miniMessanger",
-	"aws_path" : "http://159.203.113.210/minimessanger",
+	"save_path" : "/var/www/html",
+	"aws_path" : "http://159.203.113.210",
 	"domen" : "http://MiniMessanger.com",
 	"issuer" : "MiniMessanger.com",
 	"audience" : "http://localhost:8000/",

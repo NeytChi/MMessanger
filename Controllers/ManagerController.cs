@@ -20,13 +20,14 @@ namespace Common
         }
         [HttpGet]
         [ActionName("State")]
-        public ActionResult<dynamic> State([FromQuery] string userToken)
+        public ActionResult<dynamic> State([FromQuery]string userToken)
         {
             string message = string.Empty;
             Users user = context.Users.Where(u => u.UserToken == userToken).FirstOrDefault();
             if (user != null)
             {
-                Log.Info("Return state urls.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                Log.Info("Return state urls.", HttpContext.Connection
+                .RemoteIpAddress.ToString(), user.UserId);
                 bool result = CheckUrlState();
                 return ReturnStateUrl(result);
             }

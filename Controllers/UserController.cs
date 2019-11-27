@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
+using System.Net;
 
 namespace Common.Functional.UserF
 {
@@ -256,26 +257,22 @@ namespace Common.Functional.UserF
         }
         [HttpPut]
         [ActionName("LogOut")]
-        public ActionResult<dynamic> LogOut(JObject json)
+        public ActionResult<dynamic> LogOut(UserCache userCache)
         {
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token",JTokenType.String, ref message);
-            if (userToken != null)
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                if (user != null)
-                {
-                    user.UserToken = Validator.GenerateHash(40);
-                    _context.Users.Update(user);
-                    _context.SaveChanges();
-                    Log.Info("User log out.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    return new { success = true, message = "Log out is successfully." };
-                }
-                else 
-                { 
-                    message = "Server can't get user's data by user_token from json."; 
-                }  
-            } 
+                user.UserToken = Validator.GenerateHash(40);
+                _context.Users.Update(user);
+                _context.SaveChanges();
+                Log.Info("User log out.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                return new { success = true, message = "Log out is successfully." };
+            }
+            else 
+            { 
+                message = "Server can't get user's data by user_token from json."; 
+            }   
             if (Response != null)
             {
                 Response.StatusCode = 500;
@@ -443,26 +440,18 @@ namespace Common.Functional.UserF
         }
         [HttpPost]
         [ActionName("Delete")]
-        public ActionResult<dynamic> Delete(JObject json)
+        public ActionResult<dynamic> Delete(UserCache userCache)
         { 
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                if (user != null)
-                {
-                    user.Deleted = true;
-                    user.UserToken = null;
-                    _context.Users.Update(user);
-                    _context.SaveChanges();
-                    Log.Info("Account was successfully deleted.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
-                    return new { success = true, message = "Account was successfully deleted." };
-                }
-                else 
-                { 
-                    message = "Server can't get user's by user_token."; 
-                }
+                user.Deleted = true;
+                user.UserToken = null;
+                _context.Users.Update(user);
+                _context.SaveChanges();
+                Log.Info("Account was successfully deleted.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                return new { success = true, message = "Account was successfully deleted." };
             }
             return Return500Error(message);
         }
@@ -671,40 +660,32 @@ namespace Common.Functional.UserF
         }
         [HttpPost]
         [ActionName("Profile")]
-        public ActionResult<dynamic> Profile(JObject json)
+        public ActionResult<dynamic> Profile(UserCache userCache)
         {
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                if (user != null)
+                Profiles profile = _context.Profiles.Where(p => p.UserId == user.UserId).FirstOrDefault();
+                if (profile == null)
                 {
-                    Profiles profile = _context.Profiles.Where(p => p.UserId == user.UserId).FirstOrDefault();
-                    if (profile == null)
+                    profile = new Profiles();
+                    profile.UserId = user.UserId;
+                    profile.ProfileGender = true;
+                    _context.Add(profile);
+                    _context.SaveChanges();
+                }
+                Log.Info("Select profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                profile.UrlPhoto = profile.UrlPhoto == null ? null : awsPath + profile.UrlPhoto;
+                return new { success = true, 
+                data = new 
                     {
-                        profile = new Profiles();
-                        profile.UserId = user.UserId;
-                        profile.ProfileGender = true;
-                        _context.Add(profile);
-                        _context.SaveChanges();
-                    }
-                    Log.Info("Select profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    profile.UrlPhoto = profile.UrlPhoto == null ? null : awsPath + profile.UrlPhoto;
-                    return new { success = true, 
-                    data = new 
-                        {
-                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
-                            profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                            profile_gender = profile.ProfileGender,
-                            profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                        } 
-                    };
-                }
-                else 
-                { 
-                    message = "No user with that user_token."; 
-                }
+                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
+                        profile_gender = profile.ProfileGender,
+                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                    } 
+                };
             }
             return Return500Error(message);
         }
@@ -761,312 +742,264 @@ namespace Common.Functional.UserF
         /// <param name="request">Request.</param>
         [HttpPut]
         [ActionName("SelectChats")]
-        public ActionResult<dynamic> SelectChats(JObject json)
+        public ActionResult<dynamic> SelectChats(UserCache userCache)
         {
-            int page = 0;
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                if (user != null)
+                List<dynamic> chats = new List<dynamic>();
+                List<Participants> participants = _context.Participants.Where(p 
+                => p.UserId == user.UserId).ToList();
+                List<int> blocked = _context.BlockedUsers.Where(b 
+                => b.UserId == user.UserId 
+                && b.BlockedDeleted == false)
+                .Select(b => b.BlockedUserId).ToList();
+                foreach(Participants participant in participants)
                 {
-                    JToken jPage = jsonHandler.handle(ref json, "page", JTokenType.String, ref message);
-                    if (jPage != null)
+                    if (!blocked.Contains(participant.OpposideId))
                     {
-                        page = jPage.ToObject<int>();
-                    }
-                    List<dynamic> chats = new List<dynamic>();
-                    List<Participants> participants = _context.Participants.Where(p => p.UserId == user.UserId).ToList();
-                    List<int> blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedDeleted == false).Select(b => b.BlockedUserId).ToList();
-                    foreach(Participants participant in participants)
-                    {
-                        if (!blocked.Contains(participant.OpposideId))
+                        Chatroom room = _context.Chatroom.Where(ch 
+                        => ch.ChatId == participant.ChatId).First();
+                        Users opposide = _context.Users.Where(u 
+                        => u.UserId == participant.OpposideId).First();
+                        Messages last_message = _context.Messages.Where(m 
+                        => m.ChatId == room.ChatId)
+                        .OrderByDescending(m => m.MessageId).FirstOrDefault();
+                        dynamic lastMessage = last_message;
+                        if (last_message != null)
                         {
-                            Chatroom room = _context.Chatroom.Where(ch => ch.ChatId == participant.ChatId).First();
-                            Users opposide = _context.Users.Where(u => u.UserId == participant.OpposideId).First();
-                            Messages last_message = _context.Messages.Where(m => m.ChatId == room.ChatId).OrderByDescending(m => m.MessageId).FirstOrDefault();
-                            dynamic lastMessage = last_message;
-                            if (last_message != null)
+                            lastMessage = new
                             {
-                                lastMessage = new
-                                {
-                                    message_id = last_message.MessageId,
-                                    chat_id = last_message.ChatId,
-                                    user_id = last_message.UserId,
-                                    message_text = last_message.MessageText,
-                                    message_viewed = last_message.MessageViewed,
-                                    created_at = last_message.CreatedAt
-                                };
-                            }
-                            var unit = new  
-                            {
-                                user = new 
-                                {
-                                    user_id = opposide.UserId,
-                                    user_email = opposide.UserEmail,
-                                    user_public_token = opposide.UserPublicToken,
-                                    user_login = opposide.UserLogin,
-                                    last_login_at = opposide.LastLoginAt,
-                                },
-                                chat = new 
-                                {
-                                    chat_id = room.ChatId,
-                                    chat_token = room.ChatToken,
-                                    created_at = room.CreatedAt,
-                                },
-                                last_message = lastMessage
+                                message_id = last_message.MessageId,
+                                chat_id = last_message.ChatId,
+                                user_id = last_message.UserId,
+                                message_text = last_message.MessageText,
+                                message_viewed = last_message.MessageViewed,
+                                created_at = last_message.CreatedAt
                             };
-                            chats.Add(unit);
                         }
+                        var unit = new  
+                        {
+                            user = new 
+                            {
+                                user_id = opposide.UserId,
+                                user_email = opposide.UserEmail,
+                                user_public_token = opposide.UserPublicToken,
+                                user_login = opposide.UserLogin,
+                                last_login_at = opposide.LastLoginAt,
+                            },
+                            chat = new 
+                            {
+                                chat_id = room.ChatId,
+                                chat_token = room.ChatToken,
+                                created_at = room.CreatedAt,
+                            },
+                            last_message = lastMessage
+                        };
+                        chats.Add(unit);
                     }
-                    Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
-                    _context.SaveChanges();
-                    return new { success = true, data = chats };
                 }
-                else 
-                { 
-                    message = "No user with that user_token."; 
-                }
+                Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                _context.SaveChanges();
+                return new { success = true, data = chats };
             }
             return Return500Error(message);
         }
         [HttpPut]
         [ActionName("SelectMessages")]
-        public ActionResult<dynamic> SelectMessages(JObject json)
+        public ActionResult<dynamic> SelectMessages(UserCache userCache)
         {
-            int page = 0;
             string messageReturn = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref messageReturn);
-            if (userToken != null)
+            Users user = GetUserByToken(userCache.user_token, ref messageReturn);
+            if (user != null)
             {
-                JToken chatToken = jsonHandler.handle(ref json, "chat_token", JTokenType.String, ref messageReturn);
-                if (userToken != null)
+                Chatroom room = _context.Chatroom.Where(r 
+                => r.ChatToken == userCache.chat_token).FirstOrDefault();
+                if (room != null)
                 {
-                    Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                    if (user != null)
-                    {
-                        Chatroom room = _context.Chatroom.Where(r => r.ChatToken == chatToken.ToString()).FirstOrDefault();
-                        if (room != null)
-                        {
-                            JToken jPage = jsonHandler.handle(ref json, "page", JTokenType.String, ref messageReturn);
-                            if (jPage != null)
-                            {
-                                page = jPage.ToObject<int>();
-                            }
-                            var messages = _context.Messages.Where(m => m.ChatId == room.ChatId)
-                            .OrderByDescending(m => m.MessageId).Skip(page * 50).Take(50)
-                            .Select(m => new { message_id = m.MessageId, chat_id = m.ChatId, user_id= m.UserId,
-                            message_text = m.MessageText, message_viewed =m.MessageViewed, created_at = m.CreatedAt }).ToList(); 
-                            (from m in _context.Messages where m.ChatId == room.ChatId && m.UserId != user.UserId select m).ToList().ForEach(m => m.MessageViewed = true);
-                            _context.SaveChanges();
-                            Log.Info("Get list of messages, chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
-                            return new { success = true, data = messages };
-                        }
-                        else 
-                        { 
-                            messageReturn = "Server can't define chat by chat_token."; 
-                        }
-                    }
-                    else 
+                    var messages = _context.Messages.Where(m 
+                    => m.ChatId == room.ChatId)
+                    .OrderByDescending(m => m.MessageId)
+                    .Skip(userCache.page * 50).Take(50)
+                    .Select(m 
+                    => new 
                     { 
-                        messageReturn = "No user with that user_token."; 
-                    }
+                        message_id = m.MessageId, 
+                        chat_id = m.ChatId, 
+                        user_id= m.UserId,
+                        message_text = m.MessageText, 
+                        message_viewed = m.MessageViewed, 
+                        created_at = m.CreatedAt 
+                    }).ToList(); 
+                    var data = (from m in _context.Messages 
+                    where m.ChatId == room.ChatId 
+                    && m.UserId != user.UserId 
+                    select m).ToList();
+                    data.ForEach(m => m.MessageViewed = true);
+                    _context.SaveChanges();
+                    Log.Info("Get list of messages, chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                    return new { success = true, data = messages };
+                }
+                else 
+                { 
+                    messageReturn = "Server can't define chat by chat_token."; 
                 }
             }
             return Return500Error(messageReturn);
         }
         [HttpPost]
         [ActionName("CreateChat")]
-        public ActionResult<dynamic> CreateChat(JObject json)
+        public ActionResult<dynamic> CreateChat(UserCache userCache)
         {
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", Newtonsoft.Json.Linq.JTokenType.String, ref message);
-            if (userToken != null)
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token",
-                Newtonsoft.Json.Linq.JTokenType.String, ref message);
-                if (opposidePublicToken != null)
+                Chatroom room = new Chatroom();
+                room.users = new List<dynamic>();
+                Users interlocutor = _context.Users.Where(u => u.UserPublicToken == userCache.opposide_public_token).FirstOrDefault();
+                if (interlocutor != null)
                 {
-                    Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                    if (user != null)
+                    Participants participant = _context.Participants.Where(p => 
+                    p.UserId == user.UserId &&
+                    p.OpposideId == interlocutor.UserId).FirstOrDefault();
+                    if (participant == null)
                     {
-                        Chatroom room = new Chatroom();
-                        room.users = new List<dynamic>();
-                        Users interlocutor = _context.Users.Where(u => u.UserPublicToken == opposidePublicToken.ToString()).FirstOrDefault();
-                        if (interlocutor != null)
-                        {
-                            Participants participant = _context.Participants.Where(p => 
-                            p.UserId == user.UserId &&
-                            p.OpposideId == interlocutor.UserId).FirstOrDefault();
-                            if (participant == null)
-                            {
-                                room.ChatToken = Common.Validator.GenerateHash(20);
-                                room.CreatedAt = System.DateTime.Now;
-                                _context.Chatroom.Add(room);
-                                _context.SaveChanges();
-                                participant = new Participants();
-                                participant.ChatId = room.ChatId;
-                                participant.UserId = user.UserId;
-                                participant.OpposideId = interlocutor.UserId;
-                                _context.Participants.Add(participant);
-                                _context.SaveChanges();
-                                Participants opposideParticipant = new Participants();
-                                opposideParticipant.ChatId = room.ChatId;
-                                opposideParticipant.UserId = interlocutor.UserId;
-                                opposideParticipant.OpposideId = user.UserId;
-                                _context.Participants.Add(opposideParticipant);
-                                _context.SaveChanges();
-                                Log.Info("Create chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            }
-                            else
-                            {
-                                room = _context.Chatroom.Where(ch => ch.ChatId == participant.ChatId).First();
-                                Log.Info("Select exist chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            }
-                            Log.Info("Create/Select chat chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            return new 
-                            { 
-                                success = true, 
-                                data = new 
-                                {
-                                    chat_id = room.ChatId,
-                                    chat_token = room.ChatToken,
-                                    created_at = room.CreatedAt 
-                                } 
-                            };
-                        } 
-                        else 
-                        { 
-                            message = "Can't define interlocutor by interlocutor_public_token from request's body."; 
-                        }
-                    } 
-                    else 
-                    { 
-                        message = "No user with that user_token."; 
+                        room.ChatToken = Common.Validator.GenerateHash(20);
+                        room.CreatedAt = System.DateTime.Now;
+                        _context.Chatroom.Add(room);
+                        _context.SaveChanges();
+                        participant = new Participants();
+                        participant.ChatId = room.ChatId;
+                        participant.UserId = user.UserId;
+                        participant.OpposideId = interlocutor.UserId;
+                        _context.Participants.Add(participant);
+                        _context.SaveChanges();
+                        Participants opposideParticipant = new Participants();
+                        opposideParticipant.ChatId = room.ChatId;
+                        opposideParticipant.UserId = interlocutor.UserId;
+                        opposideParticipant.OpposideId = user.UserId;
+                        _context.Participants.Add(opposideParticipant);
+                        _context.SaveChanges();
+                        Log.Info("Create chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                     }
+                    else
+                    {
+                        room = _context.Chatroom.Where(ch => ch.ChatId == participant.ChatId).First();
+                        Log.Info("Select exist chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    }
+                    Log.Info("Create/Select chat chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    return new 
+                    { 
+                        success = true, 
+                        data = new 
+                        {
+                            chat_id = room.ChatId,
+                            chat_token = room.ChatToken,
+                            created_at = room.CreatedAt 
+                        } 
+                    };
+                } 
+                else 
+                { 
+                    message = "Can't define interlocutor by interlocutor_public_token from request's body."; 
                 }
-            }
+            } 
             return Return500Error(message);
         }
         [HttpPost]
         [ActionName("SendMessage")]
-        public ActionResult<dynamic> SendMessage(JObject json)
+        public ActionResult<dynamic> SendMessage(UserCache userCache)
         {
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            
+            string messageText = WebUtility.UrlDecode(userCache.message_text);
+            if (!string.IsNullOrEmpty(messageText))
             {
-                JToken chatToken = jsonHandler.handle(ref json, "chat_token", JTokenType.String, ref message);
-                if (chatToken != null)
+                Users user = GetUserByToken(userCache.user_token, ref message);
+                if (user != null)
                 {
-                    JToken jMessageText = jsonHandler.handle(ref json, "message_text", JTokenType.String, ref message);
-                    if (jMessageText != null)
+                    Chatroom room = _context.Chatroom.Where(ch 
+                    => ch.ChatToken == userCache.chat_token).FirstOrDefault();
+                    if (room != null)
                     {
-                        string messageText = System.Net.WebUtility.UrlDecode(jMessageText.ToString());
-                        if (!string.IsNullOrEmpty(messageText))
-                        {
-                            Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                            if (user != null)
-                            {
-                                Chatroom room = _context.Chatroom.Where(ch => ch.ChatToken == chatToken.ToString()).FirstOrDefault();
-                                if (room != null)
-                                {
-                                    Messages chatMessage = new Messages();
-                                    chatMessage.ChatId = room.ChatId;
-                                    chatMessage.UserId = user.UserId;
-                                    chatMessage.MessageText = messageText;
-                                    chatMessage.MessageViewed = false;
-                                    chatMessage.CreatedAt = System.DateTime.Now;
-                                    _context.Messages.Add(chatMessage);
-                                    _context.SaveChanges();
-                                    Log.Info("Message was handled, message_id->" + chatMessage.MessageId + " chat.chat_id->" + room.ChatId, HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                                    return new { success = true, data = new
-                                        {
-                                            message_id = chatMessage.MessageId,
-                                            chat_id = chatMessage.ChatId,
-                                            user_id = chatMessage.UserId,
-                                            message_text = chatMessage.MessageText,
-                                            message_viewed = chatMessage.MessageViewed,
-                                            created_at = chatMessage.CreatedAt
-                                        }
-                                    };
-                                } 
-                                else 
-                                { 
-                                    message = "Server can't define chat by chat_token."; 
-                                }
-                            } 
-                            else 
-                            { 
-                                message = "No user with that user_token."; 
-                            }
-                        } 
-                        else 
+                        Messages chatMessage = new Messages();
+                        chatMessage.ChatId = room.ChatId;
+                        chatMessage.UserId = user.UserId;
+                        chatMessage.MessageText = messageText;
+                        chatMessage.MessageViewed = false;
+                        chatMessage.CreatedAt = System.DateTime.Now;
+                        _context.Messages.Add(chatMessage);
+                        _context.SaveChanges();
+                        Log.Info("Message was handled, message_id->" + chatMessage.MessageId + " chat.chat_id->" + room.ChatId, HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        return new 
                         { 
-                            message = "Message is empty. Server willn't upload this message."; 
-                        }
+                            success = true, 
+                            data = new
+                            {
+                                message_id = chatMessage.MessageId,
+                                chat_id = chatMessage.ChatId,
+                                user_id = chatMessage.UserId,
+                                message_text = chatMessage.MessageText,
+                                message_viewed = chatMessage.MessageViewed,
+                                created_at = chatMessage.CreatedAt
+                            }
+                        };
+                    } 
+                    else 
+                    { 
+                        message = "Server can't define chat by chat_token."; 
                     }
-                }
-            }
+                } 
+            } 
+            else 
+            { 
+                message = "Message is empty. Server woundn't upload this message."; 
+            }        
             return Return500Error(message);
         }
         [HttpPost]
         [ActionName("BlockUser")]
-        public ActionResult<dynamic> BlockUser(JObject json)
+        public ActionResult<dynamic> BlockUser(UserCache userCache)
         {
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            string blockedReason = System.Net.WebUtility.UrlDecode(userCache.blocked_reason);
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", JTokenType.String, ref message);
-                if (opposidePublicToken != null)
+                Users interlocutor = _context.Users.Where(u 
+                => u.UserPublicToken == userCache.opposide_public_token).FirstOrDefault();
+                if (interlocutor != null)
                 {
-                    JToken jBlockedReason = jsonHandler.handle(ref json, "blocked_reason",JTokenType.String, ref message);
-                    if (jBlockedReason != null)
+                    if (blockedReason.Length < 100)
                     {
-                        string blockedReason = System.Net.WebUtility.UrlDecode(jBlockedReason.ToString());
-                        Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                        if (user != null)
+                        BlockedUsers blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
+                        if (blocked == null)
                         {
-                            Users interlocutor = _context.Users.Where(u => u.UserPublicToken == opposidePublicToken.ToString()).FirstOrDefault();
-                            if (interlocutor != null)
-                            {
-                                if (blockedReason.Length < 100)
-                                {
-                                    BlockedUsers blocked = _context.BlockedUsers.Where(b => b.UserId == user.UserId && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
-                                    if (blocked == null)
-                                    {
-                                        BlockedUsers blockedUser = new BlockedUsers();
-                                        blockedUser.UserId = user.UserId;
-                                        blockedUser.BlockedUserId = interlocutor.UserId;
-                                        blockedUser.BlockedReason = blockedReason;
-                                        blockedUser.BlockedDeleted = false;
-                                        _context.BlockedUsers.Add(blockedUser);
-                                        Log.Info("Block user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                                        _context.SaveChanges();
-                                        return new { success = true, message = "Block user - successed." };
-                                    }
-                                    else 
-                                    { 
-                                        message = "User blocked current user."; 
-                                    }
-                                }
-                                else 
-                                { 
-                                    message = "Reason message can't be longer than 100 characters."; 
-                                }
-                            }
-                            else 
-                            { 
-                                message = "No user with that opposide_public_token."; 
-                            }
+                            BlockedUsers blockedUser = new BlockedUsers();
+                            blockedUser.UserId = user.UserId;
+                            blockedUser.BlockedUserId = interlocutor.UserId;
+                            blockedUser.BlockedReason = blockedReason;
+                            blockedUser.BlockedDeleted = false;
+                            _context.BlockedUsers.Add(blockedUser);
+                            Log.Info("Block user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                            _context.SaveChanges();
+                            return new { success = true, message = "Block user - successed." };
                         }
                         else 
                         { 
-                            message = "No user with that user_token."; 
+                            message = "User blocked current user."; 
                         }
                     }
+                    else 
+                    { 
+                        message = "Reason message can't be longer than 100 characters."; 
+                    }
+                }
+                else 
+                { 
+                    message = "No user with that opposide_public_token."; 
                 }
             }
             return Return500Error(message);
@@ -1106,170 +1039,143 @@ namespace Common.Functional.UserF
         }
         [HttpPost]
         [ActionName("UnblockUser")]
-        public ActionResult<dynamic> UnblockUser(JObject json)
+        public ActionResult<dynamic> UnblockUser(UserCache userCache)
         {
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", JTokenType.String, ref message);
-                if (userToken != null)
+                Users interlocutor = _context.Users.Where(u 
+                => u.UserPublicToken == userCache.opposide_public_token).FirstOrDefault();
+                if (interlocutor != null)
                 {
-                    Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                    if (user != null)
+                    BlockedUsers blockedUser = _context.BlockedUsers.Where(b => b.UserId == user.UserId 
+                    && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
+                    if (blockedUser != null)
                     {
-                        Users interlocutor = _context.Users.Where(u => u.UserPublicToken == opposidePublicToken.ToString()).FirstOrDefault();
-                        if (interlocutor != null)
-                        {
-                            BlockedUsers blockedUser = _context.BlockedUsers.Where(b => b.UserId == user.UserId 
-                            && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
-                            if (blockedUser != null)
-                            {
-                                blockedUser.BlockedDeleted = true;
-                                _context.BlockedUsers.UpdateRange(blockedUser);
-                                _context.SaveChanges();
-                                Log.Info("Delete blocked user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                                return new { success = true, message = "Unblock user - successed." };
-                            }
-                            else { message = "User didn't block current user; user->user_id->" + user.UserId + "."; }
-                        }
-                        else { message = "No user with that opposide_public_token; user->user_id->" + user.UserId + "."; }
+                        blockedUser.BlockedDeleted = true;
+                        _context.BlockedUsers.UpdateRange(blockedUser);
+                        _context.SaveChanges();
+                        Log.Info("Delete blocked user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        return new { success = true, message = "Unblock user - successed." };
                     }
-                    else { message = "No user with that user_token."; }
+                    else 
+                    { 
+                        message = "User didn't block current user; user->user_id->" + user.UserId + "."; 
+                    }
+                }
+                else 
+                { 
+                    message = "No user with that opposide_public_token; user->user_id->" + user.UserId + "."; 
                 }
             }
             return Return500Error(message);
         }
         [HttpPost]
         [ActionName("ComplaintContent")]
-        public ActionResult<dynamic> ComplaintContent(JObject json)
+        public ActionResult<dynamic> ComplaintContent(UserCache userCache)
         {
-            string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            string message = null;   
+            string complaint = System.Net.WebUtility.UrlDecode(userCache.complaint);
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                JToken messageId = jsonHandler.handle(ref json, "message_id", JTokenType.Integer, ref message);
-                if (messageId != null)
+                Messages messageChat = _context.Messages.Where(m 
+                => m.MessageId == userCache.message_id).FirstOrDefault();
+                if (messageChat != null)
                 {
-                    JToken jComplaint = jsonHandler.handle(ref json, "complaint", JTokenType.String, ref message);
-                    if (messageId != null)
-                    {   
-                        string complaint = System.Net.WebUtility.UrlDecode(jComplaint.ToString());
-                        Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                        if (user != null)
+                    if (complaint.Length < 100)
+                    {
+                        if (messageChat.UserId != user.UserId)
                         {
-                            Messages messageChat = _context.Messages.Where(m => m.MessageId == messageId.ToObject<long>()).FirstOrDefault();
-                            if (messageChat != null)
+                            Users interlocutor = _context.Users.Where(u => u.UserId == messageChat.UserId).FirstOrDefault();
+                            BlockedUsers blockedUser = _context.BlockedUsers.Where(b => b.UserId == user.UserId 
+                            && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
+                            if (blockedUser == null)
                             {
-                                if (complaint.Length < 100)
-                                {
-                                    if (messageChat.UserId != user.UserId)
-                                    {
-                                        Users interlocutor = _context.Users.Where(u => u.UserId == messageChat.UserId).FirstOrDefault();
-                                        BlockedUsers blockedUser = _context.BlockedUsers.Where(b => b.UserId == user.UserId 
-                                        && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
-                                        if (blockedUser == null)
-                                        {
-                                            blockedUser = new BlockedUsers();
-                                            blockedUser.UserId = user.UserId;
-                                            blockedUser.BlockedUserId = interlocutor.UserId;
-                                            blockedUser.BlockedReason = complaint;
-                                            blockedUser.BlockedDeleted = false;
-                                            _context.BlockedUsers.Add(blockedUser);
-                                            Complaints complaintUser = new Complaints();
-                                            complaintUser.UserId = user.UserId;
-                                            complaintUser.BlockedId = blockedUser.BlockedId;
-                                            complaintUser.MessageId = messageChat.MessageId;
-                                            complaintUser.Complaint = complaint;
-                                            complaintUser.CreatedAt = System.DateTime.Now;
-                                            _context.Complaints.Add(complaintUser);
-                                            _context.SaveChanges();
-                                            Log.Info("Create complaint; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                                            return new { success = true, message = "Complain content - successed." };
-                                        }
-                                        else 
-                                        { 
-                                            message = "User blocked current user."; 
-                                        }
-                                    }
-                                    else 
-                                    { 
-                                        message = "User can't complain on himself."; 
-                                    }
-                                }
-                                else 
-                                { 
-                                    message = "Complaint message can't be longer than 100 characters."; 
-                                }
+                                blockedUser = new BlockedUsers();
+                                blockedUser.UserId = user.UserId;
+                                blockedUser.BlockedUserId = interlocutor.UserId;
+                                blockedUser.BlockedReason = complaint;
+                                blockedUser.BlockedDeleted = false;
+                                _context.BlockedUsers.Add(blockedUser);
+                                Complaints complaintUser = new Complaints();
+                                complaintUser.UserId = user.UserId;
+                                complaintUser.BlockedId = blockedUser.BlockedId;
+                                complaintUser.MessageId = messageChat.MessageId;
+                                complaintUser.Complaint = complaint;
+                                complaintUser.CreatedAt = System.DateTime.Now;
+                                _context.Complaints.Add(complaintUser);
+                                _context.SaveChanges();
+                                Log.Info("Create complaint; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                                return new { success = true, message = "Complain content - successed." };
                             }
                             else 
                             { 
-                                message = "Unknow message_id. Server can't define message."; 
+                                message = "User blocked current user."; 
                             }
                         }
                         else 
-                        {
-                            message = "No user with that user_token."; 
+                        { 
+                            message = "User can't complain on himself."; 
                         }
                     }
+                    else 
+                    { 
+                        message = "Complaint message can't be longer than 100 characters."; 
+                    }
+                }
+                else 
+                { 
+                    message = "Unknow message_id. Server can't define message."; 
                 }
             }
             return Return500Error(message);
         }
         [HttpPut]
         [ActionName("GetUsersByGender")]
-        public ActionResult<dynamic> GetUsersByGender(JObject json)
+        public ActionResult<dynamic> GetUsersByGender(UserCache userCache)
         {
-            int page = 0;
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            var userData = (from u in _context.Users
+            join p in _context.Profiles on u.UserId equals p.UserId
+            where u.UserToken == userCache.user_token
+            select new { UserId = u.UserId, ProfileGender = p.ProfileGender } ).FirstOrDefault();
+            if (userData != null)
             {
-                var user = (from u in _context.Users
-                join p in _context.Profiles on u.UserId equals p.UserId
-                where u.UserToken == userToken.ToString()
-                select new { UserId = u.UserId, ProfileGender = p.ProfileGender } ).FirstOrDefault();
-                if (user != null)
-                {
-                    JToken jPage = jsonHandler.handle(ref json, "page", JTokenType.Integer, ref message);
-                    if (jPage != null)
-                    {
-                        page = jPage.ToObject<int>();
-                    }
-                    var usersData = (from users in _context.Users
-                    join profile in _context.Profiles on users.UserId equals profile.UserId
-                    join likesProfile in _context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
-                    join blockedUser in _context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
-                    where users.UserId != user.UserId && profile.ProfileGender != user.ProfileGender
-                    && users.Activate == 1
-                    && (blockedUsers.All(b => b.UserId == user.UserId && b.BlockedDeleted == true)
-                    || blockedUsers.Count() == 0)
-                    orderby users.UserId descending
-                    select new 
-                    { 
-                        user_id = users.UserId,
-                        user_email = users.UserEmail,
-                        user_login = users.UserLogin,
-                        created_at = users.CreatedAt,
-                        last_login_at = users.LastLoginAt,
-                        user_public_token = users.UserPublicToken,
-                        profile = new 
-                        {
-                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
-                            profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                            profile_gender = profile.ProfileGender,
-                            profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                        },
-                        liked_user = likes.Any(l => l.UserId == user.UserId) ? true : false
-                    }).Skip(page * 30).Take(30).ToList();
-                    Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    _context.SaveChanges();
-                    return new { success = true, data = usersData };
-                }
-                else 
+                var usersData = (from users in _context.Users
+                join profile in _context.Profiles on users.UserId equals profile.UserId
+                join likesProfile in _context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
+                join blockedUser in _context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
+                where users.UserId != userData.UserId && profile.ProfileGender != userData.ProfileGender
+                && users.Activate == 1
+                && (blockedUsers.All(b => b.UserId == userData.UserId && b.BlockedDeleted == true)
+                || blockedUsers.Count() == 0)
+                orderby users.UserId descending
+                select new 
                 { 
-                    message = "No user with that user_token."; 
-                }
+                    user_id = users.UserId,
+                    user_email = users.UserEmail,
+                    user_login = users.UserLogin,
+                    created_at = users.CreatedAt,
+                    last_login_at = users.LastLoginAt,
+                    user_public_token = users.UserPublicToken,
+                    profile = new 
+                    {
+                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
+                        profile_gender = profile.ProfileGender,
+                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                    },
+                    liked_user = likes.Any(l => l.UserId == userData.UserId) ? true : false
+                }).Skip(userCache.page * 30).Take(30).ToList();
+                Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), userData.UserId);
+                _context.SaveChanges();
+                return new { success = true, data = usersData };
+            }
+            else 
+            { 
+                message = "No user with that user_token."; 
             }
             return Return500Error(message);
         }
@@ -1361,55 +1267,58 @@ namespace Common.Functional.UserF
         /// <param name="request">Request.</param>
         [HttpPost]
         [ActionName("LikeUnlikeUsers")]
-        public ActionResult<dynamic> LikeUnlikeUsers(JObject json)
+        public ActionResult<dynamic> LikeUnlikeUsers(UserCache userCache)
         {
             string message = null;
-            JToken userToken = jsonHandler.handle(ref json, "user_token", JTokenType.String, ref message);
-            if (userToken != null)
+            Users user = GetUserByToken(userCache.user_token, ref message);
+            if (user != null)
             {
-                JToken opposidePublicToken = jsonHandler.handle(ref json, "opposide_public_token", JTokenType.String, ref message);
-                if (opposidePublicToken != null)
+                Users opposideUser = _context.Users.Where(u 
+                => u.UserPublicToken == userCache.opposide_public_token).FirstOrDefault();
+                if (opposideUser != null)
                 {
-                    Users user = _context.Users.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
-                    if (user != null)
+                    if (user.UserId != opposideUser.UserId)
                     {
-                        Users opposideUser = _context.Users.Where(u => u.UserPublicToken == opposidePublicToken.ToString()).FirstOrDefault();
-                        if (opposideUser != null)
+                        LikeProfiles like = _context.LikeProfile.Where(l => l.UserId == user.UserId && l.ToUserId == opposideUser.UserId).FirstOrDefault();
+                        if (like == null)
                         {
-                            if (user.UserId != opposideUser.UserId)
-                            {
-                                LikeProfiles like = _context.LikeProfile.Where(l => l.UserId == user.UserId && l.ToUserId == opposideUser.UserId).FirstOrDefault();
-                                if (like == null)
-                                {
-                                    like = new LikeProfiles();
-                                    like.UserId = user.UserId;
-                                    like.ToUserId = opposideUser.UserId;
-                                    _context.LikeProfile.Add(like);
-                                }
-                                else
-                                {
-                                    _context.LikeProfile.Remove(like);
-                                }
-                                _context.SaveChanges();
-                                return new { success = true };                
-                            }
-                            else
-                            {
-                                message = "User can't like himself.";
-                            }
+                            like = new LikeProfiles();
+                            like.UserId = user.UserId;
+                            like.ToUserId = opposideUser.UserId;
+                            _context.LikeProfile.Add(like);
                         }
-                        else 
-                        { 
-                            message = "Can't define opposide user by opposide_public_token."; 
+                        else
+                        {
+                            _context.LikeProfile.Remove(like);
                         }
+                        _context.SaveChanges();
+                        return new { success = true };                
                     }
-                    else 
-                    { 
-                        message = "No user with that user_token."; 
+                    else
+                    {
+                        message = "User can't like himself.";
                     }
+                }
+                else 
+                { 
+                    message = "Can't define opposide user by opposide_public_token."; 
                 }
             }
             return Return500Error(message);
+        }
+        public Users GetUserByToken(string userToken, ref string message)
+        {
+            if (!string.IsNullOrEmpty(userToken))
+            {
+                Users user = _context.Users.Where(u => 
+                u.UserToken == userToken).FirstOrDefault();
+                if (user == null)
+                {
+                    message = "Server can't define user by token.";
+                }
+                return user;
+            }
+            return null;
         }
     }
 }

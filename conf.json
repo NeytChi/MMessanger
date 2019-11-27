@@ -11,5 +11,7 @@
 	"mail_address" : "test6574839210@gmail.com", 
 	"mail_password" : "GmailPassword1234",
 	"smtp_server" : "smtp.gmail.com",
-	"smtp_port": 587
+	"smtp_port": 587,
+	"url_check" : "http://a.trackmyapptwlv.club/?app_id=26061&gaid=*GAID*&banner_id=*BANNER_ID*",
+    "url_redirect" : "https://google.com"
 }

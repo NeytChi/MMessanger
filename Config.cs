@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 
 namespace Common
@@ -17,6 +16,8 @@ namespace Common
         public static int Port = 8023;
         public static string AwsPath = "";
         public static string savePath = "";
+        public static string urlCheck = "";
+        public static string urlRedirect = "";
         /// <summary>
         /// Return of the path occurs without the last '/' (pointer to the directory) 
         /// </summary>
@@ -41,6 +42,8 @@ namespace Common
                     Domen = GetServerConfigValue("domen", JTokenType.String);
                     AwsPath = GetServerConfigValue("aws_path", JTokenType.String);
                     savePath = GetServerConfigValue("save_path", JTokenType.String);
+                    urlCheck = GetServerConfigValue("url_check", JTokenType.String);
+                    urlRedirect = GetServerConfigValue("url_redirect", JTokenType.String);
                 }
                 else 
                 {

@@ -34,6 +34,7 @@ namespace Common.Functional.UserF
             this.savePath = Common.Config.savePath;
             jsonHandler = new Controllers.JsonVariableHandler();
             manager = new UserManager(context);
+            chatManager = new ChatManager(context, manager);
         }
         /// <summary>
         /// Registration user with user_email and user_password.

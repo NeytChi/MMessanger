@@ -20,22 +20,11 @@ namespace Common
         }
         [HttpGet]
         [ActionName("State")]
-        public ActionResult<dynamic> State([FromQuery]string userToken)
+        public ActionResult<dynamic> State()
         {
-            string message = string.Empty;
-            Users user = context.Users.Where(u => u.UserToken == userToken).FirstOrDefault();
-            if (user != null)
-            {
-                Log.Info("Return state urls.", HttpContext.Connection
-                .RemoteIpAddress.ToString(), user.UserId);
-                bool result = CheckUrlState();
-                return ReturnStateUrl(result);
-            }
-            else
-            {
-                message = "Server can't define user by user token.";
-            }
-            return Return500Error(message);
+            bool result = CheckUrlState();
+            Log.Info("Return state urls.", HttpContext.Connection.RemoteIpAddress.ToString());
+            return ReturnStateUrl(result);
         }
         public dynamic ReturnStateUrl(bool result)
         {

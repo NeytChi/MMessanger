@@ -1,8 +1,0 @@
-{ 
-	"Server" : "localhost",
-	"Database" : "minimessanger_aspnet", 
-	"User" : "root", 
-	"Password" : "root", 
-   	"Pooling" : "false",
-	"SslMode" : "none"
-}

@@ -4,6 +4,7 @@ namespace miniMessanger.Models
     {
         public string user_token { get; set; }
         public int page { get; set; }
+        public int count { get; set; }
         public long message_id { get; set; }
         public string complaint { get; set; }
         public string opposide_public_token { get; set; }

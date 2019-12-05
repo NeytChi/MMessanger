@@ -9,6 +9,8 @@ namespace miniMessanger.Models
         public long LikeId { get; set; }
         public int UserId { get; set; }
         public int ToUserId { get; set; }
+        public bool Like { get; set; }
+        public bool Dislike { get; set; }
         public virtual Users User { get; set; }
         public virtual Users ToUser { get; set; }
     }

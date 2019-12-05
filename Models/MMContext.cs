@@ -24,7 +24,7 @@ namespace miniMessanger.Models
         public virtual DbSet<Chatroom> Chatroom { get; set; }
         public virtual DbSet<Complaints> Complaints { get; set; }
         public virtual DbSet<Files> Files { get; set; }
-        public virtual DbSet<miniMessanger.Models.LogMessage> Logs { get; set; }
+        public virtual DbSet<LogMessage> Logs { get; set; }
         public virtual DbSet<Messages> Messages { get; set; }
         public virtual DbSet<Participants> Participants { get; set; }
         public virtual DbSet<Profiles> Profiles { get; set; }
@@ -115,6 +115,15 @@ namespace miniMessanger.Models
                     .HasColumnName("to_user_id")
                     .HasColumnType("int(11)");
 
+                entity.Property(e => e.Like)
+                    .HasColumnName("like")
+                    .HasColumnType("boolean");
+
+                entity.Property(e => e.Dislike)
+                    .HasColumnName("dislike")
+                    .HasColumnType("boolean");
+
+                
                 /*entity.HasOne(like => like.User)
                     .WithMany(user => user.)
                     .HasForeignKey(d => d.BlockedUserId)
@@ -309,10 +318,18 @@ namespace miniMessanger.Models
                     //.HasDefaultValueSql("'CURRENT_TIMESTAMP'");
                     //.ValueGeneratedOnAddOrUpdate();
 
+                entity.Property(e => e.MessageType)
+                    .HasColumnName("message_type")
+                    .HasColumnType("varchar(10)");
+
                 entity.Property(e => e.MessageText)
                     .HasColumnName("message_text")
                     .HasColumnType("varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci")
                     .IsUnicode(true);
+
+                entity.Property(e => e.UrlFile)
+                    .HasColumnName("url_file")
+                    .HasColumnType("varchar(100)");
 
                 entity.Property(e => e.MessageViewed)
                     .HasColumnName("message_viewed")

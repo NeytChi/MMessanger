@@ -1,8 +1,8 @@
 { 
 	"Server" : "localhost",
-	"Database" : "minimessanger_aspnet", 
-	"User" : "chistyi", 
-	"Password" : "6W4i-52jz-9r3q", 
+	"Database" : "messanger", 
+	"User" : "root", 
+	"Password" : "root", 
    	"Pooling" : "false",
 	"SslMode" : "none"
 }

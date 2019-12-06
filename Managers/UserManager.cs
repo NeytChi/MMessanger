@@ -10,7 +10,6 @@ namespace miniMessanger
         public UserManager(MMContext context)
         {
             this.context = context;
-
             this.awsPath = Common.Config.AwsPath;
         }
         public LikeProfiles LikeUser(UserCache cache, ref string message)
@@ -143,18 +142,17 @@ namespace miniMessanger
             }
             return null;
         }
-        public dynamic ReciprocalUsers(int userId, int page, int count)
+        public dynamic ReciprocalUsers(int userId, bool profileGender, int page, int count)
         {
             return (from users in context.Users
+            join like in context.LikeProfile on users.UserId equals like.ToUserId
             join profile in context.Profiles on users.UserId equals profile.UserId
-            join like in context.LikeProfile on userId equals like.UserId
-            join opposideLike in context.LikeProfile on users.UserId equals opposideLike.UserId into opposide
             join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blockedUsers
-            where (opposide.Any(o => o.Like && o.ToUserId == userId) || like.Like)
-            && users.UserId != userId
+            where like.UserId == userId
+            && like.Like 
+            && profile.ProfileGender != profileGender 
             && (blockedUsers.All(b => b.UserId == userId && b.BlockedDeleted == true)
             || blockedUsers.Count() == 0)
-            orderby users.UserId descending
             select new
             {
                 user = new 
@@ -167,7 +165,7 @@ namespace miniMessanger
                     profile = new 
                     {
                         url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
-                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
+                        profile_age = profile.ProfileAge == null ? -1 : (sbyte)(long)profile.ProfileAge,
                         profile_gender = profile.ProfileGender,
                         profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                     },

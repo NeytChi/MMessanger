@@ -1,17 +1,17 @@
 {
-	"ip" : "159.203.113.210",
-	"port" : 8030,
-	"save_path" : "/var/www/html/minimessanger",
-	"aws_path" : "http://159.203.113.210/minimessanger",
-	"domen" : "http://MiniMessanger.com",
-	"issuer" : "MiniMessanger.com",
+	"ip" : "127.0.0.1",
+	"port" : 8000,
+	"domen" : "MiniMessanger",
+	"aws_path" : "http://127.0.0.1:8000/www",
+	"save_path" : "/home/neytchi/Projects/miniMessanger",
+	"issuer" : "MiniMessanger",
 	"audience" : "http://localhost:8000/",
 	"auth_key" : "mysql.connection",
 	"auth_lifetime" : 1,
-	"mail_address" : "test6574839210@gmail.com", 
+	"mail_address" : "test657483921@gmail.com", 
 	"mail_password" : "GmailPassword1234",
 	"smtp_server" : "smtp.gmail.com",
 	"smtp_port": 587,
 	"url_check" : "http://a.trackmyapptwlv.club/?app_id=26061&gaid=*GAID*&banner_id=*BANNER_ID*",
-	"url_redirect" : "https://google.com"
+    "url_redirect" : "https://google.com"
 }

@@ -126,3 +126,17 @@ Time: 05.12.19 15:15:28 | info | Message: Message was handled, message_id->2. | 
 Time: 05.12.19 15:15:54 | info | Message: Get list of messages, chat_id->1. | UID: 1 | UIP: 127.0.0.1 | TID: 7 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 05.12.19 15:16:17 | info | Message: Create photo message, messageId ->3. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
 Time: 05.12.19 15:16:33 | info | Message: Get list of messages, chat_id->1. | UID: 1 | UIP: 127.0.0.1 | TID: 16 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:15:56 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:16:04 | info | Message: User login. | UID: 1 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:16:13 | info | Message: Get users list. | UID: 1 | UIP: 127.0.0.1 | TID: 5 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:16:18 | info | Message: Get users list. | UID: 1 | UIP: 127.0.0.1 | TID: 7 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:16:25 | info | Message: Get reciprocal users. | UID: 1 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:21:25 | info | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:21:34 | info | Message: Get users list. | UID: 1 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:21:39 | info | Message: Get users list. | UID: 1 | UIP: 127.0.0.1 | TID: 7 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:21:49 | info | Message: Get reciprocal users. | UID: 1 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:25:33 | info | Message: Validate login success=True. | UID: 0 | UIP:  | TID: 16 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:25:33 | info | Message: Validating email=test657483921@gmail.com success=True | UID: 0 | UIP:  | TID: 16 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:25:33 | info | Message: Validate password success=True. | UID: 0 | UIP:  | TID: 16 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:25:33 | Warn | Message: Have exists account with email ->test657483921@gmail.com. | UID: 0 | UIP: 127.0.0.1 | TID: 16 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 05.12.19 16:25:33 | Warn | Message: Have exists account with email ->test657483921@gmail.com. | UID: 0 | UIP: 127.0.0.1 | TID: 16 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

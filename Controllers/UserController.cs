@@ -4,12 +4,12 @@ using System.Net;
 using Controllers;
 using System.Linq;
 using miniMessanger;
+using Newtonsoft.Json;
 using miniMessanger.Models;
 using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
-using Newtonsoft.Json;
 
 namespace Common.Functional.UserF
 {
@@ -20,8 +20,6 @@ namespace Common.Functional.UserF
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private string awsPath = "none";
-        private string savePath = "none";
         private DateTime unixed = new DateTime(1970, 1, 1, 0, 0, 0);
         private MMContext context;
         private JsonVariableHandler jsonHandler;
@@ -30,8 +28,6 @@ namespace Common.Functional.UserF
         public UsersController(MMContext context)
         {
             this.context = context;
-            this.awsPath = Common.Config.AwsPath;
-            this.savePath = Common.Config.savePath;
             jsonHandler = new Controllers.JsonVariableHandler();
             manager = new UserManager(context);
             chatManager = new ChatManager(context, manager);
@@ -202,7 +198,7 @@ namespace Common.Functional.UserF
                                         user_public_token = user_data.UserPublicToken,
                                         profile = new
                                         {
-                                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                                            url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
                                             profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                                             profile_gender = profile.ProfileGender,
                                             profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
@@ -475,15 +471,15 @@ namespace Common.Functional.UserF
                     {
                         if (profile_photo.ContentType.Contains("image"))
                         {
-                            if (System.IO.File.Exists(savePath + profile.UrlPhoto))
+                            if (System.IO.File.Exists(Config.savePath + profile.UrlPhoto))
                             {
-                                System.IO.File.Delete(savePath + profile.UrlPhoto);
+                                System.IO.File.Delete(Config.savePath + profile.UrlPhoto);
                             }
-                            Directory.CreateDirectory(savePath + "/ProfilePhoto/" +
+                            Directory.CreateDirectory(Config.savePath + "/ProfilePhoto/" +
                              DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
                             profile.UrlPhoto = "/ProfilePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
                             + "-" + DateTime.Now.Day + "/" + Validator.GenerateHash(10);
-                            profile_photo.CopyTo(new System.IO.FileStream(savePath + profile.UrlPhoto,
+                            profile_photo.CopyTo(new System.IO.FileStream(Config.savePath + profile.UrlPhoto,
                             System.IO.FileMode.Create));
                             Log.Info("Update profile photo.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                         }
@@ -493,7 +489,7 @@ namespace Common.Functional.UserF
                     Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                     return new { success = true, data = new 
                     {
-                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                        url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
                         profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                         profile_gender = profile.ProfileGender,
                         profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
@@ -574,11 +570,11 @@ namespace Common.Functional.UserF
                     {
                         if (profile_photo.ContentType.Contains("image"))
                         {
-                            if (System.IO.File.Exists(savePath + profile.UrlPhoto))
+                            if (System.IO.File.Exists(Config.savePath + profile.UrlPhoto))
                             {
-                                System.IO.File.Delete(savePath + profile.UrlPhoto);
+                                System.IO.File.Delete(Config.savePath + profile.UrlPhoto);
                             }
-                            Directory.CreateDirectory(savePath + "/ProfilePhoto/" +
+                            Directory.CreateDirectory(Config.savePath + "/ProfilePhoto/" +
                              DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
                             profile.UrlPhoto = "/ProfilePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
                             + "-" + DateTime.Now.Day + "/" + Validator.GenerateHash(10);
@@ -596,7 +592,7 @@ namespace Common.Functional.UserF
                         message = "User account was successfully registered. See your email to activate account by link.",
                         data = new 
                         {
-                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                            url_photo = profile.UrlPhoto == null ? "" : Config.savePath + profile.UrlPhoto,
                             profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                             profile_gender = profile.ProfileGender,
                             profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
@@ -632,13 +628,13 @@ namespace Common.Functional.UserF
                     context.SaveChanges();
                 }
                 Log.Info("Select profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                profile.UrlPhoto = profile.UrlPhoto == null ? null : awsPath + profile.UrlPhoto;
+                profile.UrlPhoto = profile.UrlPhoto == null ? null : Config.AwsPath + profile.UrlPhoto;
                 return new 
                 { 
                     success = true, 
                     data = new 
                     {
-                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                        url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
                         profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                         profile_gender = profile.ProfileGender,
                         profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
@@ -780,7 +776,7 @@ namespace Common.Functional.UserF
                         user_id = m.UserId,
                         message_type = m.MessageType,
                         message_text = m.MessageText,
-                        url_file = string.IsNullOrEmpty(m.UrlFile) ? "" : awsPath + m.UrlFile,
+                        url_file = string.IsNullOrEmpty(m.UrlFile) ? "" : Config.AwsPath + m.UrlFile,
                         message_viewed = m.MessageViewed,
                         created_at = m.CreatedAt
                     }).ToList(); 
@@ -1096,6 +1092,7 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> GetUsersByGender(UserCache cache)
         {
             string message = null;
+            int count = cache.count == 0 ? 30 : cache.count;
             var userData = manager.GetUserWithProfile(cache.user_token, ref message);
             if (userData != null)
             {
@@ -1104,7 +1101,7 @@ namespace Common.Functional.UserF
                 join likesProfile in context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
                 join blockedUser in context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
                 where users.UserId != userData.UserId && profile.ProfileGender != userData.Profile.ProfileGender
-                && users.Activate == 1
+                && users.Activate == 1 && (!likes.Any(l => l.UserId == userData.UserId && l.Like))
                 && (blockedUsers.All(b => b.UserId == userData.UserId && b.BlockedDeleted == true)
                 || blockedUsers.Count() == 0)
                 orderby users.UserId descending
@@ -1118,7 +1115,7 @@ namespace Common.Functional.UserF
                     user_public_token = users.UserPublicToken,
                     profile = new 
                     {
-                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                        url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
                         profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                         profile_gender = profile.ProfileGender,
                         profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
@@ -1141,6 +1138,7 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> SelectChatsByGender(UserCache cache)
         {
             string message = null;
+            int count = cache.count == 0 ? 30 : cache.count;
             var user = manager.GetUserWithProfile(cache.user_token, ref message);
             if (user != null)
             {
@@ -1168,7 +1166,7 @@ namespace Common.Functional.UserF
                         chat_id = participant.ChatId,
                         profile = new 
                         {
-                            url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                            url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
                             profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                             profile_gender = profile.ProfileGender,
                             profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
@@ -1191,7 +1189,7 @@ namespace Common.Functional.UserF
                     } ,
                     liked_user = likes.Any(l => l.Like) ? true : false,
                     disliked_user = likes.Any(l => l.Dislike) ? true : false
-                }).Skip(cache.page * 30).Take(30).ToList();           
+                }).Skip(cache.page * count).Take(count).ToList();           
                 Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                 context.SaveChanges();
                 return new { success = true, data = data };
@@ -1203,10 +1201,11 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> ReciprocalUsers(UserCache cache)
         {
             string message = null;
+            int count = cache.count == 0 ? 30 : cache.count;
             Users user = manager.GetUserWithProfile(cache.user_token, ref message);
             if (user != null)
             {
-                dynamic data = manager.ReciprocalUsers(user.UserId, cache.page, cache.count);
+                dynamic data = manager.ReciprocalUsers(user.UserId, user.Profile.ProfileGender, cache.page, count);
                 Log.Info("Get reciprocal users.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                 return new { success = true, data = data };
             }

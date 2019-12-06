@@ -362,16 +362,6 @@ namespace miniMessanger.Models
                 entity.Property(e => e.UserId)
                     .HasColumnName("user_id")
                     .HasColumnType("int(11)");
-                                
-                // entity.HasOne(e => e.Opposite)
-                //     .WithOne(u => u.Opposite)
-                //     .HasForeignKey<Participants>(e => e.OpposideId)
-                //     .HasConstraintName("participants_ibfk_1");
-
-                // entity.HasOne(e => e.ChatSide)
-                //     .WithOne(u => u.ChatSide)
-                //     .HasForeignKey<Participants>(e => e.UserId)
-                //     .HasConstraintName("participants_ibfk_2");
             });
 
             modelBuilder.Entity<Profiles>(entity =>
@@ -401,8 +391,8 @@ namespace miniMessanger.Models
                     .HasColumnName("url_photo")
                     .HasColumnType("varchar(256)");
 
-                entity.Property(e => e.UrlPhoto)
-                    .HasColumnName("url_photo")
+                entity.Property(e => e.ProfileCity)
+                    .HasColumnName("profile_city")
                     .HasColumnType("varchar(256)");
 
                 entity.Property(e => e.UserId)

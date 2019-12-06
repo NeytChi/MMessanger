@@ -1,7 +1,5 @@
-﻿using System;
-using Common;
+﻿using Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace miniMessanger.Models
 {
@@ -27,7 +25,7 @@ namespace miniMessanger.Models
         public virtual DbSet<LogMessage> Logs { get; set; }
         public virtual DbSet<Message> Messages { get; set; }
         public virtual DbSet<Participants> Participants { get; set; }
-        public virtual DbSet<Profiles> Profiles { get; set; }
+        public virtual DbSet<Profile> Profile { get; set; }
         public virtual DbSet<LikeProfiles> LikeProfile { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -285,46 +283,6 @@ namespace miniMessanger.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("complaints_ibfk_1");
             });
-            modelBuilder.Entity<LogMessage>(entity =>
-            {
-                entity.HasKey(e => e.log_id)
-                    .HasName("PRIMARY");
-
-                entity.ToTable("logs");
-
-                entity.Property(e => e.log_id)
-                    .HasColumnName("log_id")
-                    .HasColumnType("bigint(20)");
-
-                entity.Property(e => e.message)
-                    .HasColumnName("message")
-                    .HasColumnType("varchar(2000)");
-
-                entity.Property(e => e.user_computer)
-                    .HasColumnName("user_computer")
-                    .HasColumnType("varchar(100)");
-
-                entity.Property(e => e.time)
-                    .HasColumnName("time")
-                    .HasColumnType("DATETIME");
-                
-                entity.Property(e => e.level)
-                    .HasColumnName("level")
-                    .HasColumnType("varchar(10)");
-
-                entity.Property(e => e.user_id)
-                    .HasColumnName("user_id")
-                    .HasColumnType("bigint(20)");
-
-                entity.Property(e => e.thread_id)
-                    .HasColumnName("thread_id")
-                    .HasColumnType("bigint(20)");
-
-                entity.Property(e => e.user_ip)
-                    .HasColumnName("user_ip")
-                    .HasColumnType("varchar(20)");
-            });
-
             modelBuilder.Entity<Message>(entity =>
             {
                 entity.HasKey(e => e.MessageId)
@@ -393,7 +351,7 @@ namespace miniMessanger.Models
                     .HasColumnType("int(11)");
             });
 
-            modelBuilder.Entity<Profiles>(entity =>
+            modelBuilder.Entity<Profile>(entity =>
             {
                 entity.HasKey(e => e.ProfileId)
                     .HasName("PRIMARY");
@@ -430,7 +388,7 @@ namespace miniMessanger.Models
 
                 entity.HasOne(d => d.User)
                     .WithOne(p => p.Profile)
-                    .HasForeignKey<Profiles>(e => e.UserId)
+                    .HasForeignKey<Profile>(e => e.UserId)
                     .IsRequired()
                     .HasConstraintName("profiles_ibfk_1");
             });

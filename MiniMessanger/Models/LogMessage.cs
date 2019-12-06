@@ -1,25 +1,16 @@
-﻿namespace miniMessanger.Models
-{
-    public enum LogLevel 
-    { 
-        DEBUG, 
-        INFO, 
-        WARN, 
-        ERROR, 
-        FATAL,
-        OFF,
-        TRACE
-    }
+﻿using System;
 
+namespace miniMessanger.Models
+{
     public partial class LogMessage
     {
-        public long log_id { get; set; }
+        public long logId { get; set; }
         public string message { get; set; }
-        public string user_computer { get; set; }
-        public System.DateTime time { get; set; }
+        public string userComputer { get; set; }
+        public DateTime time { get; set; }
         public string level { get; set; }
-        public long user_id { get; set; }
-        public long thread_id { get; set; }
-        public string user_ip { get; set; }
+        public long userId { get; set; }
+        public long threadId { get; set; }
+        public string userIp { get; set; }
     }
 }

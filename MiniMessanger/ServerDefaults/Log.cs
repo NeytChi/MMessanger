@@ -1,66 +1,57 @@
-﻿using miniMessanger.Models;
+﻿using System;
+using System.IO;
+using System.Threading;
+using miniMessanger.Models;
 
 namespace Common
 {
     public static class Log
     {
-        public static LogLevel Logging = LogLevel.DEBUG;
-        private static string PathLogs = System.IO.Directory.GetCurrentDirectory() + "/logs/";
-        private static string FileName = System.DateTime.Now.Day + "-" + System.DateTime.Now.Month + "-" + System.DateTime.Now.Year;
+        private static string PathLogs = Config.currentDirectory + "/logs/";
+        private static string FileName = DateTime.Now.Day + "-" + DateTime.Now.Month + "-" + DateTime.Now.Year;
         private static string FullPathLog = PathLogs + FileName;
-        private static System.DateTime CurrentFileDate = System.DateTime.Now;
-        private static string UserComputer = System.Environment.UserName + "-" + System.Environment.MachineName;
-        private static System.IO.StreamWriter Writer;
-        public static Common.LogContext context = new LogContext();
+        private static DateTime CurrentFileDate = DateTime.Now;
+        private static string UserComputer = Environment.UserName + "-" + Environment.MachineName;
+        private static StreamWriter Writer;
         
         public static void WriteLogMessage(LogMessage log)
         {
-            if (Logging != LogLevel.OFF)
+            if (!string.IsNullOrEmpty(log.message))
             {
-                if (!string.IsNullOrEmpty(log.message))
-                {
-                    if (log.message.Length > 2000)
-                    {
-                        log.message = log.message.Substring(0, 2000);
-                    }
-                }
-                else
-                {
-                    Error("Log->message - is null or emply, call WriteLogMessage()");
-                    return;
-                }
-                log.user_computer = UserComputer;
-                log.time = System.DateTime.Now;
-                log.thread_id = System.Threading.Thread.CurrentThread.ManagedThreadId;
-                ChangeLogFile(log.time);
+                log.userComputer = UserComputer;
+                log.time = DateTime.Now;
+                log.threadId = Thread.CurrentThread.ManagedThreadId;
                 System.Diagnostics.Debug.WriteLine(log.message); 
-                Writer.WriteAsync
-                (
-                    "Time: " + log.time + " | " +
-                    log.level + " | " +
-                    "Message: " + log.message  + " | " + 
-                    "UID: " + log.user_id + " | " +
-                    "UIP: " + log.user_ip + " | " +
-                    "TID: " + log.thread_id + " | " +
-                    "UPC: " + log.user_computer + " | " +
-                    "\r\n"
-                );
-                Writer.Flush();
-                context.Logs.AddAsync(log);
-                context.SaveChangesAsync();
+                CheckLogFile(log.time);
+                WriteLogMessage(log);
             }
             else
             {
                 System.Diagnostics.Debug.WriteLine(log.message);
             }   
         }
-        private static void ChangeLogFile(System.DateTime Local)
+        public static void WriteLogToFile(LogMessage log)
         {
-            if (!System.IO.Directory.Exists(PathLogs))
+            Writer.WriteAsync
+            (
+                "Time: " + log.time + " | " +
+                log.level + " | " +
+                "Message: " + log.message  + " | " + 
+                "UID: " + log.userId + " | " +
+                "UIP: " + log.userIp + " | " +
+                "TID: " + log.threadId + " | " +
+                "UPC: " + log.userComputer + " | " +
+                "\r\n"
+            );
+            Writer.Flush();
+        }
+        private static void CheckLogFile(DateTime Local)
+        {
+            if (!Directory.Exists(PathLogs))
             {
-                System.IO.Directory.CreateDirectory(PathLogs);
+                Directory.CreateDirectory(PathLogs);
             }
-            if (!System.IO.File.Exists(FullPathLog) || Local.Day != CurrentFileDate.Day || Writer == null)
+            if (!File.Exists(FullPathLog) || Local.Day != CurrentFileDate.Day || Writer == null)
             {
                 if (Writer != null)
                 {
@@ -69,13 +60,13 @@ namespace Common
                 CurrentFileDate = Local;
                 FileName = CurrentFileDate.Day + "-" + CurrentFileDate.Month + "-" + CurrentFileDate.Year;
                 FullPathLog = PathLogs + FileName;
-                if (System.IO.File.Exists(FullPathLog))
+                if (File.Exists(FullPathLog))
                 {
-                    Writer = new System.IO.StreamWriter(FullPathLog, true);
+                    Writer = new StreamWriter(FullPathLog, true);
                 }
                 else
                 {
-                    Writer = System.IO.File.CreateText(FullPathLog);
+                    Writer = File.CreateText(FullPathLog);
                 }
             }
         }
@@ -84,7 +75,7 @@ namespace Common
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "trace",
+                level = "TRACE",
             };
             WriteLogMessage(log);
         }
@@ -93,7 +84,7 @@ namespace Common
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "debug",
+                level = "DEBUG",
             };
             WriteLogMessage(log);
         }
@@ -102,7 +93,7 @@ namespace Common
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "info"
+                level = "INFO"
             };
             WriteLogMessage(log);
         }
@@ -111,29 +102,29 @@ namespace Common
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "info",
-                user_ip = ip
+                level = "INFO",
+                userIp = ip
             };
             WriteLogMessage(log);
         }
-        public static void Info(string message, long user_id)
+        public static void Info(string message, long userId)
         {
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "info",
-                user_id = user_id
+                level = "INFO",
+                userId = userId
             };
             WriteLogMessage(log);
         }
-        public static void Info(string message, string ip, long user_id)
+        public static void Info(string message, string ip, long userId)
         {
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "info",
-                user_ip = ip,
-                user_id = user_id
+                level = "INFO",
+                userIp = ip,
+                userId = userId
             };
             WriteLogMessage(log);
         }
@@ -142,7 +133,7 @@ namespace Common
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "Warn",
+                level = "WARN",
             };
             WriteLogMessage(log);
         }
@@ -151,29 +142,29 @@ namespace Common
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "Warn",
-                user_ip = ip
+                level = "WARN",
+                userIp = ip
             };
             WriteLogMessage(log);
         }
-        public static void Warn(string message, long user_id)
+        public static void Warn(string message, long userId)
         {
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "Warn",
-                user_id = user_id
+                level = "WARN",
+                userId = userId
             };
             WriteLogMessage(log);
         }
-        public static void Warn(string message, string ip, long user_id)
+        public static void Warn(string message, string ip, long userId)
         {
             LogMessage log = new LogMessage
             {
                 message = message,
-                level = "Warn",
-                user_ip = ip,
-                user_id = user_id
+                level = "WARN",
+                userIp = ip,
+                userId = userId
             };
             WriteLogMessage(log);
         }
@@ -192,28 +183,28 @@ namespace Common
             {
                 message = message,
                 level = "ERROR",
-                user_ip = ip
+                userIp = ip
             };
             WriteLogMessage(log);
         }
-        public static void Error(string message, long user_id)
+        public static void Error(string message, long userId)
         {
             LogMessage log = new LogMessage
             {
                 message = message,
                 level = "ERROR",
-                user_id = user_id
+                userId = userId
             };
             WriteLogMessage(log);
         }
-        public static void Error(string message, string ip, long user_id)
+        public static void Error(string message, string ip, long userId)
         {
             LogMessage log = new LogMessage
             {
                 message = message,
                 level = "ERROR",
-                user_ip = ip,
-                user_id = user_id
+                userIp = ip,
+                userId = userId
             };
             WriteLogMessage(log);
         }
@@ -232,48 +223,30 @@ namespace Common
             {
                 message = message,
                 level = "FATAL",
-                user_ip = ip
+                userIp = ip
             };
             WriteLogMessage(log);
         }
-        public static void Fatal(string message, long user_id)
+        public static void Fatal(string message, long userId)
         {
             LogMessage log = new LogMessage
             {
                 message = message,
                 level = "FATAL",
-                user_id = user_id
+                userId = userId
             };
             WriteLogMessage(log);
         }
-        public static void Fatal(string message, string ip, long user_id)
+        public static void Fatal(string message, string ip, long userId)
         {
             LogMessage log = new LogMessage
             {
                 message = message,
                 level = "FATAL",
-                user_ip = ip,
-                user_id = user_id
+                userIp = ip,
+                userId = userId
             };
             WriteLogMessage(log);
-        }
-        public static void Off()
-        {
-            Logging = LogLevel.OFF;
-        }
-        private static string SetLevelLog(LogLevel level)
-        {
-            switch (level)
-            {
-                case LogLevel.DEBUG: return "debug";
-                case LogLevel.ERROR: return "error";
-                case LogLevel.FATAL: return "fatal";
-                case LogLevel.INFO: return "info";
-                case LogLevel.OFF: return "off";
-                case LogLevel.TRACE: return "trace";
-                case LogLevel.WARN: return "warn";
-                default: return "fatal";
-            }
         }
     }
 }

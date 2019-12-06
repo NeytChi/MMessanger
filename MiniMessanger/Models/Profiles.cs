@@ -1,6 +1,6 @@
 ﻿namespace miniMessanger.Models
 {
-    public partial class Profiles
+    public partial class Profile
     {
         public int ProfileId { get; set; }
         public int UserId { get; set; }

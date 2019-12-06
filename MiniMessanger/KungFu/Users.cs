@@ -1,4 +1,5 @@
 using System.Linq;
+using Common;
 using miniMessanger.Models;
 
 namespace miniMessanger.Manage
@@ -109,6 +110,54 @@ namespace miniMessanger.Manage
             }
             return null;
         }
+        public User GetUserByPublicToken(string userPublicToken, ref string message)
+        {
+            User user = context.User.Where(u => u.UserPublicToken == userPublicToken).FirstOrDefault();
+            if (user == null)
+            {
+                message = "Server can't define user by public token";
+            }
+            return user;
+        }
+        public bool CheckExistBlocked(int userId, int opposideUserId, ref string message)
+        {
+            BlockedUser blocked = context.BlockedUsers.Where(b 
+            => b.UserId == userId
+            && b.BlockedUserId == opposideUserId
+            && b.BlockedDeleted == false).FirstOrDefault();
+            if (blocked == null)
+            {
+                message = "User blocked current user."; 
+                return false;
+            }
+            return true;
+        }
+        public void CreateBlockedUser(int userId,int opposideUserId,string blockedReason )
+        {
+            BlockedUser blockedUser = new BlockedUser();
+            blockedUser.UserId = userId;
+            blockedUser.BlockedUserId = opposideUserId;
+            blockedUser.BlockedReason = blockedReason;
+            blockedUser.BlockedDeleted = false;
+            context.BlockedUsers.Add(blockedUser);
+            context.SaveChanges();
+        }
+        public bool CheckComplaintMessage(string complaint, ref string message)
+        {
+            if (!string.IsNullOrEmpty(complaint))
+            {
+                if (complaint.Length < 100)
+                {
+                    return true;
+                }
+                message = "Complaint can't be more than 100 characters.";
+            }
+            else
+            {
+                message = "Complaint message can't be null or empty.";
+            }
+            return false;
+        }
         public User GetUserByOpposideToken(string opposideToken, ref string message)
         {
             if (!string.IsNullOrEmpty(opposideToken))
@@ -123,6 +172,41 @@ namespace miniMessanger.Manage
             }
             return null;
         }
+        public dynamic UserResponse(User user)
+        {
+            if (user != null)
+            {
+                return new 
+                {
+                    user_id = user.UserId,
+                    user_email = user.UserEmail,
+                    user_login = user.UserLogin,
+                    created_at = user.CreatedAt,
+                    last_login_at = user.LastLoginAt,
+                    user_public_token = user.UserPublicToken
+                };        
+            }
+            return null;
+        }
+        public void SendConfirmEmail(string UserEmail, string UserHash)
+        {
+            MailF.SendEmail(UserEmail, "Confirm account", 
+            "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port
+            + "/v1.0/users/Activate/?hash=" + UserHash + ">Confirm url!</a>");    
+        }
+        public Profile CreateIfNotExistProfile(int UserId)
+        {
+            Profile profile = context.Profile.Where(p => p.UserId == UserId).FirstOrDefault();
+            if (profile == null)
+            {
+                profile = new Profile();
+                profile.UserId = UserId;
+                profile.ProfileGender = true;
+                context.Add(profile);
+                context.SaveChanges();
+            }
+            return profile;
+        }
         public User GetUserWithProfile(string userToken, ref string message)
         {
             if (!string.IsNullOrEmpty(userToken))
@@ -135,7 +219,7 @@ namespace miniMessanger.Manage
                 }
                 else
                 {
-                    user.Profile = context.Profiles.Where(p 
+                    user.Profile = context.Profile.Where(p 
                     => p.UserId == user.UserId).First();
                 }
                 return user;
@@ -146,7 +230,7 @@ namespace miniMessanger.Manage
         {
             return (from users in context.User
             join like in context.LikeProfile on users.UserId equals like.ToUserId
-            join profile in context.Profiles on users.UserId equals profile.UserId
+            join profile in context.Profile on users.UserId equals profile.UserId
             join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blockedUsers
             where like.UserId == userId
             && like.Like 

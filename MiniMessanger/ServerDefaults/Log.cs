@@ -23,7 +23,7 @@ namespace Common
                 log.threadId = Thread.CurrentThread.ManagedThreadId;
                 System.Diagnostics.Debug.WriteLine(log.message); 
                 CheckLogFile(log.time);
-                WriteLogMessage(log);
+                WriteLogToFile(log);
             }
             else
             {

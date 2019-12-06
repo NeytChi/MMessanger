@@ -22,7 +22,6 @@ namespace miniMessanger.Models
         public virtual DbSet<BlockedUser> BlockedUsers { get; set; }
         public virtual DbSet<Chatroom> Chatroom { get; set; }
         public virtual DbSet<Complaints> Complaints { get; set; }
-        public virtual DbSet<LogMessage> Logs { get; set; }
         public virtual DbSet<Message> Messages { get; set; }
         public virtual DbSet<Participants> Participants { get; set; }
         public virtual DbSet<Profile> Profile { get; set; }

@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Net;
 using Common;
 using miniMessanger.Models;
 
@@ -118,6 +119,27 @@ namespace miniMessanger.Manage
                 message = "Server can't define user by public token";
             }
             return user;
+        }
+        public bool BlockUser(UserCache cache, ref string message)
+        {
+            string blockedReason = WebUtility.UrlDecode(cache.blocked_reason);
+            User user = GetUserByToken(cache.user_token, ref message);
+            if (user != null)
+            {
+                User interlocutor = GetUserByPublicToken(cache.opposide_public_token, ref message);
+                if (interlocutor != null)
+                {
+                    if (CheckComplaintMessage(blockedReason, ref message))
+                    {
+                        if (!CheckExistBlocked(user.UserId, interlocutor.UserId, ref message))
+                        {
+                            CreateBlockedUser(user.UserId, interlocutor.UserId, blockedReason);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
         public bool CheckExistBlocked(int userId, int opposideUserId, ref string message)
         {

@@ -839,23 +839,10 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> BlockUser(UserCache cache)
         {
             string message = null;
-            string blockedReason = WebUtility.UrlDecode(cache.blocked_reason);
-            User user = users.GetUserByToken(cache.user_token, ref message);
-            if (user != null)
+            if (users.BlockUser(cache, ref message))
             {
-                User interlocutor = users.GetUserByPublicToken(cache.opposide_public_token, ref message);
-                if (interlocutor != null)
-                {
-                    if (users.CheckComplaintMessage(blockedReason, ref message))
-                    {
-                        if (users.CheckExistBlocked(user.UserId, interlocutor.UserId, ref message))
-                        {
-                            users.CreateBlockedUser(user.UserId, interlocutor.UserId, blockedReason);
-                            Log.Info("Block user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            return new { success = true, message = "Block user - successed." };
-                        }
-                    }
-                }
+                Log.Info("Block user.", HttpContext.Connection.RemoteIpAddress.ToString());
+                return new { success = true, message = "Block user - successed." };
             }
             return Return500Error(message);
         }
@@ -863,26 +850,25 @@ namespace Common.Functional.UserF
         [ActionName("GetBlockedUsers")]
         public ActionResult<dynamic> GetBlockedUsers(UserCache cache)
         {
-            string message = null;
-            User user = users.GetUserByToken(cache.user_token, ref message);
-            if (user != null)
-            {
-                var blockedUsers = (from blocked in context.BlockedUsers
-                join users in context.User on blocked.BlockedUserId equals users.UserId
-                where blocked.UserId == user.UserId && blocked.BlockedDeleted == false
-                select new
-                { 
-                    user_email = users.UserEmail,
-                    user_login =  users.UserLogin,
-                    last_login_at = users.LastLoginAt,
-                    user_public_token = users.UserPublicToken,
-                    blocked_reason = blocked.BlockedReason 
-                }
-                ).ToList();
-                Log.Info("Block user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                return new { success = true, data = blockedUsers };;
+            var blockedUsers = (from user in context.User 
+            join blocked in context.BlockedUsers on user.UserId equals blocked.UserId
+            where user.UserToken == cache.user_token
+            && blocked.BlockedDeleted == false
+            select new
+            { 
+                user_email = blocked.Blocked.UserEmail,
+                user_login =  blocked.Blocked.UserLogin,
+                last_login_at = blocked.Blocked.LastLoginAt,
+                user_public_token = blocked.Blocked.UserPublicToken,
+                blocked_reason = blocked.BlockedReason
             }
-            return Return500Error(message);
+            ).ToList();
+            Log.Info("Get blocked users.", HttpContext.Connection.RemoteIpAddress.ToString());
+            return new 
+            { 
+                success = true, 
+                data = blockedUsers 
+            };
         }
         [HttpPost]
         [ActionName("UnblockUser")]

@@ -78,7 +78,7 @@ namespace miniMessanger.Models
 
                 entity.Property(user => user.UserEmail)
                     .HasColumnName("user_email")
-                    .HasColumnType("varchar(256)");
+                    .HasColumnType("varchar(100)");
 
                 entity.Property(user => user.UserHash)
                     .HasColumnName("user_hash")

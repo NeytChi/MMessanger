@@ -10,7 +10,7 @@ using miniMessanger.Manage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
-
+using miniMessanger.Authentication;
 
 namespace Common.Functional.UserF
 {
@@ -26,111 +26,48 @@ namespace Common.Functional.UserF
         private JsonVariableHandler jsonHandler;
         public Users users;
         public Chats chats;
+        public Authentication authentication;
+        public Validator Validator;
         public UsersController(Context context)
         {
             this.context = context;
+            this.Validator = new Validator();
             jsonHandler = new Controllers.JsonVariableHandler();
-            this.users = new Users(context);
-            this.chats = new Chats(context, users);
+            this.users = new Users(context, Validator);
+            this.chats = new Chats(context, users, Validator);
         }
-        /// <summary>
-        /// Registration user with user_email and user_password.
-        /// </summary>
-        /// <param name="user">User data for registration.</param>
         [HttpPost]
         [ActionName("Registration")]
         public ActionResult<dynamic> Registration(UserCache cache)
         {
             string message = string.Empty;
-            if (Validator.ValidateLogin(cache.user_login, ref message))
-            {
-                if (Validator.ValidateEmail(cache.user_email))
-                {
-                    if (Validator.ValidatePassword(cache.user_password, ref message))
-                    {
-                        User user = context.User.Where(u => u.UserEmail == cache.user_email).FirstOrDefault();
-                        if (user == null)
-                        {
-                            user = new User();
-                            user.UserEmail = cache.user_email;
-                            user.UserLogin = cache.user_login;
-                            user.UserPassword = Validator.HashPassword(cache.user_password);
-                            user.UserHash = Validator.GenerateHash(100);
-                            user.CreatedAt = (int)(DateTime.Now - Config.unixed).TotalSeconds;
-                            user.Activate = 0;
-                            user.Deleted = false;
-                            user.LastLoginAt = user.CreatedAt;
-                            user.UserToken = Validator.GenerateHash(40);
-                            user.UserPublicToken = Validator.GenerateHash(20);
-                            user.ProfileToken = Validator.GenerateHash(50);
-                            context.User.Add(user);
-                            context.SaveChanges();
-                            users.SendConfirmEmail(user.UserEmail, user.UserHash);
-                            Log.Info("Registrate new user.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            return new 
-                            { 
-                                success = true, 
-                                message = "User account was successfully registered. See your email to activate account by link.",
-                                data = new 
-                                {
-                                    profile_token = user.ProfileToken,
-                                }
-                            };
-                        }
-                        else
-                        {
-                            if (user.Deleted == true)
-                            {
-                                user.Deleted = false;
-                                user.UserToken = Validator.GenerateHash(40); 
-                                context.User.Update(user);
-                                context.SaveChanges();
-                                Log.Info("Restored old user, user_id->" + user.UserId + ".", HttpContext.Connection.LocalIpAddress.ToString(), user.UserId);
-                                return new { success = true, message = "User account was successfully restored." };
-                            }
-                            else 
-                            {
-                                message =  "Have exists account with email ->" + user.UserEmail + ".";
-                                Log.Warn("Have exists account with email ->" + user.UserEmail + ".", HttpContext.Connection.RemoteIpAddress.ToString()); 
-                            }  
-                        }
-                    }
-                }
-                else 
-                { 
-                    message = "Not valid email ->" + cache.user_email + ".";
-                }
-            }
-            Log.Warn(message, HttpContext.Connection.LocalIpAddress.ToString());
-            if (Response != null)
-            {
-                Response.StatusCode = 500;
-            }
-            return new { success = false, message = message, };
+            dynamic response = authentication.Registrate(cache, ref message);
+            return response != null ? response : Return500Error(message);
         }
+        
         [HttpPost]
         [ActionName("RegistrationEmail")]
         public ActionResult<dynamic> RegistrationEmail(UserCache cache)
         {
             string message = null;
-            User user = context.User.Where(u => u.UserEmail == cache.user_email).FirstOrDefault();
+            User user = users.GetUserByEmail(cache.user_email, ref message);
             if (user != null)
             {
                 if (!user.Deleted)
                 {                            
                     users.SendConfirmEmail(user.UserEmail, user.UserHash);
                     Log.Info("Send registration email to user.", 
-                    HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    return new { success = true, message = "Send confirm email to user." };
+                        HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    return new 
+                    {   
+                        success = true, 
+                        message = "Send confirm email to user." 
+                    };
                 }
                 else 
                 { 
                     message = "Unknow email -> " + user.UserEmail + "."; 
                 }
-            }
-            else 
-            { 
-                message = "Can't define user data by json's key 'user_email'."; 
             }
             return Return500Error(message);
         }
@@ -139,7 +76,7 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> Login(UserCache cache)
         {
             string message = null;
-            User user = context.User.Where(u=> u.UserEmail == cache.user_email).FirstOrDefault();
+            User user = users.GetUserByEmail(cache.user_email, ref message);
             if (user != null)
             {
                 if (Validator.VerifyHashedPassword(user.UserPassword, cache.user_password))
@@ -148,46 +85,51 @@ namespace Common.Functional.UserF
                     {
                         user.LastLoginAt = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                         context.User.Update(user);
-                        Profile profile = users.CreateIfNotExistProfile(user.UserId);
                         context.SaveChanges();
+                        user.Profile = users.CreateIfNotExistProfile(user.UserId);
                         Log.Info("User login.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                         return new 
                         { 
-                            success = true, data = new 
-                            { 
-                                user_id = user.UserId,
-                                user_token = user.UserToken,
-                                user_email = user.UserEmail,
-                                user_login = user.UserLogin,
-                                created_at = user.CreatedAt,
-                                last_login_at = user.LastLoginAt,
-                                user_public_token = user.UserPublicToken,
-                                profile = new
-                                {
-                                    url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
-                                    profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                                    profile_gender = profile.ProfileGender,
-                                    profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                                }    
-                            } 
+                            success = true, 
+                            data = UserResponse(user)
                         };
                     }
-                    else 
-                    { 
-                        users.SendConfirmEmail(user.UserEmail, user.UserHash);
-                        message =  "User's account isn't confirmed."; 
-                    }
+                    users.SendConfirmEmail(user.UserEmail, user.UserHash);
+                    message =  "User's account isn't confirmed."; 
                 }
                 else 
                 { 
                     message = "Wrong password."; 
                 }
             }
-            else 
-            { 
-                message = "No user with such email."; 
-            }         
             return Return500Error(message);
+        }
+        public dynamic UserResponse(User user)
+        {
+            if (user != null)
+            {
+                if (user.Profile != null)
+                {
+                    return new 
+                    { 
+                        user_id = user.UserId,
+                        user_token = user.UserToken,
+                        user_email = user.UserEmail,
+                        user_login = user.UserLogin,
+                        created_at = user.CreatedAt,
+                        last_login_at = user.LastLoginAt,
+                        user_public_token = user.UserPublicToken,
+                        profile = new
+                        {
+                            url_photo = user.Profile.UrlPhoto == null ? "" : Config.AwsPath + user.Profile.UrlPhoto,
+                            profile_age = user.Profile.ProfileAge == null ? -1 : user.Profile.ProfileAge,
+                            profile_gender = user.Profile.ProfileGender,
+                            profile_city = user.Profile.ProfileCity == null  ? "" : user.Profile.ProfileCity
+                        }    
+                    };
+                }
+            }
+            return null;
         }
         [HttpPut]
         [ActionName("LogOut")]
@@ -210,19 +152,26 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> RecoveryPassword(UserCache cache)
         {
             string message = null;
-            User user = context.User.Where(u => u.UserEmail == cache.user_email).FirstOrDefault();
-            if (user != null || !user.Deleted)
+            User user = authentication.GetUserByEmail(cache.user_email, ref message);
+            if (user != null)
             {
-                user.RecoveryCode = Validator.random.Next(100000, 999999);
-                MailF.SendEmail(user.UserEmail, "Recovery password", "Recovery code=" + user.RecoveryCode);
-                context.User.Update(user);
-                context.SaveChanges();
-                Log.Info("Recovery password.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                return new { success = true, message = "Recovery password. Send message with code to email=" + user.UserEmail + "." };
-            }
-            else 
-            { 
-                message = "Unknow email."; 
+                if (!user.Deleted && user.Activate == 1)
+                {
+                    user.RecoveryCode = Validator.random.Next(100000, 999999);
+                    MailF.SendEmail(user.UserEmail, "Recovery password", "Recovery code=" + user.RecoveryCode);
+                    context.User.Update(user);
+                    context.SaveChanges();
+                    Log.Info("Recovery password.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    return new 
+                    { 
+                        success = true, 
+                        message = "Recovery password. Send message with code to email=" + user.UserEmail + "." 
+                    };
+                }
+                else
+                {
+                    message = "User account is non activate.";
+                }
             }
             return Return500Error(message);
         }
@@ -231,10 +180,10 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> CheckRecoveryCode(UserCache cache)
         {
             string message = null;
-            User user = context.User.Where(u => u.UserEmail == cache.user_email).FirstOrDefault();
+            User user = authentication.GetUserByEmail(cache.user_email, ref message);
             if (user != null)
             {
-                if (!user.Deleted)
+                if (!user.Deleted && user.Activate == 1)
                 {
                     if (user.RecoveryCode == cache.recovery_code)
                     {
@@ -244,21 +193,24 @@ namespace Common.Functional.UserF
                         context.SaveChanges();
                         Log.Info("Check recovery code - successed.", 
                         HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        return new { success = true, data = new { recovery_token = user.RecoveryToken }};
+                        return new 
+                        { 
+                            success = true, 
+                            data = new 
+                            { 
+                                recovery_token = user.RecoveryToken 
+                            }
+                        };
                     }
                     else 
-                    { 
-                        message = "Wrong recovery code."; 
+                    {
+                        message = "Wrong code."; 
                     }
                 }
-                else 
-                { 
-                    message = "Unknow email."; 
+                else
+                {
+                    message = "User account is non activate.";
                 }
-            }
-            else 
-            { 
-                message = "Can't define user by key->user_email."; 
             }
             return Return500Error(message);
         }
@@ -267,40 +219,32 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> ChangePassword(UserCache cache)
         {
             string message = null;
-            User user = context.User.Where(u=> u.RecoveryToken == cache.recovery_token).FirstOrDefault();
+            User user = context.User.Where(u
+            => u.RecoveryToken == cache.recovery_token
+            && !u.Deleted 
+            && u.Activate == 1).FirstOrDefault();
             if (user != null)
             {
-                if (!user.Deleted)
+                if (cache.user_password.Equals(cache.user_confirm_password))
                 {
-                    if (cache.user_password.Equals(cache.user_confirm_password))
+                    if (Validator.ValidatePassword(cache.user_password, ref message))
                     {
-                        if (Validator.ValidatePassword(cache.user_password, ref message))
-                        {
-                            user.UserPassword = Validator.HashPassword(cache.user_password);
-                            user.RecoveryToken  = "";
-                            context.User.Update(user);
-                            context.SaveChanges();
-                            Log.Info("Change user password.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            return new { success = true, message = "Change user password, user_id=" + user.UserId + "." };
-                        }
-                        else 
-                        { 
-                            message = "Validation password - unsuccessfully. " + message; 
-                        }
+                        user.UserPassword = Validator.HashPassword(cache.user_password);
+                        user.RecoveryToken  = "";
+                        context.User.Update(user);
+                        context.SaveChanges();
+                        Log.Info("Change user password.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                        return new { success = true, message = "Change user password, user_id=" + user.UserId + "." };
                     }
                     else 
                     { 
-                        message = "Password are not match to each other."; 
+                        message = "Validation password - unsuccessfully. " + message; 
                     }
                 }
                 else 
                 { 
-                    message = "No user with that email."; 
+                    message = "Password are not match to each other."; 
                 }
-            }
-            else 
-            { 
-                message = "Can't find user by recovery_token."; 
             }
             return Return500Error(message);
         }
@@ -309,21 +253,15 @@ namespace Common.Functional.UserF
         public ActionResult<dynamic> Activate([FromQuery] string hash)
         {
             string message = null;
-            User user = context.User.Where(u => u.UserHash == hash).FirstOrDefault();
+            User user = context.User.Where(u => u.UserHash == hash
+            && !u.Deleted).FirstOrDefault();
             if (user != null)
             {
-                if (!user.Deleted)
-                {
-                    user.Activate = 1;
-                    context.User.Update(user);
-                    context.SaveChanges();                
-                    Log.Info("Active user account.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    return new { success = true, message = "User account is successfully active." };
-                }
-                else 
-                { 
-                    message = "No user with that email."; 
-                }
+                user.Activate = 1;
+                context.User.Update(user);
+                context.SaveChanges();
+                Log.Info("Active user account.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                return new { success = true, message = "User account is successfully active." };
             }
             else 
             { 
@@ -343,7 +281,9 @@ namespace Common.Functional.UserF
                 user.UserToken = null;
                 context.User.Update(user);
                 context.SaveChanges();
-                Log.Info("Account was successfully deleted.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
+                Log.Info("Account was successfully deleted.", 
+                    HttpContext.Connection.RemoteIpAddress.ToString(), 
+                    user.UserId); 
                 return new { success = true, message = "Account was successfully deleted." };
             }
             return Return500Error(message);
@@ -356,10 +296,10 @@ namespace Common.Functional.UserF
             string userToken = Request.Form["user_token"];
             if (userToken != null)
             {
-                User user = context.User.Where(u => u.UserToken == userToken.ToString()).FirstOrDefault();
+                User user = users.GetUserByToken(userToken, ref message);
                 if (user != null)
                 {
-                    Profile profile = users.CreateIfNotExistProfile(user.UserId);
+                    Profile profile = authentication.CreateIfNotExistProfile(user.UserId);
                     string profileGender = Request.Form["profile_gender"];
                     if (profileGender != null)
                     {
@@ -427,10 +367,6 @@ namespace Common.Functional.UserF
                         profile_gender = profile.ProfileGender,
                         profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                     } };
-                }
-                else 
-                { 
-                    message = "No user with that user_token."; 
                 }
             }
             else 
@@ -717,7 +653,6 @@ namespace Common.Functional.UserF
             if (user != null)
             {
                 Chatroom room = new Chatroom();
-                room.users = new List<dynamic>();
                 User interlocutor = context.User.Where(u => u.UserPublicToken == userCache.opposide_public_token).FirstOrDefault();
                 if (interlocutor != null)
                 {
@@ -726,7 +661,7 @@ namespace Common.Functional.UserF
                     p.OpposideId == interlocutor.UserId).FirstOrDefault();
                     if (participant == null)
                     {
-                        room.ChatToken = Common.Validator.GenerateHash(20);
+                        room.ChatToken = Validator.GenerateHash(20);
                         room.CreatedAt = System.DateTime.Now;
                         context.Chatroom.Add(room);
                         context.SaveChanges();
@@ -1083,7 +1018,7 @@ namespace Common.Functional.UserF
             User user = users.GetUserWithProfile(cache.user_token, ref message);
             if (user != null)
             {
-                dynamic data = users.ReciprocalUsers(user.UserId, user.Profile.ProfileGender, cache.page, count);
+                dynamic data = chats.ReciprocalUsers(user.UserId, user.Profile.ProfileGender, cache.page, count);
                 Log.Info("Get reciprocal users.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                 return new { success = true, data = data };
             }

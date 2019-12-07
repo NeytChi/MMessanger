@@ -4,80 +4,127 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations;
+using miniMessanger.Models;
 
 namespace Common
 {
-    public static class Validator
+    public class Validator
     {
-		private const int MIN_LENGTH = 6;
-        private const int MAX_LENGTH = 20;
-        private static  EmailAddressAttribute foo = new EmailAddressAttribute();
-        public static Regex onlyEnglish = new Regex("^[a-zA-Z0-9]*$", RegexOptions.Compiled);
-		public static Random random = new Random();
-        private static string Alphavite = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        private static string sum_names = "abc123";
+		private const sbyte minLength = 6;
+        private const sbyte maxLength = 20;
+        
+        private EmailAddressAttribute emailChecker = new EmailAddressAttribute();
+		public Regex onlyEnglish = new Regex("^[a-zA-Z0-9]*$", RegexOptions.Compiled);
+		public Random random = new Random();
+        private string Alphavite = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        private string sum_names = "abc123";
 
-        public static bool ValidateEmail(string email)
+        public bool ValidateUser(UserCache cache, ref string message)
         {
-            bool bar = foo.IsValid(email);
-            Log.Info("Validating email=" + email + " success=" + bar);
+            if (ValidateLogin(cache.user_login, ref message))
+            {
+                if (ValidateEmail(cache.user_email, ref message))
+                {
+                    return ValidatePassword(cache.user_password, ref message);
+                }
+            }
+            return false;
+        }
+        public bool ValidateEmail(string email, ref string message)
+        {
+            bool bar = false;
+            if (!string.IsNullOrEmpty(email))
+            {
+                if (emailChecker.IsValid(email))
+                {
+                    return true;
+                }
+                message = "Not valid email ->" + email + ".";
+            }
+            else
+            {
+                message = "User email is empty.";
+            }
+            Log.Info("Validating email->'" + email ?? "" + "' success ->" + bar + ".");
             return bar;
         } 
-		public static bool ValidatePassword(string password, ref string answer) 
+		public bool ValidatePassword(string password, ref string answer) 
 		{
-			bool hasLetter = false;
-            bool hasDecimalDigit = false;
-            bool meetsLengthRequirements = false;
-            if (!string.IsNullOrEmpty(password)) 
+			if (!string.IsNullOrEmpty(password)) 
             {
-                meetsLengthRequirements = password.Length >= MIN_LENGTH && password.Length <= MAX_LENGTH;
-                if (meetsLengthRequirements)
+                if (RequiredLength(password, ref answer))
                 {
-                    foreach (char c in password)
-                    {
-                        if (char.IsLetter(c)) hasLetter = true;
-                        else if (char.IsDigit(c)) hasDecimalDigit = true;
-                    }
-                    if (hasLetter)
-                    {
-                        if (hasDecimalDigit)
-                        {
-
-                        }
-                        else
-                        {
-                            answer = "Current password doesn't has decimal digit.";
-                        }
-                    }
-                    else
-                    {
-                        answer = "Current password doesn't has letter.";
-                    }
-                }
-                else
-                {
-                    answer = "Password must be more than 6 characters and less that 20.";
+                    return HasValues(password, ref answer);
                 }
             }
             else
             {
-                answer = "Password must be more than 6 characters.";
+                answer = "Password is empty.";
             }
-            bool isValid = meetsLengthRequirements && hasDecimalDigit && hasLetter;
-            Common.Log.Info("Validate password success=" + isValid + ".");
-			return isValid;         
+            Log.Info(answer);
+            return false;
         }
-        public static bool ValidateLogin(string login, ref string answer)
+        public bool HasValues(string password, ref string answer)
+        {
+            if (HasLetter(password, ref answer))
+            {
+                if (HasDigit(password, ref answer))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool RequiredLength(string password, ref string answer)
+        {
+            if (password.Length >= minLength)
+            {
+                if (password.Length <= maxLength)
+                {
+                    return true;
+                }
+            } 
+            answer = "Password must be more than " + minLength 
+            + " characters and less that " + maxLength + ".";
+            return false;
+        }
+        public bool HasLetter(string password, ref string answer)
+        {
+            if (password != null)
+            {
+                foreach (char c in password)
+                {
+                    if (char.IsLetter(c))
+                    { 
+                        return true;
+                    }
+                }
+            }
+            answer = "Current password doesn't has letter.";
+            return false;
+        }
+        public bool HasDigit(string password, ref string answer)
+        {
+            if (password != null)
+            {
+                foreach (char c in password)
+                {
+                    if (char.IsDigit(c))
+                    { 
+                        return true;
+                    }
+                }
+            }            
+            answer = "Current password doesn't has decimal digit.";
+            return false;
+        }
+        public bool ValidateLogin(string login, ref string answer)
         {
             bool result = false;
             if (!string.IsNullOrEmpty(login)) 
             {
                 result = onlyEnglish.Match(login).Success;
-                if (result)
-                {
-
-                }
-                else
+                if (!result)
                 {
                     answer = "Login contains only english charaters and numbers.";
                 }
@@ -86,10 +133,10 @@ namespace Common
             {
                 answer = "Login must be more than 6 characters.";
             }
-            Common.Log.Info("Validate login success=" + result + ".");
+            Log.Info("Validate login success=" + result + ".");
 			return result;
         }
-        public static string GenerateHash(int length_hash)
+        public string GenerateHash(int length_hash)
         {
             string hash = "";
             for (int i = 0; i < length_hash; i++)
@@ -98,13 +145,13 @@ namespace Common
             }
             return hash;
         }
-        public static string HashPassword(string password)
+        public string HashPassword(string password)
         {
             byte[] salt;
             byte[] buffer2;
             if (password == null)
             {
-                Common.Log.Error("Input value is null, function HashPassword()");
+                Log.Error("Input value is null, function HashPassword()");
                 return "";
             }
             using (Rfc2898DeriveBytes bytes = new Rfc2898DeriveBytes(password, 0x10, 0x3e8))
@@ -117,14 +164,10 @@ namespace Common
             Buffer.BlockCopy(buffer2, 0, dst, 0x11, 0x20);
             return Convert.ToBase64String(dst);
         }
-        public static bool VerifyHashedPassword(string hashedPassword, string password)
+        public bool VerifyHashedPassword(string hashedPassword, string password)
         {
             byte[] buffer4;
-            if (hashedPassword == null)
-            {
-                return false;
-            }
-            if (password == null)
+            if (hashedPassword == null || password == null)
             {
                 return false;
             }
@@ -143,7 +186,7 @@ namespace Common
             }
             return ByteArraysEqual(ref buffer3,ref buffer4);
         }
-        private static bool ByteArraysEqual(ref byte[] b1,ref byte[] b2)
+        private bool ByteArraysEqual(ref byte[] b1,ref byte[] b2)
         {
             if (b1 == b2)
             {
@@ -163,7 +206,7 @@ namespace Common
             }
             return true;
         }
-        public static string Encrypt(ref string clearText)
+        public string Encrypt(string clearText)
         {
             byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
             using (Aes encryptor = Aes.Create())
@@ -183,18 +226,20 @@ namespace Common
             }
             return clearText;
         }
-        public static string Decrypt(ref string cipherText)
+        public string Decrypt(string cipherText)
         {
             cipherText = cipherText.Replace(" ", "+");
             byte[] cipherBytes = Convert.FromBase64String(cipherText);
             using (Aes encryptor = Aes.Create())
             {
-                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(sum_names, new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(sum_names, new byte[] 
+                { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
                 encryptor.Key = pdb.GetBytes(32);
                 encryptor.IV = pdb.GetBytes(16);
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateDecryptor(), CryptoStreamMode.Write))
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateDecryptor(), 
+                    CryptoStreamMode.Write))
                     {
                         cs.Write(cipherBytes, 0, cipherBytes.Length);
                         cs.Close();

@@ -12,14 +12,16 @@ namespace miniMessanger
     {
         public Context context;
         public Users users;
+        public Validator validator;
         public string savePath;
         public string awsPath;
-        public Chats(Context context, Users users)
+        public Chats(Context context, Users users, Validator validator)
         {
             this.context = context;
             this.savePath = Config.savePath;
             this.users = users;
             this.awsPath = Config.AwsPath;
+            this.validator = validator;
         }
         public Message UploadMessagePhoto(IFormFile photo, UserCache cache, ref string message)
         {
@@ -49,7 +51,7 @@ namespace miniMessanger
                     Directory.CreateDirectory(savePath + "/MessagePhoto/" 
                     + DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
                     string url = "/MessagePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
-                    + "-" + DateTime.Now.Day + "/" + Validator.GenerateHash(10);
+                    + "-" + DateTime.Now.Day + "/" + validator.GenerateHash(10);
                     photo.CopyTo(new FileStream(Config.savePath + url, FileMode.Create));
                     message.ChatId = chatId;
                     message.UserId = userId;
@@ -73,6 +75,35 @@ namespace miniMessanger
                 answer = "Input file is null.";
             }
             return null;
+        }
+        public dynamic ReciprocalUsers(int userId, bool profileGender, int page, int count)
+        {
+            return (from users in context.User
+            join like in context.LikeProfile on users.UserId equals like.ToUserId
+            join profile in context.Profile on users.UserId equals profile.UserId
+            join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blockedUsers
+            where like.UserId == userId
+            && like.Like 
+            && profile.ProfileGender != profileGender 
+            && (blockedUsers.All(b => b.UserId == userId && b.BlockedDeleted == true)
+            || blockedUsers.Count() == 0)
+            select new
+            { 
+                user_id = users.UserId,
+                user_email = users.UserEmail,
+                user_public_token = users.UserPublicToken,
+                user_login = users.UserLogin,
+                last_login_at = users.LastLoginAt,
+                profile = new 
+                {
+                    url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                    profile_age = profile.ProfileAge == null ? -1 : (sbyte)(long)profile.ProfileAge,
+                    profile_gender = profile.ProfileGender,
+                    profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                },
+                liked_user = like.Like,
+                disliked_user = like.Dislike
+            }).Skip(page * count).Take(count).ToList();
         }
         public dynamic ResponseMessage(Message message)
         {

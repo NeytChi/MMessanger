@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic;
 
 namespace miniMessanger.Models
 {
@@ -10,6 +9,5 @@ namespace miniMessanger.Models
         public string ChatToken { get; set; }
         [Required]
         public DateTime CreatedAt { get; set; }
-        public List<dynamic> users;
     }
 }

@@ -1,6 +1,7 @@
-using System.Linq;
-using System.Net;
 using Common;
+using System;
+using System.Net;
+using System.Linq;
 using miniMessanger.Models;
 
 namespace miniMessanger.Manage
@@ -9,11 +10,14 @@ namespace miniMessanger.Manage
     {
         public Context context;
         public string awsPath;
-        public Users(Context context)
+        public Validator validator;
+        public Users(Context context, Validator validator)
         {
             this.context = context;
-            this.awsPath = Common.Config.AwsPath;
+            this.awsPath = Config.AwsPath;
+            this.validator = validator;
         }
+        
         public LikeProfiles LikeUser(UserCache cache, ref string message)
         {
             User user = GetUserByToken(cache.user_token, ref message);
@@ -111,15 +115,6 @@ namespace miniMessanger.Manage
             }
             return null;
         }
-        public User GetUserByPublicToken(string userPublicToken, ref string message)
-        {
-            User user = context.User.Where(u => u.UserPublicToken == userPublicToken).FirstOrDefault();
-            if (user == null)
-            {
-                message = "Server can't define user by public token";
-            }
-            return user;
-        }
         public bool BlockUser(UserCache cache, ref string message)
         {
             string blockedReason = WebUtility.UrlDecode(cache.blocked_reason);
@@ -209,73 +204,6 @@ namespace miniMessanger.Manage
                 };        
             }
             return null;
-        }
-        public void SendConfirmEmail(string UserEmail, string UserHash)
-        {
-            MailF.SendEmail(UserEmail, "Confirm account", 
-            "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port
-            + "/v1.0/users/Activate/?hash=" + UserHash + ">Confirm url!</a>");    
-        }
-        public Profile CreateIfNotExistProfile(int UserId)
-        {
-            Profile profile = context.Profile.Where(p => p.UserId == UserId).FirstOrDefault();
-            if (profile == null)
-            {
-                profile = new Profile();
-                profile.UserId = UserId;
-                profile.ProfileGender = true;
-                context.Add(profile);
-                context.SaveChanges();
-            }
-            return profile;
-        }
-        public User GetUserWithProfile(string userToken, ref string message)
-        {
-            if (!string.IsNullOrEmpty(userToken))
-            {
-                User user = context.User.Where(u => 
-                u.UserToken == userToken).FirstOrDefault();
-                if (user == null)
-                {
-                    message = "Server can't define user by token.";
-                }
-                else
-                {
-                    user.Profile = context.Profile.Where(p 
-                    => p.UserId == user.UserId).First();
-                }
-                return user;
-            }
-            return null;
-        }
-        public dynamic ReciprocalUsers(int userId, bool profileGender, int page, int count)
-        {
-            return (from users in context.User
-            join like in context.LikeProfile on users.UserId equals like.ToUserId
-            join profile in context.Profile on users.UserId equals profile.UserId
-            join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blockedUsers
-            where like.UserId == userId
-            && like.Like 
-            && profile.ProfileGender != profileGender 
-            && (blockedUsers.All(b => b.UserId == userId && b.BlockedDeleted == true)
-            || blockedUsers.Count() == 0)
-            select new
-            { 
-                user_id = users.UserId,
-                user_email = users.UserEmail,
-                user_public_token = users.UserPublicToken,
-                user_login = users.UserLogin,
-                last_login_at = users.LastLoginAt,
-                profile = new 
-                {
-                    url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
-                    profile_age = profile.ProfileAge == null ? -1 : (sbyte)(long)profile.ProfileAge,
-                    profile_gender = profile.ProfileGender,
-                    profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                },
-                liked_user = like.Like,
-                disliked_user = like.Dislike
-            }).Skip(page * count).Take(count).ToList();
         }
     }
 }

@@ -115,6 +115,41 @@ namespace miniMessanger.Manage
             }
             return null;
         }
+        public User GetUserByPublicToken(string token, ref string message)
+        {
+            if (!string.IsNullOrEmpty(token))
+            {
+                User user = context.User.Where(u 
+                => u.UserPublicToken == token
+                && u.Activate == 1
+                && u.Deleted == false).FirstOrDefault();
+                if (user == null)
+                {
+                    message = "Server can't define user by token.";
+                }
+                return user;
+            }
+            return null;
+        }
+        public User GetUserWithProfile(string userToken, ref string message)
+        {
+            if (!string.IsNullOrEmpty(userToken))
+            {
+                User user = context.User.Where(u => 
+                u.UserToken == userToken).FirstOrDefault();
+                if (user == null)
+                {
+                    message = "Server can't define user by token.";
+                }
+                else
+                {
+                    user.Profile = context.Profile.Where(p 
+                    => p.UserId == user.UserId).First();
+                }
+                return user;
+            }
+            return null;
+        }
         public bool BlockUser(UserCache cache, ref string message)
         {
             string blockedReason = WebUtility.UrlDecode(cache.blocked_reason);

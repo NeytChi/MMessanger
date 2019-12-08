@@ -5,18 +5,22 @@ using Newtonsoft.Json.Linq;
 
 namespace Common
 {
-    public static class MailF
+    public class MailF
     {
-        private static string GmailServer = "smtp.gmail.com";
-        private static int GmailPort = 587;
-        private static string ip = "127.0.0.1";
-        private static string domen = "minimessanger";
-        private static string mailAddress;
-        private static string mailPassword;
-        private static MailAddress from;
-        private static SmtpClient smtp;
+        public MailF()
+        {
+            Init();
+        }
+        private string GmailServer = "smtp.gmail.com";
+        private int GmailPort = 587;
+        private string ip = "127.0.0.1";
+        private string domen = "minimessanger";
+        private string mailAddress;
+        private string mailPassword;
+        private MailAddress from;
+        private SmtpClient smtp;
 
-        public static void Init()
+        public void Init()
         {
             ip = Config.IP;
             domen = Config.Domen;
@@ -32,13 +36,7 @@ namespace Common
                 smtp.EnableSsl = true;
             }
         }
-        /// <summary>
-        /// Sends the email.
-        /// </summary>
-        /// <param name="emailAddress">Email address.</param>
-        /// <param name="subject">Subject.</param>
-        /// <param name="message">Message.</param>
-        public static async void SendEmail(string emailAddress, string subject, string text)
+        public async void SendEmail(string emailAddress, string subject, string text)
         {
             MailAddress to = new MailAddress(emailAddress);
             MailMessage message = new MailMessage(from, to);
@@ -52,8 +50,7 @@ namespace Common
             }
             catch (Exception e)
             {
-                Common.Log.Error("Error SendEmailAsync, Message:" + e.Message + ".");
-                Common.Log.Error("Send message to " + emailAddress + ".");
+                Log.Error("Error SendEmailAsync, Message:" + e.Message + ".");
             }
         }
     }

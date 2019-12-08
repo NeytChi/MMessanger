@@ -5,15 +5,20 @@ namespace miniMessanger.Models
 {
     public partial class Context : DbContext
     {
-        private bool manual_control = false;
+        public bool manualControl = false;
+        public bool useInMemoryDatabase = false;
         public Context()
         {
         }
-        public Context(bool manual_control)
+        public Context(bool manualControl)
         {
-            this.manual_control = manual_control;
+            this.manualControl = manualControl;
         }
-
+        public Context(bool manualControl, bool useInMemoryDatabase)
+        {
+            this.manualControl = manualControl;
+            this.useInMemoryDatabase = useInMemoryDatabase;
+        }
         public Context(DbContextOptions<Context> options)
             : base(options)
         {
@@ -29,7 +34,12 @@ namespace miniMessanger.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (manual_control)
+            if (useInMemoryDatabase)
+            {
+                optionsBuilder.UseInMemoryDatabase("messanger");
+            }
+            optionsBuilder.EnableSensitiveDataLogging();
+            if (manualControl)
             {
                 if (!optionsBuilder.IsConfigured)
                 {
@@ -37,7 +47,6 @@ namespace miniMessanger.Models
                 }
             }
         }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>(entity =>

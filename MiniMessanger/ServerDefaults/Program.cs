@@ -8,8 +8,8 @@ namespace Instasoft
 {
     public class Program
     {
-        public static bool request_view = false;    
-        public static void Main(string[] args)
+        public static bool requestView = false;    
+        /*public static void Main(string[] args)
         {
             using (Context context = new Context(true))
             {
@@ -27,18 +27,17 @@ namespace Instasoft
                         {
                             context.Database.EnsureDeleted();
                         }
-                        Console.WriteLine("Database 'Instasoft' was deleted.");
+                        Console.WriteLine("Database 'minimessanger' was deleted.");
                         return;
                     }
                     if (args[0] == "-v")
                     {
-                        request_view = true;
+                        requestView = true;
                     }
                 }
             }
-            MailF.Init();
             CreateWebHostBuilder(args).Build().Run();
-        }
+        }*/
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args).UseUrls(Common.Config.GetHostsUrl(), Common.Config.GetHostsHttpsUrl()).UseStartup<Startup>();
     }
 }

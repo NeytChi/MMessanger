@@ -5,7 +5,6 @@ using Newtonsoft.Json.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
-
 namespace Controllers
 {
     public static class AuthOptions
@@ -24,13 +23,13 @@ namespace Controllers
     /// </summary>
     [Route("v1.0/[controller]/[action]/")]
     [ApiController]
-    public class AdminController : Microsoft.AspNetCore.Mvc.ControllerBase
+    public class AdminController : ControllerBase
     {
-        private readonly Context _context;
+        private readonly Context context;
 
-        public AdminController(Context _context)
+        public AdminController(Context context)
         {
-            this._context = _context;
+            this.context = context;
         }
     }
 }

@@ -72,7 +72,7 @@ namespace Instasoft
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-            if (Program.request_view)
+            if (Program.requestView)
             {
                 app.Use(next => context => { context.Request.EnableRewind(); return next(context); });
                 app.UseMiddleware<RequestWatchingSteamMiddleware>();

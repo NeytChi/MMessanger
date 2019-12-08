@@ -3,58 +3,209 @@ using Common;
 using System.Linq;
 using miniMessanger.Models;
 
-namespace miniMessanger.Authentication
+namespace miniMessanger
 {
     public class Authentication
     {
         public Context context;
         public Validator validator;
+        public MailF mail;
         public Authentication(Context context, Validator validator)
         {
             this.context = context;
             this.validator = validator;
+            mail = new MailF();
         }
-        public dynamic Registrate(UserCache cache, ref string message)
+        public User Login(string UserEmail, string UserPassword, ref string message)
+        {
+            User user = GetActiveUserByEmail(UserEmail, ref message);
+            if (user != null)
+            {
+                if (validator.VerifyHashedPassword(user.UserPassword, UserPassword))
+                {
+                    user.LastLoginAt = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                    context.User.Update(user);
+                    context.SaveChanges();
+                    user.Profile = CreateIfNotExistProfile(user.UserId);
+                    Log.Info("User login.", user.UserId);
+                    return user;
+                }
+                else 
+                { 
+                    message = "Wrong password."; 
+                }
+            }
+            return null;
+        }
+        public bool LogOut(string UserToken, ref string message)
+        {
+            User user = GetUserByToken(UserToken, ref message);
+            if (user != null)
+            {
+                user.UserToken = validator.GenerateHash(40);
+                context.User.Update(user);
+                context.SaveChanges();
+                Log.Info("User log out.", user.UserId);
+                return true;
+            }   
+            return false;
+        }
+        public bool RecoveryPassword(string UserEmail, ref string message)
+        {
+            User user = GetActiveUserByEmail(UserEmail, ref message);
+            if (user != null)
+            {
+                user.RecoveryCode = validator.random.Next(100000, 999999);
+                context.User.Update(user);
+                context.SaveChanges();
+                mail.SendEmail(user.UserEmail, "Recovery password", "Recovery code=" + user.RecoveryCode);
+                Log.Info("Recovery password.", user.UserId);
+                return true;
+            }
+            return false;
+        }
+        public bool ConfirmEmail(string UserEmail, ref string message)
+        {
+            User user = GetUserByEmail(UserEmail, ref message);
+            if (user != null)
+            {
+                if (!user.Deleted && user.Activate == 0)
+                {                            
+                    SendConfirmEmail(user.UserEmail, user.UserHash);
+                    Log.Info("Send registration email to user.", user.UserId);
+                    return true;
+                }
+                else 
+                { 
+                    message = "Unknow email -> " + user.UserEmail + "."; 
+                }
+            }
+            return false;
+        }
+        public User GetUserByToken(string userToken, ref string message)
+        {
+            if (!string.IsNullOrEmpty(userToken))
+            {
+                User user = context.User.Where(u 
+                => u.UserToken == userToken
+                && u.Activate == 1
+                && !u.Deleted).FirstOrDefault();
+                if (user == null)
+                {
+                    message = "Server can't define user by token.";
+                }
+                return user;
+            }
+            return null;
+        }
+        public string CheckRecoveryCode(string UserEmail, int RecoveryCode, ref string message)
+        {
+            User user = GetActiveUserByEmail(UserEmail, ref message);
+            if (user != null)
+            {
+                if (user.RecoveryCode == RecoveryCode)
+                {
+                    user.RecoveryToken = validator.GenerateHash(40);
+                    user.RecoveryCode = 0;
+                    context.User.Update(user);
+                    context.SaveChanges();
+                    Log.Info("Check recovery code - successed.", user.UserId);
+                    return user.RecoveryToken;
+                }
+                else 
+                {
+                    message = "Wrong code."; 
+                }
+            }
+            return null;
+        }
+        public bool ChangePassword(string RecoveryToken, string Password, string ConfirmPassword, ref string message)
+        {
+            User user = GetUserByRecoveryToken(RecoveryToken, ref message);
+            if (user != null)
+            {
+                if (Password.Equals(ConfirmPassword))
+                {
+                    if (validator.ValidatePassword(Password, ref message))
+                    {
+                        user.UserPassword = validator.HashPassword(Password);
+                        user.RecoveryToken  = "";
+                        context.User.Update(user);
+                        context.SaveChanges();
+                        Log.Info("Change user password.", user.UserId);
+                        return true;
+                    }
+                    message = "Incorrect password. " + message; 
+                }
+                else 
+                { 
+                    message = "Passwords are not match to each other."; 
+                }
+            }
+            return false;
+        }
+        public User GetUserByRecoveryToken(string RecoveryToken, ref string message)
+        {
+            User user = context.User.Where(u
+            => u.RecoveryToken == RecoveryToken
+            && !u.Deleted 
+            && u.Activate == 1).FirstOrDefault();
+            if (user == null)
+            {
+                message = "Server can't define user by recovery token";
+            }
+            return user;
+        }
+        public User Registrate(UserCache cache, ref string message)
         {
             if (validator.ValidateUser(cache, ref message))
             {
                 User user = GetUserByEmail(cache.user_email, ref message);
                 if (user == null)
                 {
-                    user = CreateUser(cache);
-                    return RegistrationResponse(
-                        "User account was successfully registered. See your email to activate account by link."
-                        , user.ProfileToken);
+                    user = CreateUser(cache.user_email, cache.user_login, cache.user_password);
+                    message = "User account was successfully registered. See your email to activate account by link.";
+                    return user;
                 }
                 else
                 {
                     if (RestoreUser(user, ref message))
                     {
-                        return RegistrationResponse("User account was successfully restored.", user.ProfileToken);
+                        message = "User account was successfully restored.";
+                        return user;
                     }
                 }
             }
             return null;
         }
-        public User CreateUser(UserCache cache)
+        /// <exception>
+        /// You can't create a new user with the same email in database. You need to check out it before use this method.
+        /// </exception>
+        public User CreateUser(string UserEmail, string UserLogin, string UserPassword)
         {
-            User user = new User();
-            user.UserEmail = cache.user_email;
-            user.UserLogin = cache.user_login;
-            user.UserPassword = validator.HashPassword(cache.user_password);
-            user.UserHash = validator.GenerateHash(100);
-            user.CreatedAt = (int)(DateTime.Now - Config.unixed).TotalSeconds;
-            user.Activate = 0;
-            user.Deleted = false;
-            user.LastLoginAt = user.CreatedAt;
-            user.UserToken = validator.GenerateHash(40);
-            user.UserPublicToken = validator.GenerateHash(20);
-            user.ProfileToken = validator.GenerateHash(50);
-            context.User.Add(user);
-            context.SaveChanges();
-            SendConfirmEmail(user.UserEmail, user.UserHash);           
-            Log.Info("Registrate new user.", user.UserId);
-            return user;
+            if (!string.IsNullOrEmpty(UserEmail) && !string.IsNullOrEmpty(UserLogin) && !string.IsNullOrEmpty(UserPassword))
+            {
+                User user = new User()
+                {
+                    UserEmail = UserEmail,
+                    UserLogin = UserLogin,
+                    UserPassword = validator.HashPassword(UserPassword),
+                    UserHash = validator.GenerateHash(100),
+                    Activate = 0,
+                    Deleted = false,
+                    CreatedAt = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    LastLoginAt = (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    UserToken = validator.GenerateHash(40),
+                    UserPublicToken = validator.GenerateHash(20),
+                    ProfileToken = validator.GenerateHash(50)
+                };
+                context.User.Add(user);
+                context.SaveChanges();
+                SendConfirmEmail(user.UserEmail, user.UserHash);
+                Log.Info("Registrate new user.", user.UserId);
+                return user;
+            }
+            return null;
         }
         public bool RestoreUser(User user, ref string message)
         {
@@ -89,32 +240,64 @@ namespace miniMessanger.Authentication
             }
             return null;
         }
-        public dynamic RegistrationResponse(string message, string ProfileToken)
+        public User GetActiveUserByEmail(string UserEmail, ref string message)
         {
-            return new 
-            { 
-                success = true, 
-                message = message,
-                data = new 
-                {
-                    profile_token = ProfileToken,
-                }
-            };
-        }
-        public User GetUserByPublicToken(string userPublicToken, ref string message)
-        {
-            User user = context.User.Where(u => u.UserPublicToken == userPublicToken).FirstOrDefault();
-            if (user == null)
+            if (!string.IsNullOrEmpty(UserEmail))
             {
-                message = "Server can't define user by public token";
+                User user = context.User.Where(u 
+                => u.UserEmail == UserEmail
+                && u.Activate == 1
+                && !u.Deleted).FirstOrDefault();
+                if (user == null)
+                {
+                    message = "Server can't define user by email.";
+                }
+                return user;
             }
-            return user;
+            return null;
+        }
+        public bool Activate(string UserHash, ref string message)
+        {
+            User user = context.User.Where(u 
+            => u.UserHash == UserHash
+            && !u.Deleted
+            && u.Activate == 0).FirstOrDefault();
+            if (user != null)
+            {
+                user.Activate = 1;
+                context.User.Update(user);
+                context.SaveChanges();
+                Log.Info("Active user account.", user.UserId);
+                return true;
+            }
+            else 
+            { 
+                message = "Server can't define user by hash."; 
+            }
+            return false;
+        }
+        public bool Delete(string UserToken, ref string message)
+        {
+            User user = GetUserByToken(UserToken, ref message);
+            if (user != null)
+            {
+                user.Deleted = true;
+                user.UserToken = null;
+                context.User.Update(user);
+                context.SaveChanges();
+                Log.Info("Account was successfully deleted.", user.UserId); 
+                return true;
+            }
+            return false;
         }
         public void SendConfirmEmail(string UserEmail, string UserHash)
         {
-            MailF.SendEmail(UserEmail, "Confirm account", 
-            "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port
-            + "/v1.0/users/Activate/?hash=" + UserHash + ">Confirm url!</a>");    
+            if (!string.IsNullOrEmpty(UserEmail) && !string.IsNullOrEmpty(UserHash))
+            {
+                mail.SendEmail(UserEmail, "Confirm account", 
+                "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port
+                + "/v1.0/users/Activate/?hash=" + UserHash + ">Confirm url!</a>");
+            }
         }
         public Profile CreateIfNotExistProfile(int UserId)
         {
@@ -128,25 +311,6 @@ namespace miniMessanger.Authentication
                 context.SaveChanges();
             }
             return profile;
-        }
-        public User GetUserWithProfile(string userToken, ref string message)
-        {
-            if (!string.IsNullOrEmpty(userToken))
-            {
-                User user = context.User.Where(u => 
-                u.UserToken == userToken).FirstOrDefault();
-                if (user == null)
-                {
-                    message = "Server can't define user by token.";
-                }
-                else
-                {
-                    user.Profile = context.Profile.Where(p 
-                    => p.UserId == user.UserId).First();
-                }
-                return user;
-            }
-            return null;
         }
     }
 }

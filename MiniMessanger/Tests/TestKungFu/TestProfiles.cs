@@ -1,10 +1,10 @@
 using Common;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using miniMessanger.Models;
-using System.IO;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Internal;
 
 namespace miniMessanger.Test
 {
@@ -20,10 +20,6 @@ namespace miniMessanger.Test
         public Context context;
         public Profiles profiles;
         public Authentication authentication;
-        public string UserEmail = "test@gmail.com";
-        public string UserPassword = "Test1234";
-        public string UserLogin = "Test";
-        public string UserToken = "Test";
         public string message;
         
         [Test]
@@ -111,6 +107,10 @@ namespace miniMessanger.Test
         }
         public User CreateMockingUser()
         {
+            string UserEmail = "test@gmail.com";
+            string UserPassword = "Test1234";
+            string UserLogin = "Test";
+            string UserToken = "Test";
             DeleteUser();
             User user = authentication.CreateUser(UserEmail, UserLogin, UserPassword);
             UserToken = user.UserToken;
@@ -121,6 +121,7 @@ namespace miniMessanger.Test
         }
         public void DeleteUser()
         {
+            string UserEmail = "test@gmail.com";
             System.Collections.Generic.List<User> users = context.User.Where(u => u.UserEmail == UserEmail).ToList();
             context.User.RemoveRange(users);
             context.SaveChanges();

@@ -434,61 +434,23 @@ namespace Controllers
         }
         [HttpPost]
         [ActionName("CreateChat")]
-        public ActionResult<dynamic> CreateChat(UserCache userCache)
+        public ActionResult<dynamic> CreateChat(UserCache cache)
         {
             string message = null;
-            User user = users.GetUserByToken(userCache.user_token, ref message);
-            if (user != null)
+            Chatroom room = chats.CreateChat(cache.user_token, cache.opposide_public_token, ref message);
+            if (room != null)
             {
-                Chatroom room = new Chatroom();
-                User interlocutor = context.User.Where(u => u.UserPublicToken == userCache.opposide_public_token).FirstOrDefault();
-                if (interlocutor != null)
-                {
-                    Participants participant = context.Participants.Where(p => 
-                    p.UserId == user.UserId &&
-                    p.OpposideId == interlocutor.UserId).FirstOrDefault();
-                    if (participant == null)
-                    {
-                        room.ChatToken = Validator.GenerateHash(20);
-                        room.CreatedAt = System.DateTime.Now;
-                        context.Chatroom.Add(room);
-                        context.SaveChanges();
-                        participant = new Participants();
-                        participant.ChatId = room.ChatId;
-                        participant.UserId = user.UserId;
-                        participant.OpposideId = interlocutor.UserId;
-                        context.Participants.Add(participant);
-                        context.SaveChanges();
-                        Participants opposideParticipant = new Participants();
-                        opposideParticipant.ChatId = room.ChatId;
-                        opposideParticipant.UserId = interlocutor.UserId;
-                        opposideParticipant.OpposideId = user.UserId;
-                        context.Participants.Add(opposideParticipant);
-                        context.SaveChanges();
-                        Log.Info("Create chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    }
-                    else
-                    {
-                        room = context.Chatroom.Where(ch => ch.ChatId == participant.ChatId).First();
-                        Log.Info("Select exist chat for user_id->" + user.UserId + " and opposide_id->" + interlocutor.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    }
-                    Log.Info("Create/Select chat chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    return new 
-                    { 
-                        success = true, 
-                        data = new 
-                        {
-                            chat_id = room.ChatId,
-                            chat_token = room.ChatToken,
-                            created_at = room.CreatedAt 
-                        } 
-                    };
-                } 
-                else 
+                return new 
                 { 
-                    message = "Can't define interlocutor by interlocutor_public_token from request's body."; 
-                }
-            } 
+                    success = true, 
+                    data = new 
+                    {
+                        chat_id = room.ChatId,
+                        chat_token = room.ChatToken,
+                        created_at = room.CreatedAt 
+                    } 
+                };
+            }
             return Return500Error(message);
         }
         [HttpPost]

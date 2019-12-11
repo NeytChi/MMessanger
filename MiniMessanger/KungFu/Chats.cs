@@ -23,6 +23,63 @@ namespace miniMessanger
             this.awsPath = Config.AwsPath;
             this.validator = validator;
         }
+        public Chatroom CreateChat(string userToken, string publicToken, ref string message)
+        {
+            User user = users.GetUserByToken(userToken, ref message);
+            if (user != null)
+            {
+                User interlocutor = context.User.Where(u => u.UserPublicToken == publicToken).FirstOrDefault();
+                if (interlocutor != null)
+                {
+                    return CreateChatIfNotExist(user, interlocutor);
+                } 
+                else 
+                { 
+                    message = "Can't define interlocutor by interlocutor_public_token from request's body."; 
+                }
+            } 
+            return null;
+        }
+        public Chatroom CreateChatIfNotExist(User user, User interlocutor)
+        {
+            Chatroom room;
+            Participants participant = context.Participants.Where(p 
+            => p.UserId == user.UserId 
+            && p.OpposideId == interlocutor.UserId).FirstOrDefault();
+            if (participant == null)
+            {
+                room = SaveChat();
+                SaveParticipants(room.ChatId,  user.UserId, interlocutor.UserId);
+                SaveParticipants(room.ChatId, interlocutor.UserId, user.UserId);
+                Log.Info("Create chat for userId ->" + user.UserId + ".", user.UserId);
+            }
+            else
+            {
+                room = context.Chatroom.Where(ch => ch.ChatId == participant.ChatId).First();
+                Log.Info("Select chat for userId ->" + user.UserId + ".", user.UserId);
+            }
+            return room;
+        }
+        public Chatroom SaveChat()
+        {
+            Chatroom room = new Chatroom();
+            room.ChatToken = users.validator.GenerateHash(20);
+            room.CreatedAt = DateTime.Now;
+            context.Chatroom.Add(room);
+            context.SaveChanges();
+            Log.Info("Save new chat.");
+            return room;
+        }
+        public void SaveParticipants(int chatId, int userId, int opposideUserId)
+        {
+            Participants participant = new Participants();
+            participant.ChatId = chatId;
+            participant.UserId = userId;
+            participant.OpposideId = opposideUserId;
+            context.Participants.Add(participant);
+            context.SaveChanges();
+            Log.Info("Create and save new participants.");
+        }
         public Message UploadMessagePhoto(IFormFile photo, UserCache cache, ref string message)
         {
             User user = users.GetUserByToken(cache.user_token, ref message);
@@ -105,6 +162,24 @@ namespace miniMessanger
                 disliked_user = like.Dislike
             }).Skip(page * count).Take(count).ToList();
         }
+        public void DeleteFile(string relativePath)
+        {
+            if (File.Exists(Config.savePath + relativePath))
+            {
+                File.Delete(Config.savePath + relativePath);
+                Log.Info("Delete file ->" + relativePath + ".");
+            }
+        }
+        public string CreateFile(IFormFile file, string relativePath)
+        {
+            Directory.CreateDirectory(Config.savePath + relativePath +
+                DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
+            string UrlPhoto = relativePath + DateTime.Now.Year + "-" + DateTime.Now.Month 
+            + "-" + DateTime.Now.Day + "/" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            file.CopyTo(new FileStream(Config.savePath + UrlPhoto, FileMode.Create));
+            return UrlPhoto;
+        }
+        
         public dynamic ResponseMessage(Message message)
         {
             if (message != null)

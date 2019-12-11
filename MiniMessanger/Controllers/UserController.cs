@@ -25,6 +25,7 @@ namespace Controllers
         private JsonVariableHandler jsonHandler;
         public Users users;
         public Chats chats;
+        public Profiles profiles;
         public Authentication authentication;
         public Validator Validator;
         public UsersController(Context context)
@@ -34,6 +35,7 @@ namespace Controllers
             jsonHandler = new Controllers.JsonVariableHandler();
             this.users = new Users(context, Validator);
             this.chats = new Chats(context, users, Validator);
+            this.profiles = new Profiles(context);
         }
         [HttpPost]
         [ActionName("Registration")]
@@ -207,84 +209,21 @@ namespace Controllers
         {
             string message = null;
             string userToken = Request.Form["user_token"];
-            if (userToken != null)
+            User user = users.GetUserByToken(userToken, ref message);
+            if (user != null)
             {
-                User user = users.GetUserByToken(userToken, ref message);
-                if (user != null)
-                {
-                    Profile profile = authentication.CreateIfNotExistProfile(user.UserId);
-                    string profileGender = Request.Form["profile_gender"];
-                    if (profileGender != null)
-                    {
-                        if (profileGender == "1")
-                        {
-                            profile.ProfileGender = true;
-                            Log.Info("Update profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                        else if (profileGender == "0")
-                        {
-                            profile.ProfileGender = false;
-                            Log.Info("Update profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                        else
-                        {
-                            Log.Warn("Incorrect value to uUpdate profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                    }
-                    string profileAge = Request.Form["profile_age"];
-                    if (profileAge != null)
-                    {
-                        short ProfileAge = 0;
-                        if (System.Int16.TryParse(profileAge, out ProfileAge))
-                        {
-                            if (ProfileAge > 0 && ProfileAge < 100)
-                            {
-                                profile.ProfileAge = (sbyte)ProfileAge;
-                                Log.Info("Update profile age.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            }
-                        }
-                    }
-                    string profileCity = Request.Form["profile_city"];
-                    if (profileCity != null)
-                    {
-                        if (profileCity.Length > 3 && profileCity.Length < 50)
-                        {
-                            profile.ProfileCity = profileCity;
-                            Log.Info("Update profile city.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                    }
-                    if (profile_photo != null)
-                    {
-                        if (profile_photo.ContentType.Contains("image"))
-                        {
-                            if (System.IO.File.Exists(Config.savePath + profile.UrlPhoto))
-                            {
-                                System.IO.File.Delete(Config.savePath + profile.UrlPhoto);
-                            }
-                            Directory.CreateDirectory(Config.savePath + "/ProfilePhoto/" +
-                             DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
-                            profile.UrlPhoto = "/ProfilePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
-                            + "-" + DateTime.Now.Day + "/" + Validator.GenerateHash(10);
-                            profile_photo.CopyTo(new System.IO.FileStream(Config.savePath + profile.UrlPhoto,
-                            System.IO.FileMode.Create));
-                            Log.Info("Update profile photo.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                    }
-                    context.Profile.Update(profile);
-                    context.SaveChanges();
+                user.Profile = profiles.UpdateProfile(user.UserId, ref message, 
+                profile_photo, Request.Form["profile_gender"],
+                Request.Form["profile_age"], Request.Form["profile_city"]);
+                if (user.Profile != null)
+                {    
                     Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                    return new { success = true, data = new 
-                    {
-                        url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
-                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                        profile_gender = profile.ProfileGender,
-                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                    } };
+                    return new 
+                    { 
+                        success = true, 
+                        data = ProfileToResponse(user.Profile)
+                    };
                 }
-            }
-            else 
-            {
-                message = "Request doesn't contains 'user_token' key.";
             }
             return Return500Error(message);
         }
@@ -294,95 +233,38 @@ namespace Controllers
         {
             string message = null;
             string profileToken = Request.Form["profile_token"];
-            if (profileToken != null)
+            User user = context.User.Where(u => u.ProfileToken == profileToken.ToString()).FirstOrDefault();
+            if (user != null)
             {
-                User user = context.User.Where(u => u.ProfileToken == profileToken.ToString()).FirstOrDefault();
-                if (user != null)
+                user.Profile = profiles.UpdateProfile(user.UserId, ref message, 
+                profile_photo, Request.Form["profile_gender"],
+                Request.Form["profile_age"], Request.Form["profile_city"]);
+                if (user.Profile != null)
                 {
-                    Profile profile = authentication.CreateIfNotExistProfile(user.UserId);
-                    string profileGender = Request.Form["profile_gender"];
-                    if (profileGender != null)
-                    {
-                        if (profileGender == "1")
-                        {
-                            profile.ProfileGender = true;
-                            Log.Info("Update profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                        else if (profileGender == "0")
-                        {
-                            profile.ProfileGender = false;
-                            Log.Info("Update profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                        else
-                        {
-                            Log.Warn("Incorrect value to uUpdate profile gender.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                    }
-                    string profileAge = Request.Form["profile_age"];
-                    if (profileAge != null)
-                    {
-                        short ProfileAge = 0;
-                        if (System.Int16.TryParse(profileAge, out ProfileAge))
-                        {
-                            if (ProfileAge > 0 && ProfileAge < 100)
-                            {
-                                profile.ProfileAge = (sbyte)ProfileAge;
-                                Log.Info("Update profile age.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                            }
-                        }
-                    }
-                    string profileCity = Request.Form["profile_city"];
-                    if (profileCity != null)
-                    {
-                        if (profileCity.Length > 3 && profileCity.Length < 50)
-                        {
-                            profile.ProfileCity = profileCity;
-                            Log.Info("Update profile city.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                    }
-                    if (profile_photo != null)
-                    {
-                        if (profile_photo.ContentType.Contains("image"))
-                        {
-                            if (System.IO.File.Exists(Config.savePath + profile.UrlPhoto))
-                            {
-                                System.IO.File.Delete(Config.savePath + profile.UrlPhoto);
-                            }
-                            Directory.CreateDirectory(Config.savePath + "/ProfilePhoto/" +
-                             DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
-                            profile.UrlPhoto = "/ProfilePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
-                            + "-" + DateTime.Now.Day + "/" + Validator.GenerateHash(10);
-                            profile_photo.CopyTo(new FileStream(Common.Config.savePath + profile.UrlPhoto,
-                            FileMode.Create));
-                            Log.Info("Update profile photo.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        }
-                    }
-                    context.Profile.Update(profile);
-                    context.SaveChanges();
-                    Log.Info("Registrate profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                    Log.Info("Registrate new profile.", user.UserId);
                     return new 
                     { 
                         success = true, 
                         message = "User account was successfully registered. See your email to activate account by link.",
-                        data = new 
-                        {
-                            url_photo = profile.UrlPhoto == null ? "" : Config.savePath + profile.UrlPhoto,
-                            profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                            profile_gender = profile.ProfileGender,
-                            profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                        } 
+                        data = ProfileToResponse(user.Profile)
                     };
-                }
-                else 
-                { 
-                    message = "No user with that profile_token."; 
                 }
             }
             else 
-            {
-                message = "Request doesn't contains 'profile_token' key.";
+            { 
+                message = "No user with that profile_token."; 
             }
             return Return500Error(message);
+        }
+        public dynamic ProfileToResponse(Profile profile)
+        {
+            return new 
+            {
+                url_photo = profile.UrlPhoto == null ? "" : Config.savePath + profile.UrlPhoto,
+                profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
+                profile_gender = profile.ProfileGender,
+                profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+            };
         }
         [HttpPost]
         [ActionName("Profile")]
@@ -392,19 +274,12 @@ namespace Controllers
             User user = users.GetUserByToken(userCache.user_token, ref message);
             if (user != null)
             {
-                Profile profile = authentication.CreateIfNotExistProfile(user.UserId);
+                user.Profile = authentication.CreateIfNotExistProfile(user.UserId);
                 Log.Info("Select profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                profile.UrlPhoto = profile.UrlPhoto == null ? null : Config.AwsPath + profile.UrlPhoto;
                 return new 
                 { 
                     success = true, 
-                    data = new 
-                    {
-                        url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
-                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                        profile_gender = profile.ProfileGender,
-                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                    } 
+                    data = ProfileToResponse(user.Profile)
                 };
             }
             return Return500Error(message);
@@ -757,7 +632,7 @@ namespace Controllers
         public ActionResult<dynamic> ComplaintContent(UserCache userCache)
         {
             string message = null;   
-            string complaint = System.Net.WebUtility.UrlDecode(userCache.complaint);
+            string complaint = WebUtility.UrlDecode(userCache.complaint);
             User user = users.GetUserByToken(userCache.user_token, ref message);
             if (user != null)
             {

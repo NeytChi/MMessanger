@@ -165,5 +165,34 @@ namespace miniMessanger.Manage
             })
             .Skip(page * count).Take(count).ToList();
         }
+        public dynamic ReciprocalUsers(int userId, bool profileGender, int page, int count)
+        {
+            return (from users in context.User
+            join like in context.LikeProfile on users.UserId equals like.ToUserId
+            join profile in context.Profile on users.UserId equals profile.UserId
+            join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blockedUsers
+            where like.UserId == userId
+            && like.Like 
+            && profile.ProfileGender != profileGender 
+            && (blockedUsers.All(b => b.UserId == userId && b.BlockedDeleted == true)
+            || blockedUsers.Count() == 0)
+            select new
+            { 
+                user_id = users.UserId,
+                user_email = users.UserEmail,
+                user_public_token = users.UserPublicToken,
+                user_login = users.UserLogin,
+                last_login_at = users.LastLoginAt,
+                profile = new 
+                {
+                    url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                    profile_age = profile.ProfileAge == null ? -1 : (sbyte)(long)profile.ProfileAge,
+                    profile_gender = profile.ProfileGender,
+                    profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                },
+                liked_user = like.Like,
+                disliked_user = like.Dislike
+            }).Skip(page * count).Take(count).ToList();
+        }
     }
 }

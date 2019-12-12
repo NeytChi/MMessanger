@@ -225,42 +225,37 @@ namespace miniMessanger
             data.ForEach(m => m.MessageViewed = true);
             context.SaveChanges();
         }
-
-
-
-
-
-        
-        public dynamic ReciprocalUsers(int userId, bool profileGender, int page, int count)
+        public dynamic GetChats(int UserId, int page = 0, int count = 30)
         {
-            return (from users in context.User
-            join like in context.LikeProfile on users.UserId equals like.ToUserId
-            join profile in context.Profile on users.UserId equals profile.UserId
-            join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blockedUsers
-            where like.UserId == userId
-            && like.Like 
-            && profile.ProfileGender != profileGender 
-            && (blockedUsers.All(b => b.UserId == userId && b.BlockedDeleted == true)
-            || blockedUsers.Count() == 0)
-            select new
-            { 
-                user_id = users.UserId,
-                user_email = users.UserEmail,
-                user_public_token = users.UserPublicToken,
-                user_login = users.UserLogin,
-                last_login_at = users.LastLoginAt,
-                profile = new 
+            Log.Info("Get list of chats.", UserId);
+            return (from participants in context.Participants
+            join chat in context.Chatroom on participants.ChatId equals chat.ChatId
+            join user in context.User on participants.OpposideId equals user.UserId
+            join message in context.Messages on chat.ChatId equals message.ChatId into messages
+            join block in context.BlockedUsers on user.UserId equals block.BlockedUserId into blocks
+            where participants.UserId == UserId
+            && !user.Deleted
+            && ( blocks.All(b => b.UserId == UserId && b.BlockedDeleted) || blocks.Count() == 0)
+            select new  
+            {
+                user = new 
                 {
-                    url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
-                    profile_age = profile.ProfileAge == null ? -1 : (sbyte)(long)profile.ProfileAge,
-                    profile_gender = profile.ProfileGender,
-                    profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                    user_id = user.UserId,
+                    user_email = user.UserEmail,
+                    user_public_token = user.UserPublicToken,
+                    user_login = user.UserLogin,
+                    last_login_at = user.LastLoginAt,
                 },
-                liked_user = like.Like,
-                disliked_user = like.Dislike
-            }).Skip(page * count).Take(count).ToList();
+                chat = new 
+                {
+                    chat_id = chat.ChatId,
+                    chat_token = chat.ChatToken,
+                    created_at = chat.CreatedAt,
+                },
+                last_message = messages.Count() == 0 ? null : ResponseMessage(messages.Last())
+            }
+            ).Skip(page * count).Take(count).ToList();
         }
-        
         public dynamic ResponseMessage(Message message)
         {
             if (message != null)

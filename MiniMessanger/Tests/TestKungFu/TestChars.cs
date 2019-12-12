@@ -146,9 +146,56 @@ namespace miniMessanger.Test
             Assert.AreEqual(nullable, null);
         }
         [Test]
-        public void ReciprocalUsers()
+        public void GetChats()
         {
-
+            User firstUser = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser = CreateMockingUser();
+            var firstRoom = chats.CreateChat(firstUser.UserToken, secondUser.UserPublicToken, ref message);
+            var secondRoom = chats.CreateChat(firstUser.UserToken, thirdUser.UserPublicToken, ref message);
+            var firstMessage = chats.CreateMessage("Testing text.", firstUser.UserToken, firstRoom.ChatToken, ref message);
+            var secondMessage = chats.CreateMessage("Testing text.", firstUser.UserToken, secondRoom.ChatToken, ref message);
+            ChatCache cache = new ChatCache();
+            cache.user_token = firstUser.UserToken;
+            var success = chats.GetChats(firstUser.UserId, 0, 2);
+            Assert.AreEqual(success[0].user.user_id, secondUser.UserId);
+            Assert.AreEqual(success[1].user.user_id, thirdUser.UserId);
+            Assert.AreEqual(success[0].chat.chat_id, firstRoom.ChatId);
+            Assert.AreEqual(success[1].chat.chat_id, secondRoom.ChatId);
+            Assert.AreEqual(success[0].last_message.message_id, firstMessage.MessageId);
+            Assert.AreEqual(success[1].last_message.message_id, secondMessage.MessageId);
+        }
+        [Test]
+        public void GetChatsWithBlocking()
+        {
+            User firstUser = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser = CreateMockingUser();
+            var firstRoom = chats.CreateChat(firstUser.UserToken, secondUser.UserPublicToken, ref message);
+            var secondRoom = chats.CreateChat(firstUser.UserToken, thirdUser.UserPublicToken, ref message);
+            var firstMessage = chats.CreateMessage("Testing text.", firstUser.UserToken, firstRoom.ChatToken, ref message);
+            var secondMessage = chats.CreateMessage("Testing text.", firstUser.UserToken, secondRoom.ChatToken, ref message);
+            Blocks blocks = new Blocks(new Users(context, new Validator()), context);
+            blocks.BlockUser(firstUser.UserToken, secondUser.UserPublicToken, "Test block.", ref message);
+            ChatCache cache = new ChatCache();
+            cache.user_token = firstUser.UserToken;
+            var successWithBlocking = chats.GetChats(firstUser.UserId, 0, 2);
+            Assert.AreEqual(successWithBlocking[0].user.user_id, thirdUser.UserId);
+            Assert.AreEqual(successWithBlocking[0].chat.chat_id, secondRoom.ChatId);
+            Assert.AreEqual(successWithBlocking[0].last_message.message_id, secondMessage.MessageId);   
+        }
+        [Test]
+        public void GetChatsWithoutMessage()
+        {
+            User firstUser = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            var firstRoom = chats.CreateChat(firstUser.UserToken, secondUser.UserPublicToken, ref message);
+            ChatCache cache = new ChatCache();
+            cache.user_token = firstUser.UserToken;
+            var successWithoutMessage = chats.GetChats(firstUser.UserId, 0, 2);
+            Assert.AreEqual(successWithoutMessage[0].user.user_id, secondUser.UserId);
+            Assert.AreEqual(successWithoutMessage[0].chat.chat_id, firstRoom.ChatId);
+            Assert.AreEqual(successWithoutMessage[0].last_message, null);
         }
         public User CreateMockingUser()
         {

@@ -326,65 +326,15 @@ namespace Controllers
         public ActionResult<dynamic> SelectChats(ChatCache cache)
         {
             string message = null;
+            cache.count = cache.count == 0 ? 30 : cache.count;
             User user = users.GetUserByToken(cache.user_token, ref message);
             if (user != null)
             {
-                List<dynamic> chats = new List<dynamic>();
-
-                List<Participants> participants = context.Participants.Where(p 
-                => p.UserId == user.UserId).ToList();
-
-                List<int> blocked = context.BlockedUsers.Where(b 
-                => b.UserId == user.UserId 
-                && b.BlockedDeleted == false)
-                .Select(b => b.BlockedUserId).ToList();
-
-                foreach(Participants participant in participants)
-                {
-                    if (!blocked.Contains(participant.OpposideId))
-                    {
-                        Chatroom room = context.Chatroom.Where(ch 
-                        => ch.ChatId == participant.ChatId).First();
-
-                        User opposide = context.User.Where(u 
-                        => u.UserId == participant.OpposideId).First();
-                        
-                        Message lastMessage = context.Messages.Where(m 
-                        => m.ChatId == room.ChatId)
-                        .OrderByDescending(m => m.MessageId).FirstOrDefault();
-
-                        var unit = new  
-                        {
-                            user = new 
-                            {
-                                user_id = opposide.UserId,
-                                user_email = opposide.UserEmail,
-                                user_public_token = opposide.UserPublicToken,
-                                user_login = opposide.UserLogin,
-                                last_login_at = opposide.LastLoginAt,
-                            },
-                            chat = new 
-                            {
-                                chat_id = room.ChatId,
-                                chat_token = room.ChatToken,
-                                created_at = room.CreatedAt,
-                            },
-                            last_message = lastMessage == null ? null : new
-                            {
-                                message_id = lastMessage.MessageId,
-                                chat_id = lastMessage.ChatId,
-                                user_id = lastMessage.UserId,
-                                message_text = lastMessage.MessageText,
-                                message_viewed = lastMessage.MessageViewed,
-                                created_at = lastMessage.CreatedAt
-                            }
-                        };
-                        chats.Add(unit);
-                    }
-                }
-                Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
-                context.SaveChanges();
-                return new { success = true, data = chats };
+                return new 
+                { 
+                    success = true,
+                    data = chats.GetChats(user.UserId, cache.page, cache.count) 
+                };
             }
             return Return500Error(message);
         }
@@ -694,7 +644,7 @@ namespace Controllers
             User user = users.GetUserWithProfile(cache.user_token, ref message);
             if (user != null)
             {
-                dynamic data = chats.ReciprocalUsers(user.UserId, user.Profile.ProfileGender, cache.page, cache.count);
+                dynamic data = users.ReciprocalUsers(user.UserId, user.Profile.ProfileGender, cache.page, cache.count);
                 Log.Info("Get reciprocal users.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                 return new { success = true, data = data };
             }

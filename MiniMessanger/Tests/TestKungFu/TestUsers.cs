@@ -123,6 +123,12 @@ namespace miniMessanger.Test
             Assert.AreEqual(anotherUserWithBlocked[0].user_id, second.UserId);
             Assert.AreEqual(anotherUserWithBlocked[1].user_id, first.UserId);
         }
+        [Test]
+        public void ReciprocalUsers()
+        {
+
+        }
+        
         public User CreateMockingUser()
         {
             string UserEmail = "test@gmail.com";

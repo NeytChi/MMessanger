@@ -1,6 +1,4 @@
 ﻿using Common;
-using System;
-using System.IO;
 using System.Net;
 using System.Linq;
 using miniMessanger;
@@ -215,9 +213,12 @@ namespace Controllers
             User user = users.GetUserByToken(userToken, ref message);
             if (user != null)
             {
-                user.Profile = profiles.UpdateProfile(user.UserId, ref message, 
-                profile_photo, Request.Form["profile_gender"],
-                Request.Form["profile_age"], Request.Form["profile_city"]);
+                user.Profile = profiles.UpdateProfile(
+                    user.UserId, 
+                    ref message, 
+                    profile_photo, Request.Form["profile_gender"],
+                    Request.Form["profile_age"], 
+                    Request.Form["profile_city"]);
                 if (user.Profile != null)
                 {    
                     Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
@@ -240,8 +241,8 @@ namespace Controllers
             if (user != null)
             {
                 user.Profile = profiles.UpdateProfile(user.UserId, ref message, 
-                profile_photo, Request.Form["profile_gender"],
-                Request.Form["profile_age"], Request.Form["profile_city"]);
+                    profile_photo, Request.Form["profile_gender"],
+                    Request.Form["profile_age"], Request.Form["profile_city"]);
                 if (user.Profile != null)
                 {
                     Log.Info("Registrate new profile.", user.UserId);
@@ -292,31 +293,15 @@ namespace Controllers
         public ActionResult<dynamic> GetUsersList(UserCache cache)
         {
             string message = null;
+            cache.count = cache.count == 0 ? 30 : cache.count;
             User user = users.GetUserByToken(cache.user_token, ref message);
             if (user != null)
             {
-                List<dynamic> data = new List<dynamic>();  
-                
-                List<User> usersData = context.User.Where(u 
-                => u.UserId != user.UserId)
-                .OrderByDescending(u => u.UserId)
-                .Skip(cache.page * 30).Take(30).ToList();
-                
-                List<int> blocked = context.BlockedUsers.Where(b 
-                => b.UserId == user.UserId 
-                && b.BlockedDeleted == false)
-                .Select(b => b.BlockedUserId).ToList();
-                
-                foreach(User publicUser in usersData)
-                {
-                    if (!blocked.Contains(publicUser.UserId))
-                    {
-                        data.Add(UsersResponse(publicUser));
-                    }
-                }
-                Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
-                context.SaveChanges();
-                return new { success = true, data = data };
+                return new 
+                { 
+                    success = true, 
+                    data = users.GetUsers(user.UserId, cache.page, cache.count) 
+                };
             }
             return Return500Error(message);
         }
@@ -336,10 +321,6 @@ namespace Controllers
             }
             return null;
         }
-        /// <summary>
-        /// Select list of chats. Get last message data, user's data of chat and chat data.
-        /// </summary>
-        /// <param name="request">Request.</param>
         [HttpPut]
         [ActionName("SelectChats")]
         public ActionResult<dynamic> SelectChats(ChatCache cache)

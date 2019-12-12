@@ -2,6 +2,7 @@ using Common;
 using System.Net;
 using System.Linq;
 using miniMessanger.Models;
+using System.Collections.Generic;
 
 namespace miniMessanger.Manage
 {
@@ -142,6 +143,27 @@ namespace miniMessanger.Manage
                 return user;
             }
             return null;
+        }
+        public dynamic GetUsers(int UserId, int page = 0, int count = 30)
+        {
+            Log.Info("Get users list.", UserId);
+            return (from users in context.User
+            join block in context.BlockedUsers on users.UserId equals block.BlockedUserId into blocks
+            where users.UserId != UserId
+            && users.Activate == 1
+            && !users.Deleted
+            && ( blocks.All(b => b.UserId == UserId && b.BlockedDeleted) || blocks.Count() == 0)
+            orderby users.UserId descending
+            select new
+            {
+                user_id = users.UserId,
+                user_email = users.UserEmail,
+                user_login = users.UserLogin,
+                created_at = users.CreatedAt,
+                last_login_at = users.LastLoginAt,
+                user_public_token = users.UserPublicToken
+            })
+            .Skip(page * count).Take(count).ToList();
         }
     }
 }

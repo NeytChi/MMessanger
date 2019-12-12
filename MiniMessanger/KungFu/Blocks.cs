@@ -2,6 +2,7 @@ using Common;
 using System.Net;
 using System.Linq;
 using miniMessanger.Models;
+using System;
 
 namespace miniMessanger.Manage
 {
@@ -28,7 +29,7 @@ namespace miniMessanger.Manage
                 User interlocutor = users.GetUserByPublicToken(OpposidePublicToken, ref message);
                 if (interlocutor != null)
                 {
-                    if (CheckComplaintMessage(BlockedReason, ref message))
+                    if (CheckComplaintMessage(ref BlockedReason, ref message))
                     {
                         if (GetExistBlocked(user.UserId, interlocutor.UserId, ref message) == null)
                         {
@@ -52,7 +53,7 @@ namespace miniMessanger.Manage
             }
             return blocked;
         }
-        public void CreateBlockedUser(int userId,int opposideUserId, string blockedReason)
+        public BlockedUser CreateBlockedUser(int userId,int opposideUserId, string blockedReason)
         {
             BlockedUser blockedUser = new BlockedUser();
             blockedUser.UserId = userId;
@@ -61,13 +62,15 @@ namespace miniMessanger.Manage
             blockedUser.BlockedDeleted = false;
             context.BlockedUsers.Add(blockedUser);
             context.SaveChanges();
+            return blockedUser;
         }
-        public bool CheckComplaintMessage(string complaint, ref string message)
+        public bool CheckComplaintMessage(ref string complaint, ref string message)
         {
             if (!string.IsNullOrEmpty(complaint))
             {
                 if (complaint.Length < 100)
                 {
+                    WebUtility.UrlDecode(complaint);
                     return true;
                 }
                 message = "Complaint can't be more than 100 characters.";
@@ -98,6 +101,74 @@ namespace miniMessanger.Manage
                 }
             }
             return false;
+        }
+        public bool Complaint(string userToken, long messageId, string complaint, ref string message)
+        {
+            User user = users.GetUserByToken(userToken, ref message);
+            if (user != null)
+            {
+                Message messageChat = context.Messages.Where(m => m.MessageId == messageId).FirstOrDefault();
+                if (messageChat != null)
+                {
+                    if (CheckComplaintMessage(ref complaint, ref message))
+                    {
+                        if (messageChat.UserId != user.UserId)
+                        {
+                            User interlocutor = context.User.Where(u => u.UserId == messageChat.UserId).FirstOrDefault();
+                            if (GetExistBlocked(user.UserId, interlocutor.UserId, ref message) == null)
+                            {
+                                BlockedUser block = CreateBlockedUser(user.UserId, interlocutor.UserId, complaint);
+                                CreateComplaint(user.UserId, block.BlockedId, messageChat.MessageId, complaint);
+                                Log.Info("Create complaint; user->user_id->" + user.UserId + ".", user.UserId);
+                                return true;
+                            }
+                        }
+                        else 
+                        { 
+                            message = "User can't complain on himself."; 
+                        }
+                    }
+                }
+                else 
+                { 
+                    message = "Server can't define message by message_id."; 
+                }
+            }
+            return false;
+        }
+        public Complaint CreateComplaint(int UserId, int BlockId, long MessageId, string complaintText)
+        {
+            Complaint complaint = new Complaint()
+            {
+                UserId = UserId,
+                BlockId = BlockId,
+                MessageId = MessageId,
+                ComplaintText = complaintText,
+                CreatedAt = DateTime.Now
+            };
+            context.Complaint.Add(complaint);
+            context.SaveChanges();
+            return complaint;
+        }
+        public dynamic GetBlockedUsers(int UserId, int Page, int Count = 50)
+        {
+            var blockedUsers = (from user in context.User 
+            join blocked in context.BlockedUsers on user.UserId equals blocked.BlockedId
+            where blocked.UserId == UserId
+            && blocked.BlockedDeleted == false
+            select new
+            { 
+                block_id = blocked.BlockedId,
+                user_id = blocked.BlockedUserId,
+                user_email = blocked.Blocked.UserEmail,
+                user_login =  blocked.Blocked.UserLogin,
+                last_login_at = blocked.Blocked.LastLoginAt,
+                user_public_token = blocked.Blocked.UserPublicToken,
+                blocked_reason = blocked.BlockedReason
+            }
+            ).Skip(Page * Count).Take(Count).ToList();
+            Log.Info("Get blocked users.");
+            return blockedUsers;
         }
     }
 }

@@ -138,7 +138,7 @@ namespace miniMessanger.Manage
                 else
                 {
                     user.Profile = context.Profile.Where(p 
-                    => p.UserId == user.UserId).First();
+                    => p.UserId == user.UserId).FirstOrDefault();
                 }
                 return user;
             }
@@ -162,6 +162,44 @@ namespace miniMessanger.Manage
                 created_at = users.CreatedAt,
                 last_login_at = users.LastLoginAt,
                 user_public_token = users.UserPublicToken
+            })
+            .Skip(page * count).Take(count).ToList();
+        }
+        /// <summary>
+        /// Select list of users with profile data, like and dislike keys.
+        /// Doesn't select users who a block by current user and users that current user d
+        /// </summary>
+        public dynamic GetUsersByGender(int UserId, bool ProfileGender, int page = 0, int count = 30)
+        {
+            Log.Info("Get users list by gender.", UserId);
+            return (from users in context.User
+            join profile in context.Profile on users.UserId equals profile.UserId
+            join likesProfile in context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes    
+            join block in context.BlockedUsers on users.UserId equals block.BlockedUserId into blocks
+            where users.UserId != UserId
+            && profile.ProfileGender != ProfileGender
+            && (!likes.Any(l => l.UserId == UserId && l.Like))
+            && users.Activate == 1
+            && !users.Deleted
+            && ( blocks.All(b => b.UserId == UserId && b.BlockedDeleted) || blocks.Count() == 0)
+            orderby users.UserId descending
+            select new 
+            { 
+                user_id = users.UserId,
+                user_email = users.UserEmail,
+                user_login = users.UserLogin,
+                created_at = users.CreatedAt,
+                last_login_at = users.LastLoginAt,
+                user_public_token = users.UserPublicToken,
+                profile = new 
+                {
+                    url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                    profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
+                    profile_gender = profile.ProfileGender,
+                    profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                },
+                liked_user = likes.Any(l => l.Like) ? true : false,
+                disliked_user = likes.Any(l => l.Dislike) ? true : false
             })
             .Skip(page * count).Take(count).ToList();
         }

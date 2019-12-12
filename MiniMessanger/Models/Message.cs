@@ -12,7 +12,7 @@ namespace miniMessanger.Models
     {
         public Message()
         {
-            Complaints = new HashSet<Complaints>();
+            Complaints = new HashSet<Complaint>();
         }
         public long MessageId { get; set; }
         public int ChatId { get; set; }
@@ -24,6 +24,6 @@ namespace miniMessanger.Models
         [Required]
         public DateTime CreatedAt { get; set; }
 
-        public virtual ICollection<Complaints> Complaints { get; set; }
+        public virtual ICollection<Complaint> Complaints { get; set; }
     }
 }

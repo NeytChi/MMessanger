@@ -431,25 +431,19 @@ namespace Controllers
         [ActionName("GetBlockedUsers")]
         public ActionResult<dynamic> GetBlockedUsers(UserCache cache)
         {
-            var blockedUsers = (from user in context.User 
-            join blocked in context.BlockedUsers on user.UserId equals blocked.UserId
-            where user.UserToken == cache.user_token
-            && blocked.BlockedDeleted == false
-            select new
-            { 
-                user_email = blocked.Blocked.UserEmail,
-                user_login =  blocked.Blocked.UserLogin,
-                last_login_at = blocked.Blocked.LastLoginAt,
-                user_public_token = blocked.Blocked.UserPublicToken,
-                blocked_reason = blocked.BlockedReason
+            string message = null;
+            cache.count = cache.count == 0 ? 50 : cache.count;
+            User user = users.GetUserByToken(cache.user_token, ref message);
+            if (user != null)
+            {
+                var blockedUsers = blocks.GetBlockedUsers(user.UserId, cache.page, cache.count);
+                return new 
+                { 
+                    success = true, 
+                    data = blockedUsers 
+                };
             }
-            ).ToList();
-            Log.Info("Get blocked users.", HttpContext.Connection.RemoteIpAddress.ToString());
-            return new 
-            { 
-                success = true, 
-                data = blockedUsers 
-            };
+            return Return500Error(message);
         }
         [HttpPost]
         [ActionName("UnblockUser")]
@@ -467,62 +461,13 @@ namespace Controllers
         }
         [HttpPost]
         [ActionName("ComplaintContent")]
-        public ActionResult<dynamic> ComplaintContent(UserCache userCache)
+        public ActionResult<dynamic> ComplaintContent(UserCache cache)
         {
             string message = null;   
-            string complaint = WebUtility.UrlDecode(userCache.complaint);
-            User user = users.GetUserByToken(userCache.user_token, ref message);
-            if (user != null)
+            if (blocks.Complaint(cache.user_token, cache.message_id, cache.complaint, ref message))
             {
-                Message messageChat = context.Messages.Where(m 
-                => m.MessageId == userCache.message_id).FirstOrDefault();
-                if (messageChat != null)
-                {
-                    if (complaint.Length < 100)
-                    {
-                        if (messageChat.UserId != user.UserId)
-                        {
-                            User interlocutor = context.User.Where(u => u.UserId == messageChat.UserId).FirstOrDefault();
-                            BlockedUser blockedUser = context.BlockedUsers.Where(b => b.UserId == user.UserId 
-                            && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
-                            if (blockedUser == null)
-                            {
-                                blockedUser = new BlockedUser();
-                                blockedUser.UserId = user.UserId;
-                                blockedUser.BlockedUserId = interlocutor.UserId;
-                                blockedUser.BlockedReason = complaint;
-                                blockedUser.BlockedDeleted = false;
-                                context.BlockedUsers.Add(blockedUser);
-                                Complaints complaintUser = new Complaints();
-                                complaintUser.UserId = user.UserId;
-                                complaintUser.BlockedId = blockedUser.BlockedId;
-                                complaintUser.MessageId = messageChat.MessageId;
-                                complaintUser.Complaint = complaint;
-                                complaintUser.CreatedAt = System.DateTime.Now;
-                                context.Complaints.Add(complaintUser);
-                                context.SaveChanges();
-                                Log.Info("Create complaint; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                                return new { success = true, message = "Complain content - successed." };
-                            }
-                            else 
-                            { 
-                                message = "User blocked current user."; 
-                            }
-                        }
-                        else 
-                        { 
-                            message = "User can't complain on himself."; 
-                        }
-                    }
-                    else 
-                    { 
-                        message = "Complaint message can't be longer than 100 characters."; 
-                    }
-                }
-                else 
-                { 
-                    message = "Unknow message_id. Server can't define message."; 
-                }
+                Log.Info("Create complaint.", HttpContext.Connection.RemoteIpAddress.ToString());
+                return new { success = true, message = "Complain content - successed." };
             }
             return Return500Error(message);
         }
@@ -532,39 +477,11 @@ namespace Controllers
         {
             string message = null;
             cache.count = cache.count == 0 ? 30 : cache.count;
-            var userData = users.GetUserWithProfile(cache.user_token, ref message);
-            if (userData != null)
+            User user = users.GetUserWithProfile(cache.user_token, ref message);
+            if (user != null)
             {
-                var usersData = (from users in context.User
-                join profile in context.Profile on users.UserId equals profile.UserId
-                join likesProfile in context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
-                join blockedUser in context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
-                where users.UserId != userData.UserId && profile.ProfileGender != userData.Profile.ProfileGender
-                && users.Activate == 1 && (!likes.Any(l => l.UserId == userData.UserId && l.Like))
-                && (blockedUsers.All(b => b.UserId == userData.UserId && b.BlockedDeleted == true)
-                || blockedUsers.Count() == 0)
-                orderby users.UserId descending
-                select new 
-                { 
-                    user_id = users.UserId,
-                    user_email = users.UserEmail,
-                    user_login = users.UserLogin,
-                    created_at = users.CreatedAt,
-                    last_login_at = users.LastLoginAt,
-                    user_public_token = users.UserPublicToken,
-                    profile = new 
-                    {
-                        url_photo = profile.UrlPhoto == null ? "" : AwsPath + profile.UrlPhoto,
-                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                        profile_gender = profile.ProfileGender,
-                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                    },
-                    liked_user = likes.Any(l => l.Like) ? true : false,
-                    disliked_user = likes.Any(l => l.Dislike) ? true : false
-                }).Skip(cache.page * cache.count).Take(cache.count).ToList();
-                Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), userData.UserId);
-                context.SaveChanges();
-                return new { success = true, data = usersData };
+                var data =users.GetUsersByGender(user.UserId, user.Profile.ProfileGender, cache.page, cache.count);
+                return new { success = true, data = data };
             }
             return Return500Error(message);
         }

@@ -49,19 +49,22 @@ namespace miniMessanger.Test
         {
             User first = CreateMockingUser();
             User second = CreateMockingUser();
-            blocks.CreateBlockedUser(first.UserId, second.UserId, "Test block");
+            BlockedUser block = blocks.CreateBlockedUser(first.UserId, second.UserId, "Test block");
+            Assert.AreEqual(block.UserId, first.UserId);
+            Assert.AreEqual(block.BlockedUserId, second.UserId);
         }
-        
         [Test]
         public void CheckComplaintMessage()
         {
+            string emptyString = "";
             string blockedReason = "Test block";
-            bool success = blocks.CheckComplaintMessage(blockedReason, ref message);
-            bool empty = blocks.CheckComplaintMessage("", ref message);
-            bool nullable = blocks.CheckComplaintMessage(null, ref message);
+            bool success = blocks.CheckComplaintMessage(ref blockedReason, ref message);
+            bool empty = blocks.CheckComplaintMessage(ref emptyString, ref message);
+            emptyString = null;
+            bool nullable = blocks.CheckComplaintMessage(ref emptyString, ref message);
             while (blockedReason.Length < 100)
                 blockedReason += blockedReason;
-            bool moreCharacters = blocks.CheckComplaintMessage(blockedReason, ref message);
+            bool moreCharacters = blocks.CheckComplaintMessage(ref blockedReason, ref message);
             Assert.AreEqual(success, true);
             Assert.AreEqual(empty, false);
             Assert.AreEqual(nullable, false);
@@ -79,6 +82,53 @@ namespace miniMessanger.Test
             Assert.AreEqual(createBlock, true);
             Assert.AreEqual(unblocked, true);
             Assert.AreEqual(blockDeleted, false);
+        }
+        [Test]
+        public void GetBlockedUser()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            User third = CreateMockingUser();
+            blocks.BlockUser(first.UserToken, second.UserPublicToken, "Test blocking.", ref message);
+            blocks.BlockUser(first.UserToken, third.UserPublicToken, "Test blocking.", ref message);
+            var blocked = blocks.GetBlockedUsers(first.UserId, 0, 2);
+            blocks.UnblockUser(first.UserToken, second.UserPublicToken, ref message);
+            var blockedWithoutThirdUser = blocks.GetBlockedUsers(first.UserId, 0, 2);
+            Assert.AreEqual(blocked[0].user_id, second.UserId);
+            Assert.AreEqual(blocked[1].user_id, third.UserId);
+            Assert.AreEqual(blockedWithoutThirdUser[0].user_id, third.UserId);
+        }
+        [Test]
+        public void Complaint()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chats chats = new Chats(context, new Users(context, new Validator()), new Validator());
+            Chatroom room = chats.CreateChat(first.UserToken, second.UserPublicToken, ref message);
+            Message firstMessage = chats.CreateMessage("Test message.", first.UserToken, room.ChatToken, ref message);
+            Message secondMessage = chats.CreateMessage("Test message.", second.UserToken, room.ChatToken, ref message);
+            bool success = blocks.Complaint(first.UserToken, secondMessage.MessageId, "Test complaint.", ref message);
+            bool tryCreateAgain = blocks.Complaint(first.UserToken, secondMessage.MessageId, "Test complaint.", ref message);
+            bool tryUnknowMessage = blocks.Complaint(first.UserToken, 0, "Test complaint.", ref message);
+            bool tryComplainOnHimSelf = blocks.Complaint(first.UserToken, firstMessage.MessageId, "Test complaint.", ref message);
+            Assert.AreEqual(success, true);
+            Assert.AreEqual(tryCreateAgain, false);
+            Assert.AreEqual(tryUnknowMessage, false);
+            Assert.AreEqual(tryComplainOnHimSelf, false);
+        }
+        [Test]
+        public void CreateComplaint()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chats chats = new Chats(context, new Users(context, new Validator()), new Validator());
+            Chatroom room = chats.CreateChat(first.UserToken, second.UserPublicToken, ref message);
+            Message roomMessage = chats.CreateMessage("Test message.", first.UserToken, room.ChatToken, ref message);
+            BlockedUser block = blocks.CreateBlockedUser(first.UserId, second.UserId, "Test blocking.");
+            Complaint complaint = blocks.CreateComplaint(first.UserId, block.BlockedId, roomMessage.MessageId, "Test complaint.");
+            Assert.AreEqual(complaint.UserId, first.UserId);
+            Assert.AreEqual(complaint.MessageId, roomMessage.MessageId);
+            Assert.AreEqual(complaint.BlockId, block.BlockedId);
         }
         public User CreateMockingUser()
         {

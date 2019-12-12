@@ -26,7 +26,7 @@ namespace miniMessanger.Models
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<BlockedUser> BlockedUsers { get; set; }
         public virtual DbSet<Chatroom> Chatroom { get; set; }
-        public virtual DbSet<Complaints> Complaints { get; set; }
+        public virtual DbSet<Complaint> Complaint { get; set; }
         public virtual DbSet<Message> Messages { get; set; }
         public virtual DbSet<Participants> Participants { get; set; }
         public virtual DbSet<Profile> Profile { get; set; }
@@ -234,14 +234,14 @@ namespace miniMessanger.Models
                     //.ValueGeneratedOnAddOrUpdate();
             });
 
-            modelBuilder.Entity<Complaints>(entity =>
+            modelBuilder.Entity<Complaint>(entity =>
             {
                 entity.HasKey(e => e.ComplaintId)
                     .HasName("PRIMARY");
 
                 entity.ToTable("complaints");
 
-                entity.HasIndex(e => e.BlockedId)
+                entity.HasIndex(e => e.BlockId)
                     .HasName("blocked_id");
 
                 entity.HasIndex(e => e.MessageId)
@@ -254,11 +254,11 @@ namespace miniMessanger.Models
                     .HasColumnName("complaint_id")
                     .HasColumnType("int(11)");
 
-                entity.Property(e => e.BlockedId)
+                entity.Property(e => e.BlockId)
                     .HasColumnName("blocked_id")
                     .HasColumnType("int(11)");
 
-                entity.Property(e => e.Complaint)
+                entity.Property(e => e.ComplaintText)
                     .HasColumnName("complaint")
                     .HasColumnType("varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci");
 
@@ -276,7 +276,7 @@ namespace miniMessanger.Models
 
                 entity.HasOne(d => d.Blocked)
                     .WithOne(p => p.Complaints)
-                    .HasForeignKey<Complaints>(d => d.BlockedId)
+                    .HasForeignKey<Complaint>(d => d.BlockId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("complaints_ibfk_2");
 

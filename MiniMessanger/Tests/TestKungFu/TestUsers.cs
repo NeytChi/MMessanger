@@ -124,6 +124,23 @@ namespace miniMessanger.Test
             Assert.AreEqual(anotherUserWithBlocked[1].user_id, first.UserId);
         }
         [Test]
+        public void GetUserByGender()
+        {
+            Blocks blocks = new Blocks(users, context);
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            User third = CreateMockingUser();
+            var success = users.GetUsers(first.UserId, 0, 2);
+            Assert.AreEqual(success[0].user_id, third.UserId);
+            Assert.AreEqual(success[1].user_id, second.UserId);
+            blocks.BlockUser(first.UserToken, third.UserPublicToken, "Test block.", ref message);
+            var successWithBlocked = users.GetUsers(first.UserId, 0, 2);
+            Assert.AreEqual(successWithBlocked[0].user_id, second.UserId);
+            var anotherUserWithBlocked = users.GetUsers(third.UserId, 0, 2);
+            Assert.AreEqual(anotherUserWithBlocked[0].user_id, second.UserId);
+            Assert.AreEqual(anotherUserWithBlocked[1].user_id, first.UserId);
+        }
+        [Test]
         public void ReciprocalUsers()
         {
 

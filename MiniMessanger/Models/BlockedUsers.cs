@@ -13,6 +13,6 @@
         public bool BlockedDeleted { get; set; }
         public virtual User Blocked { get; set; }
         public virtual User User { get; set; }
-        public virtual Complaints Complaints { get; set; }
+        public virtual Complaint Complaints { get; set; }
     }
 }

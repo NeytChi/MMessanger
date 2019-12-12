@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 
 namespace miniMessanger.Models
 {
@@ -9,7 +8,7 @@ namespace miniMessanger.Models
         {
             BlockedUsers = new HashSet<BlockedUser>();
             UsersBlocks = new HashSet<BlockedUser>();
-            Complaints = new HashSet<Complaints>();
+            Complaints = new HashSet<Complaint>();
             Profile = new Profile();
         }
         public int UserId { get; set; }
@@ -29,6 +28,6 @@ namespace miniMessanger.Models
         public virtual Profile Profile { get; set; }
         public virtual ICollection<BlockedUser> BlockedUsers { get; set; }
         public virtual ICollection<BlockedUser> UsersBlocks { get; set; }
-        public virtual ICollection<Complaints> Complaints { get; set; }
+        public virtual ICollection<Complaint> Complaints { get; set; }
     }
 }

@@ -7,13 +7,21 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Controllers
 {
-    public static class AuthOptions
+    public class AuthOptions
     {
-        public static string ISSUER = Config.GetServerConfigValue("issuer", JTokenType.String);
-        public static string AUDIENCE = Config.GetServerConfigValue("audience", JTokenType.String);
-        private static string KEY = Config.GetServerConfigValue("auth_key", JTokenType.String);
-        public static int LIFETIME = Config.GetServerConfigValue("auth_lifetime", JTokenType.Integer);
-        public static SymmetricSecurityKey GetSymmetricSecurityKey()
+        public AuthOptions(Config config)
+        {
+            config.Initialization();
+            ISSUER = config.GetServerConfigValue("issuer", JTokenType.String);
+            AUDIENCE = config.GetServerConfigValue("audience", JTokenType.String);
+            KEY = config.GetServerConfigValue("auth_key", JTokenType.String);
+            LIFETIME = config.GetServerConfigValue("auth_lifetime", JTokenType.Integer);
+        }
+        public string ISSUER;
+        public string AUDIENCE;
+        private string KEY;
+        public int LIFETIME;
+        public SymmetricSecurityKey GetSymmetricSecurityKey()
         {
             return new SymmetricSecurityKey(Encoding.ASCII.GetBytes(KEY));
         }

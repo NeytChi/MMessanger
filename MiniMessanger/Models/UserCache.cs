@@ -15,7 +15,6 @@ namespace miniMessanger.Models
         public string complaint;
         public string opposide_public_token;
         public string blocked_reason;
-        public string chat_token;
-        public string message_text;
+
     }
 }

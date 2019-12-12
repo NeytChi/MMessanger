@@ -12,6 +12,8 @@ namespace Common
     [ApiController]
     public class ManagerController : ControllerBase
     {
+        private string UrlRedirect;
+        private string UrlCheck;
         private Context context;
         public ManagerController(Context context)
         {
@@ -32,13 +34,13 @@ namespace Common
                 success = result,
                 data = new 
                 {
-                    url = result ? Config.urlRedirect : ""
+                    url = result ? UrlRedirect : ""
                 }
             };    
         }
         public bool CheckUrlState()
         {
-            string result = GetRequest(Config.urlCheck);
+            string result = GetRequest(UrlCheck);
             if (result != null)
             {
                 JObject json = JsonConvert.DeserializeObject<JObject>(result);

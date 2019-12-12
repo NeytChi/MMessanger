@@ -4,27 +4,30 @@ using Newtonsoft.Json.Linq;
 
 namespace Common
 {
-    public static class Config
+    public class Config
     {
-        public static DateTime unixed = new DateTime(1970, 1, 1, 0, 0, 0);
-        public static JObject server_config;
-        public static JObject database_config;
-        public static string conf_name = "conf.json";
-        public static string dbconf_name = "dbconf.json";
-        public static string IP = "127.0.0.1";
-        public static string Domen = "(none)";
-        public static int Port = 8023;
-        public static string AwsPath = "";
-        public static string savePath = "";
-        public static string urlCheck = "";
-        public static string urlRedirect = "";
+        public Config()
+        {
+            Initialization();
+        }
+        public JObject server_config;
+        public JObject database_config;
+        public string conf_name = "conf.json";
+        public string dbconf_name = "dbconf.json";
+        public string IP = "127.0.0.1";
+        public string Domen = "(none)";
+        public int Port = 8023;
+        public string AwsPath = "";
+        public string savePath = "";
+        public string urlCheck = "";
+        public string urlRedirect = "";
         /// <summary>
         /// Return of the path occurs without the last '/' (pointer to the directory) 
         /// </summary>
-        public static string currentDirectory = Directory.GetCurrentDirectory();
-        public static bool initiated = false;
+        public string currentDirectory = Directory.GetCurrentDirectory();
+        public bool initiated = false;
 
-        public static void Initialization()
+        public void Initialization()
         {
             initiated = true;
             FileInfo confExist = new FileInfo(currentDirectory + "/" + conf_name);
@@ -55,7 +58,7 @@ namespace Common
                 Console.WriteLine("Start with default config setting.");
             }
         }
-        private static string ReadConfigJsonData(string fileName)
+        private string ReadConfigJsonData(string fileName)
         {
             if (File.Exists(fileName))
             {
@@ -74,7 +77,7 @@ namespace Common
                 return string.Empty;
             }
         }
-        public static string GetHostsUrl()
+        public string GetHostsUrl()
         {
             string url_connection = null;
             if (!initiated)
@@ -92,10 +95,13 @@ namespace Common
                 }
                 else { Console.WriteLine("Can't create url_connetion_string, one of values doesn't exist."); }
             }
-            else { Console.WriteLine("Server can't define conf.json; Can't get url_connetion_string."); }
+            else 
+            { 
+                Console.WriteLine("Server can't define conf.json; Can't get url_connetion_string."); 
+            }
             return url_connection;
         }
-        public static string GetHostsHttpsUrl()
+        public string GetHostsHttpsUrl()
         {
             string url_connection = null;
             if (!initiated)
@@ -116,7 +122,7 @@ namespace Common
             else { Console.WriteLine("Server can't define conf.json; Can't get url_connetion_string."); }
             return url_connection;
         }
-        public static string GetDatabaseConfigConnection()
+        public string GetDatabaseConfigConnection()
         {
             string mysql_connection = null;
             if (!initiated)
@@ -140,7 +146,7 @@ namespace Common
             else { Console.WriteLine("Server can't define dbconf.json; Can't get mysql_connetion_string."); }
             return mysql_connection;
         }
-        public static dynamic GetServerConfigValue(string conf_name, JTokenType type_value)
+        public dynamic GetServerConfigValue(string conf_name, JTokenType type_value)
         {
             if (!initiated)
             {
@@ -163,9 +169,15 @@ namespace Common
                             return null;
                     }
                 }
-                else { Console.WriteLine("Can not get value, json doesn't have this value, value=" + conf_name + ", function GetConfigValue"); }
+                else 
+                { 
+                    Console.WriteLine("Can not get value, json doesn't have this value, value=" + conf_name + ", function GetConfigValue"); 
+                }
             }
-            else { Console.WriteLine("Can not get value, Json Object did not create, function GetConfigValue"); }
+            else 
+            { 
+                Console.WriteLine("Can not get value, Json Object did not create, function GetConfigValue"); 
+            }
             switch (type_value)
             {
                 case JTokenType.Integer: return -1;

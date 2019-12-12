@@ -1,14 +1,16 @@
 ﻿using Common;
 using System;
+using miniMessanger.Models;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using miniMessanger.Models;
 
 namespace Instasoft
 {
     public class Program
     {
         public static bool requestView = false;    
+        public static string HostHttps;
+        public static string HostHttp;
         /*public static void Main(string[] args)
         {
             using (Context context = new Context(true))
@@ -16,7 +18,9 @@ namespace Instasoft
                 context.Database.EnsureCreated();
             }
             Log.Info("Start server program.");
-            Config.Initialization();
+            Config config = new Config();
+            HostHttp = config.GetHostsUrl();
+            HostHttps = config.GetHostsHttpsUrl();
             if (args != null)
             {                
                 if (args.Length >= 1)
@@ -38,6 +42,7 @@ namespace Instasoft
             }
             CreateWebHostBuilder(args).Build().Run();
         }*/
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args).UseUrls(Common.Config.GetHostsUrl(), Common.Config.GetHostsHttpsUrl()).UseStartup<Startup>();
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args) 
+        => WebHost.CreateDefaultBuilder(args).UseUrls(HostHttp, HostHttps).UseStartup<Startup>();
     }
 }

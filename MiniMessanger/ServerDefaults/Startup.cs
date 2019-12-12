@@ -1,5 +1,6 @@
 ﻿using Common;
 using NMiddleware;
+using Controllers;
 using miniMessanger.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Builder;
@@ -27,6 +28,8 @@ namespace Instasoft
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            Config config = new Config();
+
             services.AddCors(options =>
             {
                 options.AddPolicy(AllowSpecificOrigins,
@@ -38,6 +41,8 @@ namespace Instasoft
                     //.AllowCredentials();
                 });
             });
+
+            AuthOptions authOptions = new AuthOptions(config);
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -45,15 +50,18 @@ namespace Instasoft
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = Controllers.AuthOptions.ISSUER,
+                    ValidIssuer = authOptions.ISSUER,
                     ValidateAudience = true,
-                    ValidAudience = Controllers.AuthOptions.AUDIENCE,
+                    ValidAudience = authOptions.AUDIENCE,
                     ValidateLifetime = true,
-                    IssuerSigningKey = Controllers.AuthOptions.GetSymmetricSecurityKey(),
+                    IssuerSigningKey = authOptions.GetSymmetricSecurityKey(),
                     ValidateIssuerSigningKey = true
                 };
             });
-            services.AddDbContext<Context>(options => options.UseMySql(Config.GetDatabaseConfigConnection()));
+
+            services.AddDbContext<Context>(options 
+            => options.UseMySql(config.GetDatabaseConfigConnection()));
+
             services.Configure<MvcOptions>(options =>
             {
                 options.Filters.Add(new CorsAuthorizationFilterFactory(AllowSpecificOrigins));

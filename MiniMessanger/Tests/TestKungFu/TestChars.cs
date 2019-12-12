@@ -25,6 +25,96 @@ namespace miniMessanger.Test
         public string message;
         
         [Test]
+        public void CreateChat()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chatroom room = chats.CreateChat(first.UserToken, second.UserPublicToken, ref message);
+        }
+        [Test]
+        public void CreateChatIfNotExist()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chatroom room = chats.CreateChatIfNotExist(first, second);
+        }
+        [Test]
+        public void SaveChat()
+        {
+            var room = chats.SaveChat();
+        }
+        [Test]
+        public void SaveParticipants()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chatroom room = chats.SaveChat();
+            chats.SaveParticipants(room.ChatId, first.UserId, second.UserId);
+        }
+        [Test]
+        public void CreateMessage()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chatroom room = chats.CreateChat(first.UserToken, second.UserPublicToken, ref message);
+            chats.CreateMessage("Testing text.", first.UserToken, room.ChatToken , ref message);
+        }
+        [Test]
+        public void SaveTextMessage()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chatroom room = chats.CreateChat(first.UserToken, second.UserPublicToken, ref message);
+            chats.SaveTextMessage(room.ChatId, first.UserId, "Testing text.");
+        }
+        [Test]
+        public void CheckMessageText()
+        {
+            string messageText = "Test text.";
+            bool success = chats.CheckMessageText(ref messageText, ref message);
+            while (messageText.Length < 510)
+                messageText += messageText;
+            bool veryLongText = chats.CheckMessageText(ref messageText, ref message);
+            messageText = "";
+            bool emptyText = chats.CheckMessageText(ref messageText, ref message);
+            Assert.AreEqual(success, true);
+            Assert.AreEqual(veryLongText, false);
+            Assert.AreEqual(emptyText, false);
+        }
+        [Test]
+        public void GetChatroom()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chatroom room = chats.CreateChat(first.UserToken, second.UserPublicToken, ref message);
+            Chatroom success = chats.GetChatroom(room.ChatToken, ref message);
+            Chatroom unknowRoom = chats.GetChatroom("", ref message);
+            Assert.AreEqual(success.ChatId, room.ChatId);
+            Assert.AreEqual(unknowRoom, null);
+        }
+        [Test]
+        public void GetMessages()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chatroom room = chats.CreateChat(first.UserToken, second.UserPublicToken, ref message);
+            Message testMessage = chats.CreateMessage("Test message", first.UserToken, room.ChatToken, ref message);
+            dynamic success = chats.GetMessages(first.UserId, room.ChatToken, 0, 30, ref message);
+            Assert.AreEqual(success[0].message_id, testMessage.MessageId);
+        }
+        [Test]
+        public void UpdateMessagesToViewed()
+        {
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            Chatroom room = chats.CreateChat(first.UserToken, second.UserPublicToken, ref message);
+            Message testMessage = chats.CreateMessage("Test message", first.UserToken, room.ChatToken, ref message);
+            chats.UpdateMessagesToViewed(room.ChatId, first.UserId);
+        }
+
+
+
+        [Test]
         public void UploadMessagePhoto()
         {
             User first = CreateMockingUser();
@@ -41,21 +131,6 @@ namespace miniMessanger.Test
         public void ReciprocalUsers()
         {
 
-        }
-        [Test]
-        public void DeleteFile()
-        {
-            FormFile file = CreateFormFile();
-            string relativePath = chats.CreateFile(file, "/MessagePhoto/");
-            chats.DeleteFile(relativePath);
-        }
-        [Test]
-        public void CreateFile()
-        {
-            FormFile file = CreateFormFile();
-            string result = chats.CreateFile(file, "/MessagePhoto/");
-            chats.DeleteFile(result);
-            Assert.AreEqual(result[0], '/');
         }
         public User CreateMockingUser()
         {

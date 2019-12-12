@@ -28,8 +28,11 @@ namespace Controllers
         public Profiles profiles;
         public Authentication authentication;
         public Validator Validator;
+        public string AwsPath;
         public UsersController(Context context)
         {
+            Config config = new Config();
+            this.AwsPath = config.AwsPath;
             this.context = context;
             this.Validator = new Validator();
             jsonHandler = new Controllers.JsonVariableHandler();
@@ -109,7 +112,7 @@ namespace Controllers
                         user_public_token = user.UserPublicToken,
                         profile = new
                         {
-                            url_photo = user.Profile.UrlPhoto == null ? "" : Config.AwsPath + user.Profile.UrlPhoto,
+                            url_photo = user.Profile.UrlPhoto == null ? "" : AwsPath + user.Profile.UrlPhoto,
                             profile_age = user.Profile.ProfileAge == null ? -1 : user.Profile.ProfileAge,
                             profile_gender = user.Profile.ProfileGender,
                             profile_city = user.Profile.ProfileCity == null  ? "" : user.Profile.ProfileCity
@@ -260,7 +263,7 @@ namespace Controllers
         {
             return new 
             {
-                url_photo = profile.UrlPhoto == null ? "" : Config.savePath + profile.UrlPhoto,
+                url_photo = profile.UrlPhoto == null ? "" : AwsPath + profile.UrlPhoto,
                 profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                 profile_gender = profile.ProfileGender,
                 profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
@@ -323,10 +326,10 @@ namespace Controllers
         /// <param name="request">Request.</param>
         [HttpPut]
         [ActionName("SelectChats")]
-        public ActionResult<dynamic> SelectChats(UserCache userCache)
+        public ActionResult<dynamic> SelectChats(ChatCache cache)
         {
             string message = null;
-            User user = users.GetUserByToken(userCache.user_token, ref message);
+            User user = users.GetUserByToken(cache.user_token, ref message);
             if (user != null)
             {
                 List<dynamic> chats = new List<dynamic>();
@@ -390,47 +393,21 @@ namespace Controllers
         }
         [HttpPut]
         [ActionName("SelectMessages")]
-        public ActionResult<dynamic> SelectMessages(UserCache userCache)
+        public ActionResult<dynamic> SelectMessages(ChatCache cache)
         {
-            string messageReturn = null;
-            User user = users.GetUserByToken(userCache.user_token, ref messageReturn);
+            string message = null;
+            User user = users.GetUserByToken(cache.user_token, ref message);
             if (user != null)
             {
-                Chatroom room = context.Chatroom.Where(r 
-                => r.ChatToken == userCache.chat_token).FirstOrDefault();
-                if (room != null)
+                dynamic messages = chats.GetMessages(
+                    user.UserId, cache.chat_token, cache.page, cache.count, ref message);
+                if (messages != null)
                 {
-                    var messages = context.Messages.Where(m 
-                    => m.ChatId == room.ChatId)
-                    .OrderByDescending(m => m.MessageId)
-                    .Skip(userCache.page * 50).Take(50)
-                    .Select(m 
-                    => new 
-                    { 
-                        message_id = m.MessageId,
-                        chat_id = m.ChatId,
-                        user_id = m.UserId,
-                        message_type = m.MessageType,
-                        message_text = m.MessageText,
-                        url_file = string.IsNullOrEmpty(m.UrlFile) ? "" : Config.AwsPath + m.UrlFile,
-                        message_viewed = m.MessageViewed,
-                        created_at = m.CreatedAt
-                    }).ToList(); 
-                    var data = (from m in context.Messages 
-                    where m.ChatId == room.ChatId 
-                    && m.UserId != user.UserId 
-                    select m).ToList();
-                    data.ForEach(m => m.MessageViewed = true);
-                    context.SaveChanges();
-                    Log.Info("Get list of messages, chat_id->" + room.ChatId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                     return new { success = true, data = messages };
                 }
-                else 
-                { 
-                    messageReturn = "Server can't define chat by chat_token."; 
-                }
+
             }
-            return Return500Error(messageReturn);
+            return Return500Error(message);
         }
         [HttpPost]
         [ActionName("CreateChat")]
@@ -455,47 +432,19 @@ namespace Controllers
         }
         [HttpPost]
         [ActionName("SendMessage")]
-        public ActionResult<dynamic> SendMessage(UserCache userCache)
+        public ActionResult<dynamic> SendMessage(ChatCache cache)
         {
             string answer = null;
-            if (!string.IsNullOrEmpty(userCache.message_text))
+            Message message = chats.CreateMessage(
+                cache.message_text, cache.user_token, cache.chat_token, ref answer);
+            if (message != null)
             {
-                string messageText = WebUtility.UrlDecode(userCache.message_text);
-                User user = users.GetUserByToken(userCache.user_token, ref answer);
-                if (user != null)
-                {
-                    Chatroom room = context.Chatroom.Where(ch 
-                    => ch.ChatToken == userCache.chat_token).FirstOrDefault();
-                    if (room != null)
-                    {
-                        Message message = new Message();
-                        message.ChatId = room.ChatId;
-                        message.UserId = user.UserId;
-                        message.MessageType = "text";
-                        message.MessageText = messageText;
-                        message.MessageViewed = false;
-                        message.UrlFile = "";
-                        message.CreatedAt = DateTime.Now;
-                        context.Messages.Add(message);
-                        context.SaveChanges();
-                        Log.Info("Message was handled, message_id->" + message.MessageId + ".", 
-                        HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        return new 
-                        { 
-                            success = true, 
-                            data = chats.ResponseMessage(message)
-                        };
-                    } 
-                    else 
-                    { 
-                        answer = "Server can't define chat by chat_token."; 
-                    }
-                } 
-            } 
-            else 
-            {
-                answer = "Message is empty. Server woundn't upload this message."; 
-            }        
+                return new 
+                { 
+                    success = true, 
+                    data = chats.ResponseMessage(message) 
+                };
+            }
             return Return500Error(answer);
         }
         [HttpPost]
@@ -506,7 +455,7 @@ namespace Controllers
             string data = Request.Form["data"];
             if (!string.IsNullOrEmpty(data))
             {
-                UserCache cache  = JsonConvert.DeserializeObject<UserCache>(data);
+                ChatCache cache  = JsonConvert.DeserializeObject<ChatCache>(data);
                 Message result = chats.UploadMessagePhoto(photo, cache, ref message);
                 if (result != null)
                 {
@@ -655,7 +604,7 @@ namespace Controllers
         public ActionResult<dynamic> GetUsersByGender(UserCache cache)
         {
             string message = null;
-            int count = cache.count == 0 ? 30 : cache.count;
+            cache.count = cache.count == 0 ? 30 : cache.count;
             var userData = users.GetUserWithProfile(cache.user_token, ref message);
             if (userData != null)
             {
@@ -678,14 +627,14 @@ namespace Controllers
                     user_public_token = users.UserPublicToken,
                     profile = new 
                     {
-                        url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
+                        url_photo = profile.UrlPhoto == null ? "" : AwsPath + profile.UrlPhoto,
                         profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                         profile_gender = profile.ProfileGender,
                         profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                     },
                     liked_user = likes.Any(l => l.Like) ? true : false,
                     disliked_user = likes.Any(l => l.Dislike) ? true : false
-                }).Skip(cache.page * 30).Take(30).ToList();
+                }).Skip(cache.page * cache.count).Take(cache.count).ToList();
                 Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), userData.UserId);
                 context.SaveChanges();
                 return new { success = true, data = usersData };
@@ -729,7 +678,7 @@ namespace Controllers
                         chat_id = participant.ChatId,
                         profile = new 
                         {
-                            url_photo = profile.UrlPhoto == null ? "" : Config.AwsPath + profile.UrlPhoto,
+                            url_photo = profile.UrlPhoto == null ? "" : AwsPath + profile.UrlPhoto,
                             profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
                             profile_gender = profile.ProfileGender,
                             profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
@@ -764,11 +713,11 @@ namespace Controllers
         public ActionResult<dynamic> ReciprocalUsers(UserCache cache)
         {
             string message = null;
-            int count = cache.count == 0 ? 30 : cache.count;
+            cache.count = cache.count == 0 ? 30 : cache.count;
             User user = users.GetUserWithProfile(cache.user_token, ref message);
             if (user != null)
             {
-                dynamic data = chats.ReciprocalUsers(user.UserId, user.Profile.ProfileGender, cache.page, count);
+                dynamic data = chats.ReciprocalUsers(user.UserId, user.Profile.ProfileGender, cache.page, cache.count);
                 Log.Info("Get reciprocal users.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                 return new { success = true, data = data };
             }

@@ -10,11 +10,16 @@ namespace miniMessanger
         public Context context;
         public Validator validator;
         public MailF mail;
+        public string IP;
+        public int Port;
         public Authentication(Context context, Validator validator)
         {
             this.context = context;
             this.validator = validator;
             mail = new MailF();
+            Config config = new Config();
+            IP = config.IP;
+            Port = config.Port;
         }
         public User Login(string UserEmail, string UserPassword, ref string message)
         {
@@ -295,7 +300,7 @@ namespace miniMessanger
             if (!string.IsNullOrEmpty(UserEmail) && !string.IsNullOrEmpty(UserHash))
             {
                 mail.SendEmail(UserEmail, "Confirm account", 
-                "Confirm account: <a href=http://" + Config.IP + ":" + Config.Port
+                "Confirm account: <a href=http://" + IP + ":" + Port
                 + "/v1.0/users/Activate/?hash=" + UserHash + ">Confirm url!</a>");
             }
         }

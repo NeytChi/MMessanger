@@ -7,7 +7,7 @@ namespace Common
 {
     public static class Log
     {
-        private static string PathLogs = Config.currentDirectory + "/logs/";
+        private static string PathLogs = Directory.GetCurrentDirectory() + "/logs/";
         private static string FileName = DateTime.Now.Day + "-" + DateTime.Now.Month + "-" + DateTime.Now.Year;
         private static string FullPathLog = PathLogs + FileName;
         private static DateTime CurrentFileDate = DateTime.Now;

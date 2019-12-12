@@ -21,6 +21,7 @@ namespace miniMessanger.Test
         public Profiles profiles;
         public Authentication authentication;
         public string message;
+        public FileSaver system = new FileSaver();
         
         [Test]
         public void UpdateProfile()
@@ -72,7 +73,10 @@ namespace miniMessanger.Test
         [Test]
         public void UpdatePhoto()
         {
-            FormFile file = CreateFormFile();
+            byte[] fileBytes = File.ReadAllBytes("/home/neytchi/Configuration/messanger-configuration/parrot.jpg");
+            FormFile file = new FormFile(new MemoryStream(fileBytes), 0, 0, "file", "parrot.jpg");
+            file.Headers = new HeaderDictionary();
+            file.ContentType = "image/jpeg";
             User user = CreateMockingUser();
             bool result = profiles.UpdatePhoto(file, user.Profile, ref message);
             bool withoutPhoto = profiles.UpdatePhoto(null, user.Profile, ref message);
@@ -81,23 +85,9 @@ namespace miniMessanger.Test
             Assert.AreEqual(result, true);
             Assert.AreEqual(withoutPhoto, true);
             Assert.AreEqual(withWrongType, false);
-            profiles.DeleteFile(user.Profile.UrlPhoto);
+            system.DeleteFile(user.Profile.UrlPhoto);
         }
-        [Test]
-        public void DeleteFile()
-        {
-            FormFile file = CreateFormFile();
-            string relativePath = profiles.CreateFile(file, "/ProfilePhoto/");
-            profiles.DeleteFile(relativePath);
-        }
-        [Test]
-        public void CreateFile()
-        {
-            FormFile file = CreateFormFile();
-            string result = profiles.CreateFile(file, "/ProfilePhoto/");
-            profiles.DeleteFile(result);
-            Assert.AreEqual(result[0], '/');
-        }
+        
         [Test]
         public void CreateIfNotExistProfile()
         {
@@ -126,13 +116,6 @@ namespace miniMessanger.Test
             context.User.RemoveRange(users);
             context.SaveChanges();
         }
-        public FormFile CreateFormFile()
-        {
-            byte[] fileBytes = File.ReadAllBytes("/home/neytchi/Configuration/messanger-configuration/parrot.jpg");
-            FormFile file = new FormFile(new MemoryStream(fileBytes), 0, 0, "file", "parrot.jpg");
-            file.Headers = new HeaderDictionary();
-            file.ContentType = "image/jpeg";
-            return file;
-        }
+        
     }
 }

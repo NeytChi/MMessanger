@@ -5,6 +5,8 @@ using System.Linq;
 using miniMessanger.Manage;
 using miniMessanger.Models;
 using Microsoft.AspNetCore.Http;
+using System.Net;
+using System.Collections.Generic;
 
 namespace miniMessanger
 {
@@ -13,15 +15,18 @@ namespace miniMessanger
         public Context context;
         public Users users;
         public Validator validator;
+        public FileSaver system;
         public string savePath;
         public string awsPath;
         public Chats(Context context, Users users, Validator validator)
         {
+            Config config = new Config();
             this.context = context;
-            this.savePath = Config.savePath;
+            this.savePath = config.savePath;
             this.users = users;
-            this.awsPath = Config.AwsPath;
+            this.awsPath = config.AwsPath;
             this.validator = validator;
+            this.system = new FileSaver();
         }
         public Chatroom CreateChat(string userToken, string publicToken, ref string message)
         {
@@ -80,7 +85,67 @@ namespace miniMessanger
             context.SaveChanges();
             Log.Info("Create and save new participants.");
         }
-        public Message UploadMessagePhoto(IFormFile photo, UserCache cache, ref string message)
+        public Message CreateMessage(string messageText, string userToken, string chatToken , ref string answer)
+        {
+            if (CheckMessageText(ref messageText, ref answer))
+            {
+                User user = users.GetUserByToken(userToken, ref answer);
+                if (user != null)
+                {
+                    Chatroom room = GetChatroom(chatToken, ref answer);
+                    if (room != null)
+                    {
+                        Message message = SaveTextMessage(room.ChatId, user.UserId, messageText);
+                        Log.Info("Create new message with id ->" + message.MessageId + ".", user.UserId);
+                        return message;
+                    }
+                } 
+            }
+            return null;
+        }
+        public Message SaveTextMessage(int ChatId, int UserId, string messageText)
+        {
+            Message message = new Message();
+            message.ChatId = ChatId;
+            message.UserId = UserId;
+            message.MessageType = "text";
+            message.MessageText = messageText;
+            message.MessageViewed = false;
+            message.UrlFile = "";
+            message.CreatedAt = DateTime.Now;
+            context.Messages.Add(message);
+            context.SaveChanges();
+            Log.Info("Save new text message.", UserId);
+            return message;
+        }
+        public Chatroom GetChatroom(string ChatToken, ref string message)
+        {
+            Chatroom room = context.Chatroom.Where(ch 
+            => ch.ChatToken == ChatToken).FirstOrDefault();
+            if (room == null)
+            {
+                message = "Server can't define chat by chat_token."; 
+            } 
+            return room;
+        }
+        public bool CheckMessageText(ref string messageText, ref string answer)
+        {
+            if (!string.IsNullOrEmpty(messageText))
+            {
+                if (messageText.Length < 500)
+                {
+                    messageText = WebUtility.UrlDecode(messageText);
+                    return true;
+                }
+                messageText = "Message can't be more that 500 characters";
+            }
+            else
+            {
+                answer = "Message is empty. Server woundn't upload this message."; 
+            }
+            return false;
+        }
+        public Message UploadMessagePhoto(IFormFile photo, ChatCache cache, ref string message)
         {
             User user = users.GetUserByToken(cache.user_token, ref message);
             if (user != null)
@@ -93,7 +158,7 @@ namespace miniMessanger
                 } 
                 else 
                 { 
-                    message = "Server can't define chat by chat_token."; 
+                    message = "Server can't define chat by 'chat_token' key."; 
                 }
             }
             return null;
@@ -105,17 +170,12 @@ namespace miniMessanger
                 Message message = new Message();
                 if (photo.ContentType.Contains("image"))
                 {
-                    Directory.CreateDirectory(savePath + "/MessagePhoto/" 
-                    + DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
-                    string url = "/MessagePhoto/" + DateTime.Now.Year + "-" + DateTime.Now.Month 
-                    + "-" + DateTime.Now.Day + "/" + validator.GenerateHash(10);
-                    photo.CopyTo(new FileStream(Config.savePath + url, FileMode.Create));
                     message.ChatId = chatId;
                     message.UserId = userId;
                     message.MessageType = "photo";
                     message.MessageText = "";
                     message.MessageViewed = false;
-                    message.UrlFile = url;
+                    message.UrlFile = system.CreateFile(photo, "/MessagePhoto/");
                     message.CreatedAt = DateTime.Now;
                     context.Messages.Add(message);
                     context.SaveChanges();
@@ -132,6 +192,39 @@ namespace miniMessanger
                 answer = "Input file is null.";
             }
             return null;
+        }
+        public dynamic GetMessages(int UserId, string ChatToken, int Page, int Count, ref string answer)
+        {
+            Chatroom room = GetChatroom(ChatToken, ref answer);
+            if (room != null)
+            {
+                var messages = context.Messages.Where(m 
+                => m.ChatId == room.ChatId).OrderByDescending(m => m.MessageId)
+                .Skip(Page * Count).Take(Count).Select(m 
+                => new 
+                { 
+                    message_id = m.MessageId,
+                    chat_id = m.ChatId,
+                    user_id = m.UserId,
+                    message_type = m.MessageType,
+                    message_text = m.MessageText,
+                    url_file = string.IsNullOrEmpty(m.UrlFile) ? "" : awsPath + m.UrlFile,
+                    message_viewed = m.MessageViewed,
+                    created_at = m.CreatedAt
+                }).ToList(); 
+                UpdateMessagesToViewed(room.ChatId, UserId);
+                Log.Info("Get list of messages, chatId -> " + room.ChatId + ".", UserId); 
+                return messages;
+            }
+            return null;
+        }
+        public void UpdateMessagesToViewed(int ChatId, int UserId)
+        {
+            List<Message> data = context.Messages.Where(m
+            => m.ChatId == ChatId
+            && m.UserId != UserId).ToList();
+            data.ForEach(m => m.MessageViewed = true);
+            context.SaveChanges();
         }
         public dynamic ReciprocalUsers(int userId, bool profileGender, int page, int count)
         {
@@ -161,23 +254,6 @@ namespace miniMessanger
                 liked_user = like.Like,
                 disliked_user = like.Dislike
             }).Skip(page * count).Take(count).ToList();
-        }
-        public void DeleteFile(string relativePath)
-        {
-            if (File.Exists(Config.savePath + relativePath))
-            {
-                File.Delete(Config.savePath + relativePath);
-                Log.Info("Delete file ->" + relativePath + ".");
-            }
-        }
-        public string CreateFile(IFormFile file, string relativePath)
-        {
-            Directory.CreateDirectory(Config.savePath + relativePath +
-                DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
-            string UrlPhoto = relativePath + DateTime.Now.Year + "-" + DateTime.Now.Month 
-            + "-" + DateTime.Now.Day + "/" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            file.CopyTo(new FileStream(Config.savePath + UrlPhoto, FileMode.Create));
-            return UrlPhoto;
         }
         
         public dynamic ResponseMessage(Message message)

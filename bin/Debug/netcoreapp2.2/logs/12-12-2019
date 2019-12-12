@@ -1,0 +1,81 @@
+Time: 12.12.19 10:39:07 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:20 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:21 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:21 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:21 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:21 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:36 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:36 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:36 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:37 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:37 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:37 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:37 | INFO | Message: Create chat for userId ->1. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:50 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:50 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:50 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:50 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:51 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:51 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 10:39:51 | INFO | Message: Create chat for userId ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:27:51 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:27:51 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:27:51 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:27:52 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:27:52 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:27:52 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:27:52 | INFO | Message: Create chat for userId ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:31:54 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:31:55 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:31:55 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:31:55 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:31:55 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:31:55 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:31:55 | INFO | Message: Create chat for userId ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:31:55 | INFO | Message: Save new text message. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:11 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:11 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:11 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:11 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:12 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:12 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:12 | INFO | Message: Create chat for userId ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:12 | INFO | Message: Save new text message. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:32:12 | INFO | Message: Create new message with id ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:18 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:18 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:18 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:18 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:18 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:18 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:18 | INFO | Message: Create chat for userId ->1. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:19 | INFO | Message: Save new text message. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:19 | INFO | Message: Create new message with id ->1. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:19 | INFO | Message: Get list of messages, chatId -> 1. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Create chat for userId ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Save new text message. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Create new message with id ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:53:55 | INFO | Message: Get list of messages, chatId -> 1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:40 | INFO | Message: Registrate new user. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:40 | ERROR | Message: Error SendEmailAsync, Message:An asynchronous call is already in progress. It must be completed or canceled before you can call this method.. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:40 | INFO | Message: Registrate new user. | UID: 2 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:40 | INFO | Message: Save new chat. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:41 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:41 | INFO | Message: Create and save new participants. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:41 | INFO | Message: Create chat for userId ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:41 | INFO | Message: Save new text message. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 11:55:41 | INFO | Message: Create new message with id ->1. | UID: 1 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 12:46:07 | INFO | Message: Delete file ->/ProfilePhoto/2019-12-12/1576147567. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 12:46:21 | INFO | Message: Delete file ->/ProfilePhoto/2019-12-12/1576147581. | UID: 0 | UIP:  | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 12:46:28 | INFO | Message: Delete file ->/ProfilePhoto/2019-12-12/1576147588. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 12:46:28 | INFO | Message: Delete file ->/ProfilePhoto/2019-12-12/1576147588. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 12:47:39 | INFO | Message: Create new file, relative path ->/ProfilePhoto/2019-12-12/1576147659. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 12:47:39 | INFO | Message: Delete file ->/ProfilePhoto/2019-12-12/1576147659. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 12:47:39 | INFO | Message: Create new file, relative path ->/ProfilePhoto/2019-12-12/1576147659. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
+Time: 12.12.19 12:47:39 | INFO | Message: Delete file ->/ProfilePhoto/2019-12-12/1576147659. | UID: 0 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

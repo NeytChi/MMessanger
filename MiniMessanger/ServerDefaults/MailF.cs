@@ -22,12 +22,13 @@ namespace Common
 
         public void Init()
         {
-            ip = Config.IP;
-            domen = Config.Domen;
-            mailAddress = Config.GetServerConfigValue("mail_address", JTokenType.String);
-            mailPassword = Config.GetServerConfigValue("mail_password", JTokenType.String);
-            GmailServer = Config.GetServerConfigValue("smtp_server", JTokenType.String);
-            GmailPort = Config.GetServerConfigValue("smtp_port", JTokenType.Integer);
+            Config config = new Config();
+            ip = config.IP;
+            domen = config.Domen;
+            mailAddress = config.GetServerConfigValue("mail_address", JTokenType.String);
+            mailPassword = config.GetServerConfigValue("mail_password", JTokenType.String);
+            GmailServer = config.GetServerConfigValue("smtp_server", JTokenType.String);
+            GmailPort = config.GetServerConfigValue("smtp_port", JTokenType.Integer);
             if (ip != null && mailAddress != null)
             {
                 smtp = new SmtpClient(GmailServer, GmailPort);

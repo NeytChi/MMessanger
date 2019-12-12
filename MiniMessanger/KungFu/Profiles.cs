@@ -3,13 +3,13 @@ using Common;
 using System.Linq;
 using miniMessanger.Models;
 using Microsoft.AspNetCore.Http;
-using System.IO;
 
 namespace miniMessanger
 {
     public class Profiles
     {
         public Context context;
+        public FileSaver fileSystem = new FileSaver();
         public Profiles(Context context)
         {
             this.context = context;
@@ -111,8 +111,8 @@ namespace miniMessanger
             {
                 if (photo.ContentType.Contains("image"))
                 {
-                    DeleteFile(profile.UrlPhoto);
-                    profile.UrlPhoto = CreateFile(photo, "/ProfilePhoto/");
+                    fileSystem.DeleteFile(profile.UrlPhoto);
+                    profile.UrlPhoto = fileSystem.CreateFile(photo, "/ProfilePhoto/");
                     context.Profile.Update(profile);
                     context.SaveChanges();
                     Log.Info("Update profile photo.", profile.UserId);
@@ -125,23 +125,6 @@ namespace miniMessanger
                 return false;
             }
             return true;
-        }
-        public void DeleteFile(string relativePath)
-        {
-            if (File.Exists(Config.savePath + relativePath))
-            {
-                File.Delete(Config.savePath + relativePath);
-                Log.Info("Delete file ->" + relativePath + ".");
-            }
-        }
-        public string CreateFile(IFormFile file, string relativePath)
-        {
-            Directory.CreateDirectory(Config.savePath + relativePath +
-                DateTime.Now.Year + "-" + DateTime.Now.Month + "-" + DateTime.Now.Day);
-            string UrlPhoto = relativePath + DateTime.Now.Year + "-" + DateTime.Now.Month 
-            + "-" + DateTime.Now.Day + "/" + DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            file.CopyTo(new FileStream(Config.savePath + UrlPhoto, FileMode.Create));
-            return UrlPhoto;
         }
         public Profile CreateIfNotExistProfile(int UserId)
         {

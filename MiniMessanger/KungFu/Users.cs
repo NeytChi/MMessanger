@@ -1,5 +1,4 @@
 using Common;
-using System;
 using System.Net;
 using System.Linq;
 using miniMessanger.Models;
@@ -13,11 +12,11 @@ namespace miniMessanger.Manage
         public Validator validator;
         public Users(Context context, Validator validator)
         {
+            Config config = new Config();
             this.context = context;
-            this.awsPath = Config.AwsPath;
+            this.awsPath = config.AwsPath;
             this.validator = validator;
         }
-        
         public LikeProfiles LikeUser(UserCache cache, ref string message)
         {
             User user = GetUserByToken(cache.user_token, ref message);

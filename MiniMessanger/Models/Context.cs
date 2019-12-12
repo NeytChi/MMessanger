@@ -43,7 +43,8 @@ namespace miniMessanger.Models
             {
                 if (!optionsBuilder.IsConfigured)
                 {
-                    optionsBuilder.UseMySql(Config.GetDatabaseConfigConnection());
+                    Config config = new Config();
+                    optionsBuilder.UseMySql(config.GetDatabaseConfigConnection());
                 }
             }
         }

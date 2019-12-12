@@ -20,25 +20,25 @@ namespace Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private DateTime unixed = new DateTime(1970, 1, 1, 0, 0, 0);
         private Context context;
-        private JsonVariableHandler jsonHandler;
         public Users users;
         public Chats chats;
         public Profiles profiles;
         public Authentication authentication;
+        public Blocks blocks;
         public Validator Validator;
         public string AwsPath;
+        
         public UsersController(Context context)
         {
             Config config = new Config();
             this.AwsPath = config.AwsPath;
             this.context = context;
             this.Validator = new Validator();
-            jsonHandler = new Controllers.JsonVariableHandler();
             this.users = new Users(context, Validator);
             this.chats = new Chats(context, users, Validator);
             this.profiles = new Profiles(context);
+            this.blocks = new Blocks(users, context);
         }
         [HttpPost]
         [ActionName("Registration")]
@@ -311,7 +311,7 @@ namespace Controllers
                 {
                     if (!blocked.Contains(publicUser.UserId))
                     {
-                        data.Add(users.UserResponse(publicUser));
+                        data.Add(UsersResponse(publicUser));
                     }
                 }
                 Log.Info("Get users list.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
@@ -319,6 +319,22 @@ namespace Controllers
                 return new { success = true, data = data };
             }
             return Return500Error(message);
+        }
+        public dynamic UsersResponse(User user)
+        {
+            if (user != null)
+            {
+                return new 
+                {
+                    user_id = user.UserId,
+                    user_email = user.UserEmail,
+                    user_login = user.UserLogin,
+                    created_at = user.CreatedAt,
+                    last_login_at = user.LastLoginAt,
+                    user_public_token = user.UserPublicToken
+                };        
+            }
+            return null;
         }
         /// <summary>
         /// Select list of chats. Get last message data, user's data of chat and chat data.
@@ -473,7 +489,7 @@ namespace Controllers
         public ActionResult<dynamic> BlockUser(UserCache cache)
         {
             string message = null;
-            if (users.BlockUser(cache, ref message))
+            if (blocks.BlockUser(cache.user_token, cache.opposide_public_token, cache.blocked_reason, ref message))
             {
                 Log.Info("Block user.", HttpContext.Connection.RemoteIpAddress.ToString());
                 return new { success = true, message = "Block user - successed." };
@@ -506,35 +522,15 @@ namespace Controllers
         }
         [HttpPost]
         [ActionName("UnblockUser")]
-        public ActionResult<dynamic> UnblockUser(UserCache userCache)
+        public ActionResult<dynamic> UnblockUser(UserCache cache)
         {
             string message = null;
-            User user = users.GetUserByToken(userCache.user_token, ref message);
-            if (user != null)
+            if (blocks.UnblockUser(cache.user_token, cache.opposide_public_token, ref message))
             {
-                User interlocutor = context.User.Where(u 
-                => u.UserPublicToken == userCache.opposide_public_token).FirstOrDefault();
-                if (interlocutor != null)
-                {
-                    BlockedUser blockedUser = context.BlockedUsers.Where(b => b.UserId == user.UserId 
-                    && b.BlockedUserId == interlocutor.UserId && b.BlockedDeleted == false).FirstOrDefault();
-                    if (blockedUser != null)
-                    {
-                        blockedUser.BlockedDeleted = true;
-                        context.BlockedUsers.UpdateRange(blockedUser);
-                        context.SaveChanges();
-                        Log.Info("Delete blocked user; user->user_id->" + user.UserId + ".", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
-                        return new { success = true, message = "Unblock user - successed." };
-                    }
-                    else 
-                    { 
-                        message = "User didn't block current user; user->user_id->" + user.UserId + "."; 
-                    }
-                }
-                else 
+                return new 
                 { 
-                    message = "No user with that opposide_public_token; user->user_id->" + user.UserId + "."; 
-                }
+                    success = true, message = "Unblock user - successed." 
+                };
             }
             return Return500Error(message);
         }

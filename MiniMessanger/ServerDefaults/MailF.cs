@@ -46,8 +46,8 @@ namespace Common
             message.IsBodyHtml = true;
             try
             {
-                await smtp.SendMailAsync(message);
-                Common.Log.Info("Send message to " + emailAddress + ".");
+                //await smtp.SendMailAsync(message);
+                Log.Info("Send message to " + emailAddress + ".");
             }
             catch (Exception e)
             {

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http.Internal;
 namespace miniMessanger.Test
 {
     [TestFixture]
-    public class TestFileSystem
+    public class TestFileSaver
     {
         public FileSaver system = new FileSaver();
         [Test]

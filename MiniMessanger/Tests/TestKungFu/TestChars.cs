@@ -21,6 +21,7 @@ namespace miniMessanger.Test
         }
         public Context context;
         public Authentication authentication;
+        public TestFileSaver saver = new TestFileSaver();
         public Chats chats;
         public string message;
         
@@ -111,21 +112,39 @@ namespace miniMessanger.Test
             Message testMessage = chats.CreateMessage("Test message", first.UserToken, room.ChatToken, ref message);
             chats.UpdateMessagesToViewed(room.ChatId, first.UserId);
         }
-
-
-
         [Test]
         public void UploadMessagePhoto()
         {
             User first = CreateMockingUser();
-            User second = CreateMockingUser();
-
-            //chats.UploadMessagePhoto()
+            Chatroom room = chats.CreateChat(first.UserToken, CreateMockingUser().UserPublicToken, ref message);
+            ChatCache cache = new ChatCache()
+            {
+                user_token = first.UserToken,
+                chat_token = room.ChatToken
+            };
+            FormFile file = saver.CreateFormFile();
+            Message success = chats.UploadMessagePhoto(file, cache, ref message);   
+            Message nullable = chats.UploadMessagePhoto(null, cache, ref message);
+            saver.system.DeleteFile(success.UrlFile);
+            Assert.AreEqual(success.UserId, first.UserId);
+            Assert.AreEqual(nullable, null);
         }
         [Test]
         public void MessagePhoto()
         {
-
+            User first = CreateMockingUser();
+            Chatroom room = chats.CreateChat(first.UserToken, CreateMockingUser().UserPublicToken, ref message);
+            ChatCache cache = new ChatCache()
+            {
+                user_token = first.UserToken,
+                chat_token = room.ChatToken
+            };
+            FormFile file = saver.CreateFormFile();
+            Message success = chats.MessagePhoto(file, first.UserId, room.ChatId, ref message);   
+            Message nullable = chats.MessagePhoto(null, first.UserId, room.ChatId, ref message);
+            saver.system.DeleteFile(success.UrlFile);
+            Assert.AreEqual(success.UserId, first.UserId);
+            Assert.AreEqual(nullable, null);
         }
         [Test]
         public void ReciprocalUsers()

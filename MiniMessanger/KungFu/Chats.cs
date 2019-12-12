@@ -167,30 +167,29 @@ namespace miniMessanger
         {
             if (photo != null)
             {
-                Message message = new Message();
                 if (photo.ContentType.Contains("image"))
                 {
-                    message.ChatId = chatId;
-                    message.UserId = userId;
-                    message.MessageType = "photo";
-                    message.MessageText = "";
-                    message.MessageViewed = false;
-                    message.UrlFile = system.CreateFile(photo, "/MessagePhoto/");
-                    message.CreatedAt = DateTime.Now;
+                    Message message = new Message()
+                    {
+                        ChatId = chatId,
+                        UserId = userId,
+                        MessageType = "photo",
+                        MessageText = "",
+                        MessageViewed = false,
+                        UrlFile = system.CreateFile(photo, "/MessagePhoto/"),
+                        CreatedAt = DateTime.Now
+                    };
                     context.Messages.Add(message);
                     context.SaveChanges();
                     Log.Info("Create photo message, messageId ->" + message.MessageId + ".", userId);
                     return message;
                 }
-                else
-                {
-                    answer = "Incorrect file type of message's foto.";
-                }
+                answer = "Incorrect file type of message's foto.";
             }
             else
             {
                 answer = "Input file is null.";
-            }
+            } 
             return null;
         }
         public dynamic GetMessages(int UserId, string ChatToken, int Page, int Count, ref string answer)
@@ -226,6 +225,12 @@ namespace miniMessanger
             data.ForEach(m => m.MessageViewed = true);
             context.SaveChanges();
         }
+
+
+
+
+
+        
         public dynamic ReciprocalUsers(int userId, bool profileGender, int page, int count)
         {
             return (from users in context.User

@@ -226,60 +226,47 @@ namespace miniMessanger.Models
 
             modelBuilder.Entity<Complaint>(entity =>
             {
-                entity.HasKey(e => e.ComplaintId)
+                entity.HasKey(complaint => complaint.ComplaintId)
                     .HasName("PRIMARY");
 
                 entity.ToTable("complaints");
 
-                entity.HasIndex(e => e.BlockId)
+                entity.HasIndex(complaint => complaint.BlockId)
                     .HasName("blocked_id");
 
-                entity.HasIndex(e => e.MessageId)
+                entity.HasIndex(complaint => complaint.MessageId)
                     .HasName("message_id");
 
-                entity.HasIndex(e => e.UserId)
+                entity.HasIndex(complaint => complaint.UserId)
                     .HasName("user_id");
 
-                entity.Property(e => e.ComplaintId)
+                entity.Property(complaint => complaint.ComplaintId)
                     .HasColumnName("complaint_id")
                     .HasColumnType("int(11)");
 
-                entity.Property(e => e.BlockId)
+                entity.Property(complaint => complaint.BlockId)
                     .HasColumnName("blocked_id")
                     .HasColumnType("int(11)");
 
-                entity.Property(e => e.ComplaintText)
+                entity.Property(complaint => complaint.ComplaintText)
                     .HasColumnName("complaint")
                     .HasColumnType("varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci");
 
-                entity.Property(e => e.CreatedAt)
+                entity.Property(complaint => complaint.CreatedAt)
                     .HasColumnName("created_at")
                     .HasColumnType("datetime");
 
-                entity.Property(e => e.MessageId)
+                entity.Property(complaint => complaint.MessageId)
                     .HasColumnName("message_id")
                     .HasColumnType("bigint(20)");
 
-                entity.Property(e => e.UserId)
+                entity.Property(complaint => complaint.UserId)
                     .HasColumnName("user_id")
                     .HasColumnType("int(11)");
 
-                entity.HasOne(d => d.Blocked)
-                    .WithOne(p => p.Complaints)
-                    .HasForeignKey<Complaint>(d => d.BlockId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("complaints_ibfk_2");
-
-                entity.HasOne(d => d.Message)
-                    .WithMany(p => p.Complaints)
-                    .HasForeignKey(d => d.MessageId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("complaints_ibfk_3");
-
-                entity.HasOne(d => d.User)
+                entity.HasOne(complaint => complaint.User)
                     .WithMany(p => p.Complaints)
                     .HasForeignKey(d => d.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("complaints_ibfk_1");
             });
             modelBuilder.Entity<Message>(entity =>

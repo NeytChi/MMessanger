@@ -10,10 +10,6 @@ namespace miniMessanger.Models
     /// </summary>
     public partial class Message
     {
-        public Message()
-        {
-            Complaints = new HashSet<Complaint>();
-        }
         public long MessageId { get; set; }
         public int ChatId { get; set; }
         public int UserId { get; set; }
@@ -24,6 +20,5 @@ namespace miniMessanger.Models
         [Required]
         public DateTime CreatedAt { get; set; }
 
-        public virtual ICollection<Complaint> Complaints { get; set; }
     }
 }

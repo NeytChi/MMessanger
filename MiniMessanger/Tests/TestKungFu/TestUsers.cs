@@ -110,17 +110,17 @@ namespace miniMessanger.Test
         public void GetUsers()
         {
             DeleteUsers();  
-            Blocks blocks = new Blocks(users, context);
-            User first = CreateMockingUser();
+            User first  = CreateMockingUser();
             User second = CreateMockingUser();
-            User third = CreateMockingUser();
+            User third  = CreateMockingUser();
             var success = users.GetUsers(first.UserId, 0, 2);
+            Blocks blocks = new Blocks(users, context);
+                blocks.BlockUser(first.UserToken, third.UserPublicToken, "Test block.", ref message);
+            var successWithBlocked = users.GetUsers(first.UserId, 0, 2);
+            var anotherUserWithBlocked = users.GetUsers(third.UserId, 0, 2);
             Assert.AreEqual(success[0].user_id, third.UserId);
             Assert.AreEqual(success[1].user_id, second.UserId);
-            blocks.BlockUser(first.UserToken, third.UserPublicToken, "Test block.", ref message);
-            var successWithBlocked = users.GetUsers(first.UserId, 0, 2);
             Assert.AreEqual(successWithBlocked[0].user_id, second.UserId);
-            var anotherUserWithBlocked = users.GetUsers(third.UserId, 0, 2);
             Assert.AreEqual(anotherUserWithBlocked[0].user_id, second.UserId);
             Assert.AreEqual(anotherUserWithBlocked[1].user_id, first.UserId);
         }
@@ -128,12 +128,12 @@ namespace miniMessanger.Test
         public void GetUserByGender()
         {
             DeleteUsers();
-            Profiles profiles = new Profiles(context);
-            User first = CreateMockingUser();
+            User first  = CreateMockingUser();
             User second = CreateMockingUser();
-            User third = CreateMockingUser();
-            first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
-            profiles.UpdateGender(first.Profile, "1", ref message);
+            User third  = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
+                profiles.UpdateGender(first.Profile, "1", ref message);
             var success = users.GetUsersByGender(first.UserId, true, 0, 2);
             Assert.AreEqual(success[0].user_id, third.UserId);
             Assert.AreEqual(success[1].user_id, second.UserId);
@@ -142,14 +142,14 @@ namespace miniMessanger.Test
         public void GetUserByGenderWithBlocked()
         {
             DeleteUsers();
-            Profiles profiles = new Profiles(context);
-            User first = CreateMockingUser();
+            User first  = CreateMockingUser();
             User second = CreateMockingUser();
-            User third = CreateMockingUser();
-            first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
-            profiles.UpdateGender(first.Profile, "1", ref message);
+            User third  = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
+                profiles.UpdateGender(first.Profile, "1", ref message);
             Blocks blocks = new Blocks(users, context);
-            blocks.BlockUser(first.UserToken, third.UserPublicToken, "Test block.", ref message);
+                blocks.BlockUser(first.UserToken, third.UserPublicToken, "Test block.", ref message);
             var successWithBlocked = users.GetUsersByGender(first.UserId, true, 0, 1);
             Assert.AreEqual(successWithBlocked[0].user_id, second.UserId);
         }
@@ -157,20 +157,119 @@ namespace miniMessanger.Test
         public void GetUserByGenderWithLiked()
         {
             DeleteUsers();
-            Profiles profiles = new Profiles(context);
-            User first = CreateMockingUser();
+            User first  = CreateMockingUser();
             User second = CreateMockingUser();
-            User third = CreateMockingUser();
-            first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
-            profiles.UpdateGender(first.Profile, "1", ref message);   
+            User third  = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
+                profiles.UpdateGender(first.Profile, "1", ref message);   
             users.CreateLike(first.UserId, third.UserId);
             var successWithLiked = users.GetUsersByGender(first.UserId, true, 0, 1);
             Assert.AreEqual(successWithLiked[0].user_id, second.UserId);
         }
         [Test]
+        public void GetLikedUsers()
+        {
+            DeleteUsers();
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                firstUser.Profile = profiles.CreateIfNotExistProfile(firstUser.UserId);
+                profiles.UpdateGender(firstUser.Profile, "1", ref message);   
+            users.CreateLike(firstUser.UserId, thirdUser.UserId);
+            users.CreateLike(firstUser.UserId, secondUser.UserId);
+            var success = users.GetLikedUsers(firstUser.UserId, true, 0, 2);
+            Assert.AreEqual(success[0].user_id, secondUser.UserId);
+            Assert.AreEqual(success[1].user_id, thirdUser.UserId);
+        }
+        [Test]
+        public void GetLikedUsersWithBlocked()
+        {
+            DeleteUsers();
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                firstUser.Profile = profiles.CreateIfNotExistProfile(firstUser.UserId);
+                profiles.UpdateGender(firstUser.Profile, "1", ref message);   
+            users.CreateLike(firstUser.UserId, thirdUser.UserId);
+            users.CreateLike(firstUser.UserId, secondUser.UserId);
+            Blocks blocks = new Blocks(users, context);
+                blocks.BlockUser(firstUser.UserToken, secondUser.UserPublicToken, "Test block.", ref message);
+            var success = users.GetLikedUsers(firstUser.UserId, true, 0, 1);
+            Assert.AreEqual(success[0].user_id, thirdUser.UserId);
+        }
+        [Test]
+        public void GetReciprocalUsers()
+        {
+            DeleteUsers();
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                firstUser.Profile = profiles.CreateIfNotExistProfile(firstUser.UserId);
+                profiles.UpdateGender(firstUser.Profile, "1", ref message);   
+            users.CreateLike(secondUser.UserId, firstUser.UserId);
+            users.CreateLike(thirdUser.UserId, firstUser.UserId);
+            var success = users.GetReciprocalUsers(firstUser.UserId, true, 0, 2);
+            Assert.AreEqual(success[0].user_id, secondUser.UserId);
+            Assert.AreEqual(success[1].user_id, thirdUser.UserId);
+        }
+        [Test]
+        public void GetReciprocalUsersWithBlocked()
+        {
+            DeleteUsers();
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                firstUser.Profile = profiles.CreateIfNotExistProfile(firstUser.UserId);
+                profiles.UpdateGender(firstUser.Profile, "1", ref message);   
+            users.CreateLike(thirdUser.UserId, firstUser.UserId);
+            users.CreateLike(secondUser.UserId, firstUser.UserId);
+            Blocks blocks = new Blocks(users, context);
+                blocks.BlockUser(firstUser.UserToken, secondUser.UserPublicToken, "Test block.", ref message);
+            var success = users.GetReciprocalUsers(firstUser.UserId, true, 0, 1);
+            Assert.AreEqual(success[0].user_id, thirdUser.UserId);
+        }
+         [Test]
         public void ReciprocalUsers()
         {
-
+            DeleteUsers();
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            User fourthUser = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                firstUser.Profile = profiles.CreateIfNotExistProfile(firstUser.UserId);
+                profiles.UpdateGender(firstUser.Profile, "1", ref message);   
+            users.CreateLike(firstUser.UserId, secondUser.UserId);
+            users.CreateLike(thirdUser.UserId, firstUser.UserId);
+            users.CreateLike(fourthUser.UserId, firstUser.UserId);
+            var success = users.ReciprocalUsers(firstUser.UserId, true, 0, 2);
+            Assert.AreEqual(success[0].user_id, secondUser.UserId);
+            Assert.AreEqual(success[1].user_id, thirdUser.UserId);
+        }
+        [Test]
+        public void ReciprocalUsersWithBlocked()
+        {
+            DeleteUsers();
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            User fourthUser = CreateMockingUser();
+            Profiles profiles = new Profiles(context);
+                firstUser.Profile = profiles.CreateIfNotExistProfile(firstUser.UserId);
+                profiles.UpdateGender(firstUser.Profile, "1", ref message);   
+            users.CreateLike(firstUser.UserId, secondUser.UserId);
+            users.CreateLike(thirdUser.UserId, firstUser.UserId);
+            users.CreateLike(fourthUser.UserId, firstUser.UserId);
+            Blocks blocks = new Blocks(users, context);
+                blocks.BlockUser(firstUser.UserToken, secondUser.UserPublicToken, "Test block.", ref message);   
+            var success = users.ReciprocalUsers(firstUser.UserId, true, 0, 2);
+            Assert.AreEqual(success[0].user_id, thirdUser.UserId);
+            Assert.AreEqual(success[1].user_id, fourthUser.UserId);
         }
         public User UserEnviroment()
         {

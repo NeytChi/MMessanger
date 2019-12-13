@@ -153,9 +153,10 @@ namespace miniMessanger.Manage
         public dynamic GetBlockedUsers(int UserId, int Page, int Count = 50)
         {
             var blockedUsers = (from user in context.User 
-            join blocked in context.BlockedUsers on user.UserId equals blocked.BlockedId
+            join blocked in context.BlockedUsers on user.UserId equals blocked.BlockedUserId
             where blocked.UserId == UserId
             && blocked.BlockedDeleted == false
+            orderby user.UserId
             select new
             { 
                 block_id = blocked.BlockedId,

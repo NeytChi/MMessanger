@@ -205,15 +205,74 @@ namespace miniMessanger.Manage
         }
         public dynamic ReciprocalUsers(int userId, bool profileGender, int page, int count)
         {
+            bool exist = false;
+            var likedUsers = GetLikedUsers(userId, profileGender, page, count);
+            var reciprocalUsers = GetReciprocalUsers(userId, profileGender, page, count);
+            foreach (dynamic reciprocal in reciprocalUsers)
+            {
+                if (likedUsers.Count < count)
+                {
+                    foreach (dynamic user in likedUsers)
+                    {
+                        if (user.user_id == reciprocal.user_id)
+                        {
+                            exist = true;
+                        }
+                    }
+                    if (!exist)
+                    {
+                        likedUsers.Add(reciprocal);
+                    }
+                    exist = false;
+                }
+            }
+            Log.Info("Get reciprocal users.", userId);
+            return likedUsers;
+        }
+        public dynamic GetLikedUsers(int userId, bool profileGender, int page, int count)
+        {
+            Log.Info("Get liked users by user", userId);
             return (from users in context.User
             join like in context.LikeProfile on users.UserId equals like.ToUserId
             join profile in context.Profile on users.UserId equals profile.UserId
-            join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blockedUsers
+            join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blocks
             where like.UserId == userId
             && like.Like 
+            && !users.Deleted
             && profile.ProfileGender != profileGender 
-            && (blockedUsers.All(b => b.UserId == userId && b.BlockedDeleted == true)
-            || blockedUsers.Count() == 0)
+            && ( blocks.All(b => b.UserId == userId && b.BlockedDeleted) || blocks.Count() == 0)
+            orderby users.UserId
+            select new
+            { 
+                user_id = users.UserId,
+                user_email = users.UserEmail,
+                user_public_token = users.UserPublicToken,
+                user_login = users.UserLogin,
+                last_login_at = users.LastLoginAt,
+                profile = new 
+                {
+                    url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                    profile_age = profile.ProfileAge == null ? -1 : (sbyte)(long)profile.ProfileAge,
+                    profile_gender = profile.ProfileGender,
+                    profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                },
+                liked_user = like.Like,
+                disliked_user = like.Dislike
+            }).Skip(page * count).Take(count).ToList();
+        }
+        public dynamic GetReciprocalUsers(int userId, bool profileGender, int page, int count)
+        {
+            Log.Info("Get liked users by users(reciprocal).", userId);
+            return (from users in context.User
+            join like in context.LikeProfile on users.UserId equals like.UserId
+            join profile in context.Profile on users.UserId equals profile.UserId
+            join blocked in context.BlockedUsers on users.UserId equals blocked.BlockedUserId into blocks
+            where like.ToUserId == userId
+            && like.Like 
+            && !users.Deleted
+            && profile.ProfileGender != profileGender 
+            && ( blocks.All(b => b.BlockedUserId == userId && b.BlockedDeleted) || blocks.Count() == 0)
+            orderby users.UserId
             select new
             { 
                 user_id = users.UserId,

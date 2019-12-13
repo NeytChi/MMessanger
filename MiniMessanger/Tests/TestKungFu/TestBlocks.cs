@@ -34,6 +34,7 @@ namespace miniMessanger.Test
         [Test]
         public void GetExistBlocked()
         {
+            context.RemoveRange(context.User);
             User first = CreateMockingUser();
             User second = CreateMockingUser();
             BlockedUser nonBlocked = blocks.GetExistBlocked(first.UserId, second.UserId, ref message);
@@ -86,6 +87,7 @@ namespace miniMessanger.Test
         [Test]
         public void GetBlockedUser()
         {
+            context.RemoveRange(context.User);
             User first = CreateMockingUser();
             User second = CreateMockingUser();
             User third = CreateMockingUser();

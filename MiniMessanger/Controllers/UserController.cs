@@ -485,10 +485,6 @@ namespace Controllers
             }
             return Return500Error(message);
         }
-        /// <summary>
-        /// Select list of chats. Get last message data, user's data of chat and chat data.
-        /// </summary>
-        /// <param name="request">Request.</param>
         [HttpPut]
         [ActionName("SelectChatsByGender")]
         public ActionResult<dynamic> SelectChatsByGender(UserCache cache)
@@ -499,11 +495,7 @@ namespace Controllers
             if (user != null)
             {
                 var data = chats.GetChatsByGender(user.UserId, user.Profile.ProfileGender, cache.page, cache.count);
-                return new 
-                { 
-                    success = true, 
-                    data = data 
-                };
+                return new { success = true, data = data };
             }
             return Return500Error(message);
         }

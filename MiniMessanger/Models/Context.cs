@@ -125,9 +125,6 @@ namespace miniMessanger.Models
 
                 entity.ToTable("blocked_users");
 
-                entity.HasIndex(block => block.BlockedUserId)
-                    .HasName("blocked_user_id");
-
                 entity.HasIndex(block => block.UserId)
                     .HasName("user_id");
                 
@@ -151,16 +148,9 @@ namespace miniMessanger.Models
                     .HasColumnName("blocked_reason")
                     .HasColumnType("varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci");
 
-                entity.HasOne(block => block.Blocked)
-                    .WithMany(user => user.BlockedUsers)
-                    .HasForeignKey(block => block.BlockedUserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("blocked_users_ibfk_2");
-
                 entity.HasOne(block => block.User)
-                    .WithMany(user => user.UsersBlocks)
+                    .WithMany(user => user.Blocks)
                     .HasForeignKey(block => block.UserId)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("blocked_users_ibfk_1");
             });
 

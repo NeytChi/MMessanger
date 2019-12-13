@@ -198,8 +198,8 @@ namespace miniMessanger.Manage
                     profile_gender = profile.ProfileGender,
                     profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                 },
-                liked_user = likes.Any(l => l.Like) ? true : false,
-                disliked_user = likes.Any(l => l.Dislike) ? true : false
+                liked_user = false,
+                disliked_user = likes.Any(l => l.Dislike && l.UserId == UserId) ? true : false
             })
             .Skip(page * count).Take(count).ToList();
         }

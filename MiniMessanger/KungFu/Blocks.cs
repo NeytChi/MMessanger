@@ -160,10 +160,10 @@ namespace miniMessanger.Manage
             { 
                 block_id = blocked.BlockedId,
                 user_id = blocked.BlockedUserId,
-                user_email = blocked.Blocked.UserEmail,
-                user_login =  blocked.Blocked.UserLogin,
-                last_login_at = blocked.Blocked.LastLoginAt,
-                user_public_token = blocked.Blocked.UserPublicToken,
+                user_email = user.UserEmail,
+                user_login =  user.UserLogin,
+                last_login_at = user.LastLoginAt,
+                user_public_token = user.UserPublicToken,
                 blocked_reason = blocked.BlockedReason
             }
             ).Skip(Page * Count).Take(Count).ToList();

@@ -498,57 +498,12 @@ namespace Controllers
             var user = users.GetUserWithProfile(cache.user_token, ref message);
             if (user != null)
             {
-                var data = (
-                from participant in context.Participants
-                join users in context.User on participant.OpposideId equals users.UserId
-                join profile in context.Profile on users.UserId equals profile.UserId
-                join chats in context.Chatroom on participant.ChatId equals chats.ChatId
-                join likesProfile in context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
-                join messageChat in context.Messages on chats.ChatId equals messageChat.ChatId into messages
-                join blockedUser in context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blockedUsers
-                where participant.UserId == user.UserId && profile.ProfileGender != user.Profile.ProfileGender
-                && (blockedUsers.All(b => b.UserId == user.UserId && b.BlockedDeleted == true)
-                || blockedUsers.Count() == 0) && users.Activate == 1
-                orderby users.UserId descending
-                select new
-                {
-                    user = new 
-                    { 
-                        user_id = users.UserId,
-                        user_email = users.UserEmail,
-                        user_public_token = users.UserPublicToken,
-                        user_login = users.UserLogin,
-                        last_login_at = users.LastLoginAt,    
-                        chat_id = participant.ChatId,
-                        profile = new 
-                        {
-                            url_photo = profile.UrlPhoto == null ? "" : AwsPath + profile.UrlPhoto,
-                            profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
-                            profile_gender = profile.ProfileGender,
-                            profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
-                        }
-                    },
-                    chat = new 
-                    {
-                        chat_id = chats.ChatId,
-                        chat_token = chats.ChatToken,
-                        created_at = chats.CreatedAt,
-                    },
-                    last_message = messages == null || messages.Count() == 0 ? null : new 
-                    {
-                        message_id = messages.ToList()[messages.Count() - 1].MessageId,
-                        chat_id = messages.ToList()[messages.Count() - 1].ChatId,
-                        user_id = messages.ToList()[messages.Count() - 1].UserId,
-                        message_text = messages.ToList()[messages.Count() - 1].MessageText,
-                        message_viewed = messages.ToList()[messages.Count() - 1].MessageViewed,
-                        created_at = messages.ToList()[messages.Count() - 1].CreatedAt
-                    } ,
-                    liked_user = likes.Any(l => l.Like) ? true : false,
-                    disliked_user = likes.Any(l => l.Dislike) ? true : false
-                }).Skip(cache.page * count).Take(count).ToList();           
-                Log.Info("Get list of chats.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
-                context.SaveChanges();
-                return new { success = true, data = data };
+                var data = chats.GetChatsByGender(user.UserId, user.Profile.ProfileGender, cache.page, cache.count);
+                return new 
+                { 
+                    success = true, 
+                    data = data 
+                };
             }
             return Return500Error(message);
         }

@@ -1,11 +1,10 @@
 using System;
 using Common;
-using System.IO;
+using System.Net;
 using System.Linq;
 using miniMessanger.Manage;
 using miniMessanger.Models;
 using Microsoft.AspNetCore.Http;
-using System.Net;
 using System.Collections.Generic;
 
 namespace miniMessanger
@@ -255,6 +254,51 @@ namespace miniMessanger
                 last_message = messages.Count() == 0 ? null : ResponseMessage(messages.Last())
             }
             ).Skip(page * count).Take(count).ToList();
+        }
+        public dynamic GetChatsByGender(int UserId, bool ProfileGender, int page = 0, int count = 30)
+        {
+            Log.Info("Get list of chats by gender.", UserId);
+            return (from participant in context.Participants
+            join chats in context.Chatroom on participant.ChatId equals chats.ChatId
+            join users in context.User on participant.OpposideId equals users.UserId
+            join profile in context.Profile on users.UserId equals profile.UserId
+            join likesProfile in context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
+            join messageChat in context.Messages on chats.ChatId equals messageChat.ChatId into messages
+            join blockedUser in context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blocks
+            where participant.UserId == UserId 
+            && profile.ProfileGender != ProfileGender
+            && (blocks.All(b => b.UserId == UserId && b.BlockedDeleted) || blocks.Count() == 0)
+            && !users.Deleted
+            orderby users.UserId descending
+            select new
+            {
+                user = new 
+                { 
+                    user_id = users.UserId,
+                    user_email = users.UserEmail,
+                    user_public_token = users.UserPublicToken,
+                    user_login = users.UserLogin,
+                    last_login_at = users.LastLoginAt,    
+                    chat_id = participant.ChatId,
+                    profile = new 
+                    {
+                        url_photo = profile.UrlPhoto == null ? "" : awsPath + profile.UrlPhoto,
+                        profile_age = profile.ProfileAge == null ? -1 : profile.ProfileAge,
+                        profile_gender = profile.ProfileGender,
+                        profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
+                    }
+                },
+                chat = new 
+                {
+                    chat_id = chats.ChatId,
+                    chat_token = chats.ChatToken,
+                    created_at = chats.CreatedAt,
+                },
+                last_message = messages.Count() == 0 ? null : ResponseMessage(messages.Last()),
+                liked_user = likes.Any(l => l.Like && l.UserId == UserId) ? true : false,
+                disliked_user = likes.Any(l => l.Dislike && l.UserId == UserId) ? true : false
+            }
+            ).Skip(page * count).Take(count).ToList();           
         }
         public dynamic ResponseMessage(Message message)
         {

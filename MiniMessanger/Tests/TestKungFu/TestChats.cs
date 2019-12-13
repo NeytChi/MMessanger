@@ -148,6 +148,7 @@ namespace miniMessanger.Test
         [Test]
         public void GetChats()
         {
+            DeleteUsers();
             User firstUser = CreateMockingUser();
             User secondUser = CreateMockingUser();
             User thirdUser = CreateMockingUser();
@@ -168,6 +169,7 @@ namespace miniMessanger.Test
         [Test]
         public void GetChatsWithBlocking()
         {
+            DeleteUsers();
             User firstUser = CreateMockingUser();
             User secondUser = CreateMockingUser();
             User thirdUser = CreateMockingUser();
@@ -187,7 +189,8 @@ namespace miniMessanger.Test
         [Test]
         public void GetChatsWithoutMessage()
         {
-            User firstUser = CreateMockingUser();
+            DeleteUsers();
+            User firstUser  = CreateMockingUser();
             User secondUser = CreateMockingUser();
             var firstRoom = chats.CreateChat(firstUser.UserToken, secondUser.UserPublicToken, ref message);
             ChatCache cache = new ChatCache();
@@ -196,6 +199,71 @@ namespace miniMessanger.Test
             Assert.AreEqual(successWithoutMessage[0].user.user_id, secondUser.UserId);
             Assert.AreEqual(successWithoutMessage[0].chat.chat_id, firstRoom.ChatId);
             Assert.AreEqual(successWithoutMessage[0].last_message, null);
+        }
+        [Test]
+        public void GetChatsByGender()
+        {
+            DeleteUsers();
+            Profiles profiles = new Profiles(context);
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            Chatroom firstRoom  = chats.CreateChat(firstUser.UserToken, secondUser.UserPublicToken, ref message);
+            Chatroom secondRoom = chats.CreateChat(firstUser.UserToken, thirdUser.UserPublicToken, ref message);
+            var firstMessage  = chats.CreateMessage("Text.", firstUser.UserToken, firstRoom.ChatToken, ref message);
+            profiles.UpdateGender(firstUser.Profile, "1", ref message);
+            var success = chats.GetChatsByGender(firstUser.UserId, true, 0, 2);
+            Assert.AreEqual(success[0].user.user_id, thirdUser.UserId);
+            Assert.AreEqual(success[1].user.user_id, secondUser.UserId);
+            Assert.AreEqual(success[0].chat.chat_id, secondRoom.ChatId);
+            Assert.AreEqual(success[1].chat.chat_id, firstRoom.ChatId);
+            Assert.AreEqual(success[0].last_message, null);
+            Assert.AreEqual(success[1].last_message.message_id, firstMessage.MessageId);
+            Assert.AreEqual(success[0].liked_user, false);
+            Assert.AreEqual(success[1].liked_user, false);
+        }
+        [Test]
+        public void GetChatsByGenderWithBlocked()
+        {
+            DeleteUsers();
+            Profiles profiles = new Profiles(context);
+            Blocks blocks = new Blocks(new Users(context, new Validator()), context);
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            Chatroom firstRoom  = chats.CreateChat(firstUser.UserToken, secondUser.UserPublicToken, ref message);
+            Chatroom secondRoom = chats.CreateChat(firstUser.UserToken, thirdUser.UserPublicToken, ref message);
+            profiles.UpdateGender(firstUser.Profile, "1", ref message);
+            blocks.BlockUser(firstUser.UserToken, thirdUser.UserPublicToken, "Test block.", ref message);
+            var successWithBlocked = chats.GetChatsByGender(firstUser.UserId, true, 0, 1);
+            Assert.AreEqual(successWithBlocked[0].user.user_id, secondUser.UserId);
+            Assert.AreEqual(successWithBlocked[0].chat.chat_id, firstRoom.ChatId);
+            Assert.AreEqual(successWithBlocked[0].last_message, null);
+        }
+        [Test]
+        public void GetChatsByGenderWithLiked()
+        {
+            DeleteUsers();
+            Profiles profiles = new Profiles(context);
+            Users users = new Users(context, new Validator());
+            User firstUser  = CreateMockingUser();
+            User secondUser = CreateMockingUser();
+            User thirdUser  = CreateMockingUser();
+            Chatroom firstRoom  = chats.CreateChat(firstUser.UserToken, secondUser.UserPublicToken, ref message);
+            Chatroom secondRoom = chats.CreateChat(firstUser.UserToken, thirdUser.UserPublicToken, ref message);
+            var firstMessage  = chats.CreateMessage("Text.", firstUser.UserToken, firstRoom.ChatToken, ref message);
+            profiles.UpdateGender(firstUser.Profile, "1", ref message);
+            users.CreateLike(firstUser.UserId, thirdUser.UserId);
+            users.CreateDislike(firstUser.UserId, secondUser.UserId);
+            var success = chats.GetChatsByGender(firstUser.UserId, true, 0, 2);
+            Assert.AreEqual(success[0].user.user_id, thirdUser.UserId);
+            Assert.AreEqual(success[1].user.user_id, secondUser.UserId);
+            Assert.AreEqual(success[0].chat.chat_id, secondRoom.ChatId);
+            Assert.AreEqual(success[1].chat.chat_id, firstRoom.ChatId);
+            Assert.AreEqual(success[0].last_message, null);
+            Assert.AreEqual(success[1].last_message.message_id, firstMessage.MessageId);
+            Assert.AreEqual(success[0].liked_user, true);
+            Assert.AreEqual(success[1].disliked_user, true);
         }
         public User CreateMockingUser()
         {
@@ -218,5 +286,9 @@ namespace miniMessanger.Test
             file.ContentType = "image/jpeg";
             return file;
         }    
+        public void DeleteUsers()
+        {
+            context.RemoveRange(context.User);
+        }
     }
 }

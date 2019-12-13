@@ -1,5 +1,4 @@
 ﻿using Common;
-using System.Net;
 using System.Linq;
 using miniMessanger;
 using Newtonsoft.Json;
@@ -7,7 +6,6 @@ using miniMessanger.Models;
 using miniMessanger.Manage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using System.Collections.Generic;
 
 namespace Controllers
 {

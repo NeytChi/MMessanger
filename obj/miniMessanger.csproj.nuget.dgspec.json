@@ -39,10 +39,6 @@
       "frameworks": {
         "netcoreapp2.2": {
           "dependencies": {
-            "AWSSDK.S3": {
-              "target": "Package",
-              "version": "[3.3.104.36, )"
-            },
             "Microsoft.AspNetCore.App": {
               "suppressParent": "All",
               "target": "Package",
@@ -64,7 +60,7 @@
             },
             "Microsoft.NET.Test.Sdk": {
               "target": "Package",
-              "version": "[16.4.0, )"
+              "version": "[16.1.0, )"
             },
             "Microsoft.NETCore.App": {
               "suppressParent": "All",
@@ -78,7 +74,7 @@
             },
             "NUnit3TestAdapter": {
               "target": "Package",
-              "version": "[3.15.1, )"
+              "version": "[3.13.0, )"
             },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",

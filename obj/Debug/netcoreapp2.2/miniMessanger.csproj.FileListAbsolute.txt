@@ -14,5 +14,4 @@
 /home/neytchi/Projects/miniMessanger/obj/Debug/netcoreapp2.2/miniMessanger.pdb
 /home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/NUnit3.TestAdapter.dll
 /home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/NUnit3.TestAdapter.pdb
-/home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/nunit.engine.dll
-/home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/nunit.engine.api.dll
+/home/neytchi/Projects/miniMessanger/bin/Debug/netcoreapp2.2/nunit.engine.netstandard.dll

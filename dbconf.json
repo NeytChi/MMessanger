@@ -1,6 +1,6 @@
 { 
 	"Server" : "localhost",
-	"Database" : "messanger", 
+	"Database" : "messanger_new", 
 	"User" : "root", 
 	"Password" : "root", 
    	"Pooling" : "false",

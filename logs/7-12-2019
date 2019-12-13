@@ -1,7 +1,0 @@
-Time: 07.12.19 09:49:30 | INFO | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 07.12.19 10:21:24 | INFO | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 07.12.19 10:25:27 | INFO | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 07.12.19 10:25:47 | INFO | Message: User login. | UID: 1 | UIP: 127.0.0.1 | TID: 7 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 07.12.19 10:26:07 | INFO | Message: Select exist chat for user_id->1 and opposide_id->2. | UID: 1 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 07.12.19 10:26:07 | INFO | Message: Create/Select chat chat_id->1. | UID: 1 | UIP: 127.0.0.1 | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 07.12.19 10:26:25 | INFO | Message: Get list of chats. | UID: 1 | UIP: 127.0.0.1 | TID: 13 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

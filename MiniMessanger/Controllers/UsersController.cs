@@ -216,8 +216,7 @@ namespace Controllers
                     user.UserId, 
                     ref message, 
                     profile_photo, Request.Form["profile_gender"],
-                    Request.Form["profile_age"], 
-                    Request.Form["profile_city"]);
+                    Request.Form["profile_city"], Request.Form["profile_age"]);
                 if (user.Profile != null)
                 {    
                     Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
@@ -241,7 +240,7 @@ namespace Controllers
             {
                 user.Profile = profiles.UpdateProfile(user.UserId, ref message, 
                     profile_photo, Request.Form["profile_gender"],
-                    Request.Form["profile_age"], Request.Form["profile_city"]);
+                    Request.Form["profile_city"], Request.Form["profile_age"]);
                 if (user.Profile != null)
                 {
                     Log.Info("Registrate new profile.", user.UserId);
@@ -341,6 +340,7 @@ namespace Controllers
         public ActionResult<dynamic> SelectMessages(ChatCache cache)
         {
             string message = null;
+            cache.count = cache.count == 0 ? 50 : cache.count;
             User user = users.GetUserByToken(cache.user_token, ref message);
             if (user != null)
             {
@@ -486,7 +486,7 @@ namespace Controllers
         public ActionResult<dynamic> SelectChatsByGender(UserCache cache)
         {
             string message = null;
-            int count = cache.count == 0 ? 30 : cache.count;
+            cache.count = cache.count == 0 ? 30 : cache.count;
             var user = users.GetUserWithProfile(cache.user_token, ref message);
             if (user != null)
             {

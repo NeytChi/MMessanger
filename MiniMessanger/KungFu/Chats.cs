@@ -226,7 +226,6 @@ namespace miniMessanger
             return (from participants in context.Participants
             join chat in context.Chatroom on participants.ChatId equals chat.ChatId
             join user in context.User on participants.OpposideId equals user.UserId
-            join message in context.Messages on chat.ChatId equals message.ChatId into messages
             join block in context.BlockedUsers on user.UserId equals block.BlockedUserId into blocks
             where participants.UserId == UserId
             && !user.Deleted
@@ -247,7 +246,7 @@ namespace miniMessanger
                     chat_token = chat.ChatToken,
                     created_at = chat.CreatedAt,
                 },
-                last_message = messages.Count() == 0 ? null : ResponseMessage(messages.Last())
+                last_message = ResponseMessage(context.Messages.Where(m => m.ChatId == chat.ChatId).LastOrDefault())
             }
             ).Skip(page * count).Take(count).ToList();
         }
@@ -258,9 +257,8 @@ namespace miniMessanger
             join chats in context.Chatroom on participant.ChatId equals chats.ChatId
             join users in context.User on participant.OpposideId equals users.UserId
             join profile in context.Profile on users.UserId equals profile.UserId
-            join likesProfile in context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes
-            join messageChat in context.Messages on chats.ChatId equals messageChat.ChatId into messages
-            join blockedUser in context.BlockedUsers on users.UserId equals blockedUser.BlockedUserId into blocks
+            join like in context.LikeProfile on users.UserId equals like.ToUserId into likes
+            join block in context.BlockedUsers on users.UserId equals block.BlockedUserId into blocks
             where participant.UserId == UserId 
             && profile.ProfileGender != ProfileGender
             && (blocks.All(b => b.UserId == UserId && b.BlockedDeleted) || blocks.Count() == 0)
@@ -290,7 +288,7 @@ namespace miniMessanger
                     chat_token = chats.ChatToken,
                     created_at = chats.CreatedAt,
                 },
-                last_message = messages.Count() == 0 ? null : ResponseMessage(messages.Last()),
+                last_message = ResponseMessage(context.Messages.Where(m => m.ChatId == chats.ChatId).LastOrDefault()),
                 liked_user = likes.Any(l => l.Like && l.UserId == UserId) ? true : false,
                 disliked_user = likes.Any(l => l.Dislike && l.UserId == UserId) ? true : false
             }

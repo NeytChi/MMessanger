@@ -154,8 +154,9 @@ namespace miniMessanger.Test
             User thirdUser = CreateMockingUser();
             var firstRoom = chats.CreateChat(firstUser.UserToken, secondUser.UserPublicToken, ref message);
             var secondRoom = chats.CreateChat(firstUser.UserToken, thirdUser.UserPublicToken, ref message);
-            var firstMessage = chats.CreateMessage("Testing text.", firstUser.UserToken, firstRoom.ChatToken, ref message);
-            var secondMessage = chats.CreateMessage("Testing text.", firstUser.UserToken, secondRoom.ChatToken, ref message);
+            var thirdMessage = chats.CreateMessage("Third message.", firstUser.UserToken, firstRoom.ChatToken, ref message);
+            var firstMessage = chats.CreateMessage("First message.", firstUser.UserToken, firstRoom.ChatToken, ref message);
+            var secondMessage = chats.CreateMessage("Second message.", firstUser.UserToken, secondRoom.ChatToken, ref message);
             ChatCache cache = new ChatCache();
             cache.user_token = firstUser.UserToken;
             var success = chats.GetChats(firstUser.UserId, 0, 2);

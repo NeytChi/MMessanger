@@ -11,7 +11,7 @@ namespace Instasoft
         public static bool requestView = false;    
         public static string HostHttps;
         public static string HostHttp;
-        /*public static void Main(string[] args)
+        public static void Main(string[] args)
         {
             using (Context context = new Context(true))
             {
@@ -41,7 +41,7 @@ namespace Instasoft
                 }
             }
             CreateWebHostBuilder(args).Build().Run();
-        }*/
+        }
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) 
         => WebHost.CreateDefaultBuilder(args).UseUrls(HostHttp, HostHttps).UseStartup<Startup>();
     }

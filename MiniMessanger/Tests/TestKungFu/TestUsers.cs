@@ -1,7 +1,7 @@
 using Common;
+using NUnit.Framework;
 using miniMessanger.Manage;
 using miniMessanger.Models;
-using NUnit.Framework;
 
 namespace miniMessanger.Test
 {
@@ -109,6 +109,7 @@ namespace miniMessanger.Test
         [Test]
         public void GetUsers()
         {
+            DeleteUsers();  
             Blocks blocks = new Blocks(users, context);
             User first = CreateMockingUser();
             User second = CreateMockingUser();
@@ -126,26 +127,56 @@ namespace miniMessanger.Test
         [Test]
         public void GetUserByGender()
         {
-            Blocks blocks = new Blocks(users, context);
+            DeleteUsers();
+            Profiles profiles = new Profiles(context);
             User first = CreateMockingUser();
             User second = CreateMockingUser();
             User third = CreateMockingUser();
-            var success = users.GetUsers(first.UserId, 0, 2);
+            first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
+            profiles.UpdateGender(first.Profile, "1", ref message);
+            var success = users.GetUsersByGender(first.UserId, true, 0, 2);
             Assert.AreEqual(success[0].user_id, third.UserId);
             Assert.AreEqual(success[1].user_id, second.UserId);
+        }
+        [Test]
+        public void GetUserByGenderWithBlocked()
+        {
+            DeleteUsers();
+            Profiles profiles = new Profiles(context);
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            User third = CreateMockingUser();
+            first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
+            profiles.UpdateGender(first.Profile, "1", ref message);
+            Blocks blocks = new Blocks(users, context);
             blocks.BlockUser(first.UserToken, third.UserPublicToken, "Test block.", ref message);
-            var successWithBlocked = users.GetUsers(first.UserId, 0, 2);
+            var successWithBlocked = users.GetUsersByGender(first.UserId, true, 0, 1);
             Assert.AreEqual(successWithBlocked[0].user_id, second.UserId);
-            var anotherUserWithBlocked = users.GetUsers(third.UserId, 0, 2);
-            Assert.AreEqual(anotherUserWithBlocked[0].user_id, second.UserId);
-            Assert.AreEqual(anotherUserWithBlocked[1].user_id, first.UserId);
+        }
+        [Test]
+        public void GetUserByGenderWithLiked()
+        {
+            DeleteUsers();
+            Profiles profiles = new Profiles(context);
+            User first = CreateMockingUser();
+            User second = CreateMockingUser();
+            User third = CreateMockingUser();
+            first.Profile = profiles.CreateIfNotExistProfile(first.UserId);
+            profiles.UpdateGender(first.Profile, "1", ref message);   
+            users.CreateLike(first.UserId, third.UserId);
+            var successWithLiked = users.GetUsersByGender(first.UserId, true, 0, 1);
+            Assert.AreEqual(successWithLiked[0].user_id, second.UserId);
         }
         [Test]
         public void ReciprocalUsers()
         {
 
         }
-        
+        public User UserEnviroment()
+        {
+            DeleteUsers();
+            return CreateMockingUser();
+        }
         public User CreateMockingUser()
         {
             string UserEmail = "test@gmail.com";
@@ -158,6 +189,10 @@ namespace miniMessanger.Test
             context.User.Update(user);
             context.SaveChanges();
             return user;
+        }
+        public void DeleteUsers()
+        {
+            context.RemoveRange(context.User);
         }
     }
 }

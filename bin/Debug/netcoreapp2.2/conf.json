@@ -13,5 +13,6 @@
 	"smtp_server" : "smtp.gmail.com",
 	"smtp_port": 587,
 	"url_check" : "http://a.trackmyapptwlv.club/?app_id=26061&gaid=*GAID*&banner_id=*BANNER_ID*",
-    "url_redirect" : "https://google.com"
+	"url_redirect" : "https://google.com",
+	"email_enable" : false
 }

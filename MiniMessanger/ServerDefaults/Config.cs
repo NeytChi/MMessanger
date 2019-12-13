@@ -146,7 +146,7 @@ namespace Common
             else { Console.WriteLine("Server can't define dbconf.json; Can't get mysql_connetion_string."); }
             return mysql_connection;
         }
-        public dynamic GetServerConfigValue(string conf_name, JTokenType type_value)
+        public dynamic GetServerConfigValue(string confKey, JTokenType typeValue)
         {
             if (!initiated)
             {
@@ -154,16 +154,37 @@ namespace Common
             }
             if (server_config != null)
             {
-                if (server_config.ContainsKey(conf_name))
+                if (server_config.ContainsKey(confKey))
                 {
-                    switch (type_value)
+                    switch (typeValue)
                     {
                         case JTokenType.Integer:
-                            if (server_config[conf_name].Type == JTokenType.Integer) { return server_config[conf_name].ToObject<int>(); }
-                            else { return -1; }
+                            if (server_config[confKey].Type == JTokenType.Integer) 
+                            { 
+                                return server_config[confKey].ToObject<int>(); 
+                            }
+                            else 
+                            { 
+                                return -1; 
+                            }
                         case JTokenType.String:
-                            if (server_config[conf_name].Type == JTokenType.String) { return server_config[conf_name].ToObject<string>(); }
-                            else { return ""; }
+                            if (server_config[confKey].Type == JTokenType.String) 
+                            { 
+                                return server_config[confKey].ToObject<string>(); 
+                            }
+                            else 
+                            { 
+                                return ""; 
+                            }
+                        case JTokenType.Boolean:
+                            if (server_config[confKey].Type == JTokenType.Boolean) 
+                            { 
+                                return server_config[confKey].ToObject<bool>(); 
+                            }
+                            else 
+                            { 
+                                return false; 
+                            }
                         default:
                             Console.WriteLine("Can not get value, type of value not define, function GetConfigValue");
                             return null;
@@ -178,10 +199,11 @@ namespace Common
             { 
                 Console.WriteLine("Can not get value, Json Object did not create, function GetConfigValue"); 
             }
-            switch (type_value)
+            switch (typeValue)
             {
                 case JTokenType.Integer: return -1;
                 case JTokenType.String: return null;
+                case JTokenType.Boolean: return false;
                 default: return null;
             }
         }

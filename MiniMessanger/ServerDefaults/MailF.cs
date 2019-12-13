@@ -11,6 +11,7 @@ namespace Common
         {
             Init();
         }
+        public bool emailEnable = true;
         private string GmailServer = "smtp.gmail.com";
         private int GmailPort = 587;
         private string ip = "127.0.0.1";
@@ -29,6 +30,7 @@ namespace Common
             mailPassword = config.GetServerConfigValue("mail_password", JTokenType.String);
             GmailServer = config.GetServerConfigValue("smtp_server", JTokenType.String);
             GmailPort = config.GetServerConfigValue("smtp_port", JTokenType.Integer);
+            emailEnable = config.GetServerConfigValue("email_enable", JTokenType.Boolean);
             if (ip != null && mailAddress != null)
             {
                 smtp = new SmtpClient(GmailServer, GmailPort);
@@ -46,7 +48,10 @@ namespace Common
             message.IsBodyHtml = true;
             try
             {
-                await smtp.SendMailAsync(message);
+                if (emailEnable)
+                {
+                    await smtp.SendMailAsync(message);
+                }
                 Log.Info("Send message to " + emailAddress + ".");
             }
             catch (Exception e)

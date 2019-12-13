@@ -32,14 +32,10 @@ namespace miniMessanger
             User user = users.GetUserByToken(userToken, ref message);
             if (user != null)
             {
-                User interlocutor = context.User.Where(u => u.UserPublicToken == publicToken).FirstOrDefault();
+                User interlocutor = users.GetUserByPublicToken(publicToken, ref message);
                 if (interlocutor != null)
                 {
                     return CreateChatIfNotExist(user, interlocutor);
-                } 
-                else 
-                { 
-                    message = "Can't define interlocutor by interlocutor_public_token from request's body."; 
                 }
             } 
             return null;

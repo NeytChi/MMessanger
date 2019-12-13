@@ -121,7 +121,7 @@ namespace Common
         public bool ValidateLogin(string login, ref string answer)
         {
             bool result = false;
-            if (!string.IsNullOrEmpty(login)) 
+            if (!string.IsNullOrEmpty(login) && login.Length >= 3) 
             {
                 result = onlyEnglish.Match(login).Success;
                 if (!result)
@@ -131,7 +131,7 @@ namespace Common
             }
             else
             {
-                answer = "Login must be more than 6 characters.";
+                answer = "Login must be more than 3 characters.";
             }
             Log.Info("Validate login success=" + result + ".");
 			return result;

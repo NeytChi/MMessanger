@@ -12,12 +12,15 @@ namespace Common
     [ApiController]
     public class ManagerController : ControllerBase
     {
-        private string UrlRedirect;
-        private string UrlCheck;
+        private string UrlRedirect = "";
+        private string UrlCheck = "";
         private Context context;
         public ManagerController(Context context)
         {
             this.context = context;
+            Config config = new Config();
+            UrlRedirect = config.urlRedirect;
+            UrlCheck = config.urlCheck;
         }
         [HttpGet]
         [ActionName("State")]

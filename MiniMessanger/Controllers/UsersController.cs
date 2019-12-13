@@ -35,6 +35,7 @@ namespace Controllers
             this.chats = new Chats(context, users, Validator);
             this.profiles = new Profiles(context);
             this.blocks = new Blocks(users, context);
+            this.authentication = new Authentication(context, Validator);
         }
         [HttpPost]
         [ActionName("Registration")]
@@ -270,14 +271,13 @@ namespace Controllers
         }
         [HttpPost]
         [ActionName("Profile")]
-        public ActionResult<dynamic> Profile(UserCache userCache)
+        public ActionResult<dynamic> Profile(UserCache cache)
         {
             string message = null;
-            User user = users.GetUserByToken(userCache.user_token, ref message);
+            User user = users.GetUserByToken(cache.user_token, ref message);
             if (user != null)
             {
                 user.Profile = authentication.CreateIfNotExistProfile(user.UserId);
-                Log.Info("Select profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
                 return new 
                 { 
                     success = true, 
@@ -321,7 +321,7 @@ namespace Controllers
         }
         [HttpPut]
         [ActionName("SelectChats")]
-        public ActionResult<dynamic> SelectChats(ChatCache cache)
+        public ActionResult<dynamic> SelectChats(UserCache cache)
         {
             string message = null;
             cache.count = cache.count == 0 ? 30 : cache.count;
@@ -420,7 +420,6 @@ namespace Controllers
             string message = null;
             if (blocks.BlockUser(cache.user_token, cache.opposide_public_token, cache.blocked_reason, ref message))
             {
-                Log.Info("Block user.", HttpContext.Connection.RemoteIpAddress.ToString());
                 return new { success = true, message = "Block user - successed." };
             }
             return Return500Error(message);
@@ -464,7 +463,6 @@ namespace Controllers
             string message = null;   
             if (blocks.Complaint(cache.user_token, cache.message_id, cache.complaint, ref message))
             {
-                Log.Info("Create complaint.", HttpContext.Connection.RemoteIpAddress.ToString());
                 return new { success = true, message = "Complain content - successed." };
             }
             return Return500Error(message);
@@ -507,7 +505,6 @@ namespace Controllers
             if (user != null)
             {
                 dynamic data = users.ReciprocalUsers(user.UserId, user.Profile.ProfileGender, cache.page, cache.count);
-                Log.Info("Get reciprocal users.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId); 
                 return new { success = true, data = data };
             }
             return Return500Error(message);
@@ -557,7 +554,7 @@ namespace Controllers
             {
                 Response.StatusCode = 500;
             }
-            Log.Warn(message, HttpContext.Connection.RemoteIpAddress.ToString());
+            Log.Warn(message, HttpContext?.Connection.RemoteIpAddress.ToString() ?? "");
             return new { success = false, message = message };
         }
     }

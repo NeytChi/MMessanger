@@ -1,9 +1,0 @@
-Time: 26.12.19 15:59:27 | INFO | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 26.12.19 15:59:49 | INFO | Message: User login. | UID: 1 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 26.12.19 16:00:01 | INFO | Message: Get list of chats. | UID: 1 | UIP:  | TID: 6 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 26.12.19 16:00:13 | INFO | Message: Get blocked users. | UID: 0 | UIP:  | TID: 9 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 26.12.19 16:00:36 | INFO | Message: Get blocked users. | UID: 0 | UIP:  | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 26.12.19 16:00:43 | INFO | Message: Get list of chats. | UID: 1 | UIP:  | TID: 9 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 26.12.19 16:01:00 | INFO | Message: Unblock user; blockedId ->2. | UID: 1 | UIP:  | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 26.12.19 16:01:06 | INFO | Message: Get blocked users. | UID: 0 | UIP:  | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 26.12.19 16:01:10 | INFO | Message: Get list of chats. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

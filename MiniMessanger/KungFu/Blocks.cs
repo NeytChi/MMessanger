@@ -1,8 +1,9 @@
-using Common;
+using System;
+using Serilog;
 using System.Net;
 using System.Linq;
+using Serilog.Core;
 using miniMessanger.Models;
-using System;
 
 namespace miniMessanger.Manage
 {
@@ -10,6 +11,9 @@ namespace miniMessanger.Manage
     {
         public Users users;
         public Context context;
+        public Logger log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
         public Blocks(Users users, Context context)
         {
             this.users = users;
@@ -95,7 +99,7 @@ namespace miniMessanger.Manage
                         blocked.BlockedDeleted = true;
                         context.BlockedUsers.UpdateRange(blocked);
                         context.SaveChanges();
-                        Log.Info("Unblock user; blockedId ->" + blocked.BlockedId + ".", user.UserId);
+                        log.Information("User(id -> " + user.UserId + ") unblock user, id -> " + blocked.BlockedId);
                         return true;
                     }
                 }
@@ -119,7 +123,7 @@ namespace miniMessanger.Manage
                             {
                                 BlockedUser block = CreateBlockedUser(user.UserId, interlocutor.UserId, complaint);
                                 CreateComplaint(user.UserId, block.BlockedId, messageChat.MessageId, complaint);
-                                Log.Info("Create complaint; user->user_id->" + user.UserId + ".", user.UserId);
+                                log.Information("Create complaint by user, id -> " + user.UserId);
                                 return true;
                             }
                         }
@@ -168,7 +172,7 @@ namespace miniMessanger.Manage
                 blocked_reason = blocked.BlockedReason
             }
             ).Skip(Page * Count).Take(Count).ToList();
-            Log.Info("Get blocked users.");
+            log.Information("Get blocked users, id -> " + UserId);
             return blockedUsers;
         }
     }

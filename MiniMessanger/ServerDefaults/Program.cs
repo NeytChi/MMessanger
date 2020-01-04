@@ -17,7 +17,6 @@ namespace Instasoft
             {
                 context.Database.EnsureCreated();
             }
-            Log.Info("Start server program.");
             Config config = new Config();
             HostHttp = config.GetHostsUrl();
             HostHttps = config.GetHostsHttpsUrl();

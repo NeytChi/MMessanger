@@ -1,6 +1,8 @@
 using System;
 using Common;
+using Serilog;
 using System.Linq;
+using Serilog.Core;
 using miniMessanger.Models;
 
 namespace miniMessanger
@@ -10,8 +12,9 @@ namespace miniMessanger
         public Context context;
         public Validator validator;
         public MailF mail;
+        public Logger log;
         public string IP;
-        public int Port;
+        public int PORT;
         public Authentication(Context context, Validator validator)
         {
             this.context = context;
@@ -19,7 +22,10 @@ namespace miniMessanger
             mail = new MailF();
             Config config = new Config();
             IP = config.IP;
-            Port = config.Port;
+            PORT = config.Port;
+            log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
         }
         public User Login(string UserEmail, string UserPassword, ref string message)
         {
@@ -32,7 +38,7 @@ namespace miniMessanger
                     context.User.Update(user);
                     context.SaveChanges();
                     user.Profile = CreateIfNotExistProfile(user.UserId);
-                    Log.Info("User login.", user.UserId);
+                    log.Information("User login, id -> " + user.UserId);
                     return user;
                 }
                 else 
@@ -50,7 +56,7 @@ namespace miniMessanger
                 user.UserToken = validator.GenerateHash(40);
                 context.User.Update(user);
                 context.SaveChanges();
-                Log.Info("User log out.", user.UserId);
+                log.Information("User log out, id -> " + user.UserId);
                 return true;
             }   
             return false;
@@ -64,7 +70,7 @@ namespace miniMessanger
                 context.User.Update(user);
                 context.SaveChanges();
                 mail.SendEmail(user.UserEmail, "Recovery password", "Recovery code=" + user.RecoveryCode);
-                Log.Info("Recovery password.", user.UserId);
+                log.Information("Recovery password, id -> " + user.UserId);
                 return true;
             }
             return false;
@@ -77,7 +83,7 @@ namespace miniMessanger
                 if (!user.Deleted && user.Activate == 0)
                 {                            
                     SendConfirmEmail(user.UserEmail, user.UserHash);
-                    Log.Info("Send registration email to user.", user.UserId);
+                    Log.Information("Send registration email to user, id -> " + user.UserId);
                     return true;
                 }
                 else 
@@ -114,7 +120,7 @@ namespace miniMessanger
                     user.RecoveryCode = 0;
                     context.User.Update(user);
                     context.SaveChanges();
-                    Log.Info("Check recovery code - successed.", user.UserId);
+                    Log.Information("Check recovery code - successed, id -> " + user.UserId);
                     return user.RecoveryToken;
                 }
                 else 
@@ -137,7 +143,7 @@ namespace miniMessanger
                         user.RecoveryToken  = "";
                         context.User.Update(user);
                         context.SaveChanges();
-                        Log.Info("Change user password.", user.UserId);
+                        log.Information("Change user password, id ->", user.UserId);
                         return true;
                     }
                     message = "Incorrect password. " + message; 
@@ -207,7 +213,7 @@ namespace miniMessanger
                 context.User.Add(user);
                 context.SaveChanges();
                 SendConfirmEmail(user.UserEmail, user.UserHash);
-                Log.Info("Registrate new user.", user.UserId);
+                log.Information("Registrate new user, id -> " + user.UserId);
                 return user;
             }
             return null;
@@ -222,7 +228,7 @@ namespace miniMessanger
                     user.UserToken = validator.GenerateHash(40); 
                     context.User.Update(user);
                     context.SaveChanges();
-                    Log.Info("Restored old user, user_id->" + user.UserId + ".", user.UserId);
+                    log.Information("Restored old user, id -> " + user.UserId);
                     return true;
                 }
                 else 
@@ -272,7 +278,7 @@ namespace miniMessanger
                 user.Activate = 1;
                 context.User.Update(user);
                 context.SaveChanges();
-                Log.Info("Active user account.", user.UserId);
+                log.Information("Active user account, id -> " + user.UserId);
                 return true;
             }
             else 
@@ -290,18 +296,18 @@ namespace miniMessanger
                 user.UserToken = null;
                 context.User.Update(user);
                 context.SaveChanges();
-                Log.Info("Account was successfully deleted.", user.UserId); 
+                log.Information("Account was successfully deleted, id ->" + user.UserId);
                 return true;
             }
             return false;
         }
-        public void SendConfirmEmail(string UserEmail, string UserHash)
+        public void SendConfirmEmail(string email, string userhash)
         {
-            if (!string.IsNullOrEmpty(UserEmail) && !string.IsNullOrEmpty(UserHash))
+            if (!string.IsNullOrEmpty(email) && !string.IsNullOrEmpty(userhash))
             {
-                mail.SendEmail(UserEmail, "Confirm account", 
-                "Confirm account: <a href=http://" + IP + ":" + Port
-                + "/v1.0/users/Activate/?hash=" + UserHash + ">Confirm url!</a>");
+                mail.SendEmail(email, "Confirm account", 
+                "Confirm account: <a href=http://" + IP + ":" + PORT
+                + "/v1.0/users/Activate/?hash=" + userhash + ">Confirm url!</a>");
             }
         }
         public Profile CreateIfNotExistProfile(int UserId)

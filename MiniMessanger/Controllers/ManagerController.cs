@@ -1,5 +1,7 @@
+using Serilog;
 using System.IO;
 using System.Net;
+using Serilog.Core;
 using Newtonsoft.Json;
 using miniMessanger.Models;
 using Newtonsoft.Json.Linq;
@@ -15,6 +17,10 @@ namespace Common
         private string UrlRedirect = "";
         private string UrlCheck = "";
         private Context context;
+        public Logger log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+		
         public ManagerController(Context context)
         {
             this.context = context;
@@ -27,7 +33,8 @@ namespace Common
         public ActionResult<dynamic> State()
         {
             bool result = CheckUrlState();
-            Log.Info("Return state urls.", HttpContext.Connection.RemoteIpAddress.ToString());
+            log.Information("Return state urls, IP -> " 
+            + HttpContext.Connection.RemoteIpAddress.ToString());
             return ReturnStateUrl(result);
         }
         public dynamic ReturnStateUrl(bool result)
@@ -50,7 +57,7 @@ namespace Common
                 if (json.ContainsKey("success") 
                 && json["success"].Type == JTokenType.Boolean)
                 {
-                    Log.Info("Check url state.");
+                    log.Information("Check url state");
                     return json["success"].ToObject<bool>();
                 }
             }
@@ -68,14 +75,15 @@ namespace Common
                 string result = reader.ReadToEnd();
                 data.Close();
                 reader.Close();
-                Log.Info("Send get request.");
+                log.Information("Send GET request");
                 return result;
             }
             return null;
         }
         public dynamic Return500Error(string message)
         {
-            Log.Warn(message, HttpContext.Connection.LocalIpAddress.ToString());
+            log.Warning(message + " IP -> "
+             + HttpContext.Connection.LocalIpAddress.ToString());
             if (Response != null)
             {
                 Response.StatusCode = 500;

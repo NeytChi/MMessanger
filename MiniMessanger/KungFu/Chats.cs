@@ -1,7 +1,9 @@
 using System;
 using Common;
+using Serilog;
 using System.Net;
 using System.Linq;
+using Serilog.Core;
 using miniMessanger.Manage;
 using miniMessanger.Models;
 using Microsoft.AspNetCore.Http;
@@ -15,6 +17,7 @@ namespace miniMessanger
         public Users users;
         public Validator validator;
         public FileSaver system;
+        public Logger log;
         public string savePath;
         public string awsPath;
         public Chats(Context context, Users users, Validator validator)
@@ -26,6 +29,9 @@ namespace miniMessanger
             this.awsPath = config.AwsPath;
             this.validator = validator;
             this.system = new FileSaver();
+            log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
         }
         public Chatroom CreateChat(string userToken, string publicToken, ref string message)
         {
@@ -51,12 +57,12 @@ namespace miniMessanger
                 room = SaveChat();
                 SaveParticipants(room.ChatId,  user.UserId, interlocutor.UserId);
                 SaveParticipants(room.ChatId, interlocutor.UserId, user.UserId);
-                Log.Info("Create chat for userId ->" + user.UserId + ".", user.UserId);
+                log.Information("Create new chat by user, id -> " + user.UserId);
             }
             else
             {
                 room = context.Chatroom.Where(ch => ch.ChatId == participant.ChatId).First();
-                Log.Info("Select chat for userId ->" + user.UserId + ".", user.UserId);
+                log.Information("Get chat for user, id -> " + user.UserId);
             }
             return room;
         }
@@ -67,7 +73,7 @@ namespace miniMessanger
             room.CreatedAt = DateTime.Now;
             context.Chatroom.Add(room);
             context.SaveChanges();
-            Log.Info("Save new chat.");
+            log.Information("Save new chat");
             return room;
         }
         public void SaveParticipants(int chatId, int userId, int opposideUserId)
@@ -78,7 +84,7 @@ namespace miniMessanger
             participant.OpposideId = opposideUserId;
             context.Participants.Add(participant);
             context.SaveChanges();
-            Log.Info("Create and save new participants.");
+            log.Information("Create and save new participants");
         }
         public Message CreateMessage(string messageText, string userToken, string chatToken , ref string answer)
         {
@@ -91,7 +97,7 @@ namespace miniMessanger
                     if (room != null)
                     {
                         Message message = SaveTextMessage(room.ChatId, user.UserId, messageText);
-                        Log.Info("Create new message with id ->" + message.MessageId + ".", user.UserId);
+                        log.Information("Send new message, id -> " + message.MessageId);
                         return message;
                     }
                 } 
@@ -110,7 +116,7 @@ namespace miniMessanger
             message.CreatedAt = DateTime.Now;
             context.Messages.Add(message);
             context.SaveChanges();
-            Log.Info("Save new text message.", UserId);
+            log.Information("Save new text message");
             return message;
         }
         public Chatroom GetChatroom(string ChatToken, ref string message)
@@ -176,7 +182,7 @@ namespace miniMessanger
                     };
                     context.Messages.Add(message);
                     context.SaveChanges();
-                    Log.Info("Create photo message, messageId ->" + message.MessageId + ".", userId);
+                    log.Information("Create photo message, id -> " + message.MessageId);
                     return message;
                 }
                 answer = "Incorrect file type of message's foto.";
@@ -207,7 +213,7 @@ namespace miniMessanger
                     created_at = m.CreatedAt
                 }).ToList(); 
                 UpdateMessagesToViewed(room.ChatId, UserId);
-                Log.Info("Get list of messages, chatId -> " + room.ChatId + ".", UserId); 
+                log.Information("Get messages by chat, id -> " + room.ChatId); 
                 return messages;
             }
             return null;
@@ -222,7 +228,7 @@ namespace miniMessanger
         }
         public dynamic GetChats(int UserId, int page = 0, int count = 30)
         {
-            Log.Info("Get list of chats.", UserId);
+            log.Information("Get chats by user, id -> " + UserId);
             return (from participants in context.Participants
             join chat in context.Chatroom on participants.ChatId equals chat.ChatId
             join user in context.User on participants.OpposideId equals user.UserId
@@ -252,7 +258,7 @@ namespace miniMessanger
         }
         public dynamic GetChatsByGender(int UserId, bool ProfileGender, int page = 0, int count = 30)
         {
-            Log.Info("Get list of chats by gender.", UserId);
+            log.Information("Get chats by user with gender, id -> " + UserId);
             return (from participant in context.Participants
             join chats in context.Chatroom on participant.ChatId equals chats.ChatId
             join users in context.User on participant.OpposideId equals users.UserId

@@ -1,6 +1,7 @@
 using Common;
-using System.Net;
+using Serilog;
 using System.Linq;
+using Serilog.Core;
 using miniMessanger.Models;
 using System.Collections.Generic;
 
@@ -11,12 +12,16 @@ namespace miniMessanger.Manage
         public Context context;
         public string awsPath;
         public Validator validator;
+        public Logger log;
         public Users(Context context, Validator validator)
         {
             Config config = new Config();
             this.context = context;
             this.awsPath = config.AwsPath;
             this.validator = validator;
+            log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
         }
         public LikeProfiles LikeUser(UserCache cache, ref string message)
         {
@@ -144,15 +149,15 @@ namespace miniMessanger.Manage
             }
             return null;
         }
-        public dynamic GetUsers(int UserId, int page = 0, int count = 30)
+        public dynamic GetUsers(int userid, int page = 0, int count = 30)
         {
-            Log.Info("Get users list.", UserId);
+            log.Information("Get users by user, id -> " + userid);
             return (from users in context.User
             join block in context.BlockedUsers on users.UserId equals block.BlockedUserId into blocks
-            where users.UserId != UserId
+            where users.UserId != userid
             && users.Activate == 1
             && !users.Deleted
-            && ( blocks.All(b => b.UserId == UserId && b.BlockedDeleted) || blocks.Count() == 0)
+            && ( blocks.All(b => b.UserId == userid && b.BlockedDeleted) || blocks.Count() == 0)
             orderby users.UserId descending
             select new
             {
@@ -169,19 +174,19 @@ namespace miniMessanger.Manage
         /// Select list of users with profile data, like and dislike keys.
         /// Doesn't select users who a block by current user and users that current user d
         /// </summary>
-        public dynamic GetUsersByGender(int UserId, bool ProfileGender, int page = 0, int count = 30)
+        public dynamic GetUsersByGender(int userid, bool ProfileGender, int page = 0, int count = 30)
         {
-            Log.Info("Get users list by gender.", UserId);
+            log.Information("Get users by user and gender, id -> " + userid);
             return (from users in context.User
             join profile in context.Profile on users.UserId equals profile.UserId
             join likesProfile in context.LikeProfile on users.UserId equals likesProfile.ToUserId into likes    
             join block in context.BlockedUsers on users.UserId equals block.BlockedUserId into blocks
-            where users.UserId != UserId
+            where users.UserId != userid
             && profile.ProfileGender != ProfileGender
-            && (!likes.Any(l => l.UserId == UserId && l.Like))
+            && (!likes.Any(l => l.UserId == userid && l.Like))
             && users.Activate == 1
             && !users.Deleted
-            && ( blocks.All(b => b.UserId == UserId && b.BlockedDeleted) || blocks.Count() == 0)
+            && ( blocks.All(b => b.UserId == userid && b.BlockedDeleted) || blocks.Count() == 0)
             orderby users.UserId descending
             select new 
             { 
@@ -199,7 +204,7 @@ namespace miniMessanger.Manage
                     profile_city = profile.ProfileCity == null  ? "" : profile.ProfileCity
                 },
                 liked_user = false,
-                disliked_user = likes.Any(l => l.Dislike && l.UserId == UserId) ? true : false
+                disliked_user = likes.Any(l => l.Dislike && l.UserId == userid) ? true : false
             })
             .Skip(page * count).Take(count).ToList();
         }
@@ -226,12 +231,12 @@ namespace miniMessanger.Manage
                     exist = false;
                 }
             }
-            Log.Info("Get reciprocal users.", userId);
+            log.Information("Get reciprocal users, id -> " + userId);
             return likedUsers;
         }
         public dynamic GetLikedUsers(int userId, bool profileGender, int page, int count)
         {
-            Log.Info("Get liked users by user", userId);
+            log.Information("Get liked users by user, id -> " + userId);
             return (from users in context.User
             join like in context.LikeProfile on users.UserId equals like.ToUserId
             join profile in context.Profile on users.UserId equals profile.UserId
@@ -262,7 +267,7 @@ namespace miniMessanger.Manage
         }
         public dynamic GetReciprocalUsers(int userId, bool profileGender, int page, int count)
         {
-            Log.Info("Get liked users by users(reciprocal).", userId);
+            log.Information("Get liked users by user(reciprocal), id -> " + userId);
             return (from users in context.User
             join like in context.LikeProfile on users.UserId equals like.UserId
             join profile in context.Profile on users.UserId equals profile.UserId

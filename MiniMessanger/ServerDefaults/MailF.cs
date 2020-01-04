@@ -1,5 +1,7 @@
 ﻿using System;
+using Serilog;
 using System.Net;
+using Serilog.Core;
 using System.Net.Mail;
 using Newtonsoft.Json.Linq;
 
@@ -10,7 +12,11 @@ namespace Common
         public MailF()
         {
             Init();
+            log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
         }
+        public Logger log;
         public bool emailEnable = true;
         private string GmailServer = "smtp.gmail.com";
         private int GmailPort = 587;
@@ -39,9 +45,9 @@ namespace Common
                 smtp.EnableSsl = true;
             }
         }
-        public async void SendEmail(string emailAddress, string subject, string text)
+        public async void SendEmail(string email, string subject, string text)
         {
-            MailAddress to = new MailAddress(emailAddress);
+            MailAddress to = new MailAddress(email);
             MailMessage message = new MailMessage(from, to);
             message.Subject = subject;
             message.Body = text;
@@ -52,11 +58,11 @@ namespace Common
                 {
                     await smtp.SendMailAsync(message);
                 }
-                Log.Info("Send message to " + emailAddress + ".");
+                log.Information("Send message to " + email);
             }
             catch (Exception e)
             {
-                Log.Error("Error SendEmailAsync, Message:" + e.Message + ".");
+                Log.Error("Can't send email message, ex: " + e.Message);
             }
         }
     }

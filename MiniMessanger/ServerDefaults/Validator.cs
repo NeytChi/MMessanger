@@ -1,6 +1,8 @@
 ﻿using System;
+using Serilog;
 using System.IO;
 using System.Text;
+using Serilog.Core;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations;
@@ -14,6 +16,9 @@ namespace Common
         private const sbyte maxLength = 20;
         
         private EmailAddressAttribute emailChecker = new EmailAddressAttribute();
+        public Logger log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
 		public Regex onlyEnglish = new Regex("^[a-zA-Z0-9]*$", RegexOptions.Compiled);
 		public Random random = new Random();
         private string Alphavite = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -45,7 +50,7 @@ namespace Common
             {
                 message = "User email is empty.";
             }
-            Log.Info("Validating email->'" + email ?? "" + "' success ->" + bar + ".");
+            log.Information("Check email ->'" + email ?? "" + "' result -> " + bar);
             return bar;
         } 
 		public bool ValidatePassword(string password, ref string answer) 
@@ -61,7 +66,7 @@ namespace Common
             {
                 answer = "Password is empty.";
             }
-            Log.Info(answer);
+            log.Information(answer);
             return false;
         }
         public bool HasValues(string password, ref string answer)
@@ -133,7 +138,7 @@ namespace Common
             {
                 answer = "Login must be more than 3 characters.";
             }
-            Log.Info("Validate login success=" + result + ".");
+            log.Information("Check login, result -> " + result);
 			return result;
         }
         public string GenerateHash(int length_hash)

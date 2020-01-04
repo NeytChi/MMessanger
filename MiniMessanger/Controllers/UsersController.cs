@@ -1,7 +1,8 @@
 ﻿using Common;
+using Serilog;
 using System.Linq;
+using Serilog.Core;
 using miniMessanger;
-using Newtonsoft.Json;
 using miniMessanger.Models;
 using miniMessanger.Manage;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +24,10 @@ namespace Controllers
         public Authentication authentication;
         public Blocks blocks;
         public Validator Validator;
+        public Logger log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+		
         public string AwsPath;
         
         public UsersController(Context context)
@@ -217,15 +222,12 @@ namespace Controllers
                     ref message, 
                     profile_photo, Request.Form["profile_gender"],
                     Request.Form["profile_city"], Request.Form["profile_age"]);
-                if (user.Profile != null)
-                {    
-                    Log.Info("Update profile.", HttpContext.Connection.RemoteIpAddress.ToString(), user.UserId);
+                if (user.Profile != null) 
                     return new 
                     { 
                         success = true, 
                         data = ProfileToResponse(user.Profile)
                     };
-                }
             }
             return Return500Error(message);
         }
@@ -242,15 +244,12 @@ namespace Controllers
                     profile_photo, Request.Form["profile_gender"],
                     Request.Form["profile_city"], Request.Form["profile_age"]);
                 if (user.Profile != null)
-                {
-                    Log.Info("Registrate new profile.", user.UserId);
                     return new 
                     { 
                         success = true, 
                         message = "User account was successfully registered. See your email to activate account by link.",
                         data = ProfileToResponse(user.Profile)
                     };
-                }
             }
             else 
             { 
@@ -547,10 +546,9 @@ namespace Controllers
         public dynamic Return500Error(string message)
         {
             if (Response != null)
-            {
                 Response.StatusCode = 500;
-            }
-            Log.Warn(message, HttpContext?.Connection.RemoteIpAddress.ToString() ?? "");
+            log.Warning(message + " IP -> " 
+            + HttpContext?.Connection.RemoteIpAddress.ToString() ?? "");
             return new { success = false, message = message };
         }
     }

@@ -1,7 +1,0 @@
-Time: 22.12.19 14:27:12 | INFO | Message: Start server program. | UID: 0 | UIP:  | TID: 1 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 22.12.19 14:27:50 | WARN | Message: Server can't define user by token. | UID: 0 | UIP: 127.0.0.1 | TID: 4 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 22.12.19 14:28:07 | INFO | Message: User login. | UID: 1 | UIP:  | TID: 12 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 22.12.19 14:29:19 | INFO | Message: Get list of chats. | UID: 1 | UIP:  | TID: 9 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 22.12.19 14:29:49 | INFO | Message: Create new file, relative path ->/MessagePhoto/2019-12-22/1577017789. | UID: 0 | UIP:  | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 22.12.19 14:29:49 | INFO | Message: Create photo message, messageId ->6. | UID: 1 | UIP:  | TID: 14 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 
-Time: 22.12.19 14:30:00 | INFO | Message: Get list of messages, chatId -> 1. | UID: 1 | UIP:  | TID: 15 | UPC: neytchi-neytchi-Lenovo-ideapad-310-15ISK | 

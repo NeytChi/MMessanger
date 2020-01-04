@@ -1,6 +1,7 @@
 using System;
-using Common;
+using Serilog;
 using System.Linq;
+using Serilog.Core;
 using miniMessanger.Models;
 using Microsoft.AspNetCore.Http;
 
@@ -10,9 +11,13 @@ namespace miniMessanger
     {
         public Context context;
         public FileSaver fileSystem = new FileSaver();
+        public Logger log;
         public Profiles(Context context)
         {
             this.context = context;
+            log = new LoggerConfiguration()
+            .WriteTo.File("./logs/log", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
         }
         public Profile UpdateProfile (
             int userId,
@@ -31,7 +36,7 @@ namespace miniMessanger
                     {
                         if (UpdatePhoto(photo, profile, ref message))
                         {
-                            Log.Info("Update profile.", userId);
+                            log.Information("Update profile, id -> " + userId);
                             return profile;
                         }
                     }
@@ -53,13 +58,13 @@ namespace miniMessanger
                 }
                 else
                 {
-                    message ="Incorrect value in variable profile gender.";
-                    Log.Warn(message, profile.UserId);
+                    message ="Incorrect value in variable profile gender, id -> " + profile.UserId;
+                    log.Warning(message);
                     return false;
                 }
                 context.Profile.Update(profile);
                 context.SaveChanges();
-                Log.Info("Update profile gender.", profile.UserId);
+                log.Information("Update profile gender, id -> ", profile.ProfileId);
             }
             return true;
         }
@@ -75,7 +80,7 @@ namespace miniMessanger
                         profile.ProfileAge = (sbyte)ProfileAge;
                         context.Profile.Update(profile);
                         context.SaveChanges();
-                        Log.Info("Update profile age.", profile.UserId);
+                        log.Information("Update profile age, id -> ", profile.UserId);
                         return true;
                     }
                     message = "Profile age can't be more that 200 and less that 0.";
@@ -97,7 +102,7 @@ namespace miniMessanger
                     profile.ProfileCity = profileCity;
                     context.Profile.Update(profile);
                     context.SaveChanges();
-                    Log.Info("Update profile city.", profile.UserId);
+                    log.Information("Update profile city, id -> ", profile.UserId);
                     return true;
                 }
                 message = "Parameter 'profile_city' can't has more that 50 charaters and less that 3.";
@@ -115,7 +120,7 @@ namespace miniMessanger
                     profile.UrlPhoto = fileSystem.CreateFile(photo, "/ProfilePhoto/");
                     context.Profile.Update(profile);
                     context.SaveChanges();
-                    Log.Info("Update profile photo.", profile.UserId);
+                    log.Information("Update profile photo, id -> ", profile.UserId);
                     return true;
                 }
                 else

@@ -397,20 +397,16 @@ namespace Controllers
         public ActionResult<dynamic> MessagePhoto(IFormFile photo)
         {
             string message = null;
-            string data = Request.Form["data"];
-            if (!string.IsNullOrEmpty(data))
+            ChatCache cache  = new ChatCache()
             {
-                ChatCache cache  = JsonConvert.DeserializeObject<ChatCache>(data);
-                Message result = chats.UploadMessagePhoto(photo, cache, ref message);
-                if (result != null)
-                {
-                    return new { success = true, data = chats.ResponseMessage(result) };
-                }
-            } 
-            else 
+                user_token = Request.Form["user_token"],
+                chat_token = Request.Form["chat_token"]
+            };
+            Message result = chats.UploadMessagePhoto(photo, cache, ref message);
+            if (result != null)
             {
-                message = "Input field 'data' is null or empty."; 
-            }        
+                return new { success = true, data = chats.ResponseMessage(result) };
+            }
             return Return500Error(message);
         }
         [HttpPost]

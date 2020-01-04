@@ -15,3 +15,6 @@
 /home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.RazorTargetAssemblyInfo.cache
 /home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.dll
 /home/neytchi/Projects/miniMessanger/obj/Release/netcoreapp2.2/ubuntu.18.10-x64/miniMessanger.pdb
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/NUnit3.TestAdapter.dll
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/NUnit3.TestAdapter.pdb
+/home/neytchi/Projects/miniMessanger/bin/Release/netcoreapp2.2/ubuntu.18.10-x64/nunit.engine.netstandard.dll
